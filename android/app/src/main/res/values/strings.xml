@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Livraison Express</string>
+    <string name="facebook_app_id">684158992788662</string>
+    <string name="fb_login_protocol_scheme">fb684158992788662</string>
+    <string name="facebook_client_token">db6ba32b322265b0eda6d69ad1102d5b</string>
+</resources>

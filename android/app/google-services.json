@@ -1,0 +1,106 @@
+{
+  "project_info": {
+    "project_number": "1037926031065",
+    "firebase_url": "https://livraison-express-dev.firebaseio.com",
+    "project_id": "livraison-express-dev",
+    "storage_bucket": "livraison-express-dev.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1037926031065:android:3ff6ac2bae3085723ae8c8",
+        "android_client_info": {
+          "package_name": "com.example.livraison_express"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1037926031065-bmjibpejh7r5ia3kgdto61up658ieuvq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.livraison_express",
+            "certificate_hash": "75711e0cd974f559731840a0e834a6833ba013ff"
+          }
+        },
+        {
+          "client_id": "1037926031065-22q6pvhr2nb2p9t6sh7l74rratn95kd5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCzD-aaPMOgXlXixDGulOwHpprD89qW9S8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1037926031065-22q6pvhr2nb2p9t6sh7l74rratn95kd5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1037926031065:android:219d064bd292d157",
+        "android_client_info": {
+          "package_name": "com.multicanalservices.livraisonexpress"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1037926031065-22q6pvhr2nb2p9t6sh7l74rratn95kd5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCzD-aaPMOgXlXixDGulOwHpprD89qW9S8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1037926031065-22q6pvhr2nb2p9t6sh7l74rratn95kd5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1037926031065:android:bdbeb6140b83b05f",
+        "android_client_info": {
+          "package_name": "com.multicanalservices.restaurantexpressapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1037926031065-22q6pvhr2nb2p9t6sh7l74rratn95kd5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCzD-aaPMOgXlXixDGulOwHpprD89qW9S8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1037926031065-22q6pvhr2nb2p9t6sh7l74rratn95kd5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
