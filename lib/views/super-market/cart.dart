@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:livraison_express/model/module_color.dart';
 import 'package:livraison_express/service/api_auth_service.dart';
 import 'package:livraison_express/views/home-page.dart';
 import 'package:livraison_express/views/super-market/cart-provider.dart';
@@ -13,8 +14,9 @@ import '../../model/cart-model.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({
-    Key? key,
+    Key? key, required this.moduleColor,
   }) : super(key: key);
+  final ModuleColor moduleColor;
 
   @override
   State<CartPage> createState() => _CartPageState();
@@ -40,7 +42,7 @@ class _CartPageState extends State<CartPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Panier'),
-        backgroundColor: const Color(0xff00a117),
+        backgroundColor: widget.moduleColor.moduleColor,
         actions: [
           IconButton(
               onPressed: (){
@@ -176,10 +178,10 @@ class _CartPageState extends State<CartPage> {
               width: double.infinity,
               child: ElevatedButton(
                   style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all(const Color(0xff00a117))),
+                      backgroundColor: MaterialStateProperty.all(widget.moduleColor.moduleColorDark)),
                   onPressed: () async{
                     List cartList=await cartProvider.getData();
-                    await ApiAuthService.getUser();
+                    // await ApiAuthService.getUser();
                     print(cartList.isEmpty);
                     String text ='Veuillez remplir votre panier avant de le valider';
                     bool cartLength=cartList.isEmpty;

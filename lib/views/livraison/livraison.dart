@@ -1,19 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:livraison_express/model/auto_gene.dart';
+import 'package:livraison_express/model/magasin.dart';
+import 'package:livraison_express/model/module_color.dart';
 import 'package:livraison_express/views/livraison/commande-coursier.dart';
 
 class Livraison extends StatefulWidget {
   final String city;
-  const Livraison({Key? key, required this.city}) : super(key: key);
+  final ModuleColor moduleColor;
+  final Shops shops;
+  const Livraison({Key? key, required this.city, required this.moduleColor, required this.shops}) : super(key: key);
 
   @override
   State<Livraison> createState() => _LivraisonState();
 }
 
 class _LivraisonState extends State<Livraison> {
+  Shops magasin =Shops();
   @override
   void initState() {
-    // TODO: implement initState
+    magasin =widget.shops;
     super.initState();
     print(widget.city);
   }
@@ -22,7 +28,7 @@ class _LivraisonState extends State<Livraison> {
   Widget build(BuildContext context) {
     return AnnotatedRegion(
       value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.white
+        statusBarColor: Color(0xff2a5ca8)
       ),
       child: SafeArea(
         child: Scaffold(
@@ -30,7 +36,7 @@ class _LivraisonState extends State<Livraison> {
           appBar: PreferredSize(
             preferredSize: const Size.fromHeight(60),
             child: AppBar(
-              shadowColor: Color(0xffBBD4EF),
+              shadowColor: Colors.lightBlueAccent,
               title: Center(
                   child: Image.asset(
                 'img/logo_start.png',
@@ -44,13 +50,14 @@ class _LivraisonState extends State<Livraison> {
           body: Stack(
             children: [
               Container(
+                height: MediaQuery.of(context).size.height,
+                width: MediaQuery.of(context).size.width,
                 alignment: Alignment.centerLeft,
-                margin: const EdgeInsets.only(bottom: 6),
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   image: DecorationImage(
                     image: AssetImage("img/landing_coursier_4.png"),
-                    fit: BoxFit.fill,
+                    fit: BoxFit.fitHeight,
                   ),
                 ),
                 child: Row(
@@ -92,6 +99,7 @@ class _LivraisonState extends State<Livraison> {
                                         builder: (BuildContext context) =>
                                             CommandeCoursier(
                                               city: widget.city,
+                                              shops: magasin,
                                             )));
                                   },
                                   child: const Text(
@@ -110,7 +118,7 @@ class _LivraisonState extends State<Livraison> {
                   child: Column(
                     children: [
                       Container(
-                        height: 30,
+                        height: 40,
                         color: Colors.white,
                       ),
                       Container(
@@ -118,7 +126,7 @@ class _LivraisonState extends State<Livraison> {
                         color: Colors.red,
                       ),
                       Container(
-                        height: 50,
+                        height: 60,
                         color: Colors.white,
                       ),
                     ],

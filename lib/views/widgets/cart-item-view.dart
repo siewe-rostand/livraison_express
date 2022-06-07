@@ -34,7 +34,7 @@ class _CartItemViewState extends State<CartItemView> {
                 color: Colors.white38,
                 child: SizedBox(
                     height: 85,
-                    child:Image.asset(widget.image)),
+                    child:Image.network(widget.image)),
               ),
               flex: 2,
             ),

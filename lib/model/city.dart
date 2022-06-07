@@ -3,8 +3,8 @@ import 'package:livraison_express/constant/some-constant.dart';
 class City{
   int? id;
   String? name;
-  double? latitude;
-  double? longitude;
+  String? latitude;
+  String? longitude;
   bool? isActive;
 
   City({this.name,this.id,this.longitude,this.latitude,this.isActive});
@@ -17,14 +17,22 @@ class City{
     CityConstant.isActive:city.isActive
   };
 
-  factory City.fromJson(Map<String,dynamic> json){
-    return City(
-      id: json[CityConstant.id],
-      name: json[CityConstant.name],
-      latitude: json[CityConstant.latitude],
-      longitude: json[CityConstant.longitude],
-      isActive: json[CityConstant.isActive]
-    );
+  City.fromJson(Map<String, dynamic> json) {
+    id = json['id'];
+    name = json['name'];
+    latitude = json['latitude'];
+    longitude = json['longitude'];
+    isActive = json['is_active'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['name'] = name;
+    data['latitude'] = latitude;
+    data['longitude'] = longitude;
+    data['is_active'] = isActive;
+    return data;
   }
 
 }

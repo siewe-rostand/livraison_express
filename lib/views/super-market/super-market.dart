@@ -9,6 +9,8 @@ import 'package:livraison_express/views/super-market/cart.dart';
 import 'package:livraison_express/views/super-market/chocolate.dart';
 import 'package:provider/provider.dart';
 
+import '../../model/module_color.dart';
+
 class SuperMarket extends StatefulWidget {
   const SuperMarket({Key? key}) : super(key: key);
 
@@ -628,11 +630,13 @@ class _SuperMarketState extends State<SuperMarket> {
               ),
               child: IconButton(
                 onPressed: (){
+                  ModuleColor moduleColor=ModuleColor();
                   Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (BuildContext context) =>
-                          const CartPage()));
+                          builder: (BuildContext context) => CartPage(
+                            moduleColor: moduleColor,
+                          )));
 
                 },
                 icon: const Icon(Icons.shopping_cart,color: Colors.green,),

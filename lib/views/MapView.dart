@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_google_places/flutter_google_places.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_api_headers/google_api_headers.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_webservice/places.dart';
-import 'package:livraison_express/views/restaurant/restaurant.dart';
 import 'package:uuid/uuid.dart';
+import 'dart:ui' as ui;
+import 'package:flutter/services.dart';
 
 class MapsView extends StatefulWidget {
   const MapsView({Key? key}) : super(key: key);
@@ -28,32 +30,52 @@ class _MapsViewState extends State<MapsView> {
   Position? _currentPosition;
   final startAddressController = TextEditingController();
   String location = "Search Location";
+  double? latitude;
+  double? longitude;
 
   String _currentAddress = '';
   final sessionToken = const Uuid().v4();
   // Method for retrieving the current location
   _getCurrentLocation() async {
     bool serviceEnabled;
-    LocationPermission permission = await Geolocator
-        .checkPermission(); // Test if location services are enabled.
+    LocationPermission permission = await Geolocator.checkPermission();
+    BitmapDescriptor bitmapDescriptor = await _bitmapDescriptorFromSvgAsset(
+        context, 'img/icon/svg/ic_location_on_black.svg');
+    // Test if location services are enabled.
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
         markers.add(
           Marker(
+              draggable: true,
+              onDragEnd: (newPosition) {
+                debugPrint('new pos ${newPosition}');
+              },
               markerId: MarkerId(startLocation.toString()),
               position: startLocation,
-              icon: BitmapDescriptor.defaultMarker),
+              icon: bitmapDescriptor),
         );
+        showDialog(
+            context: context,
+            builder: (context) {
+              return const AlertDialog(
+                title: Text('ERROR'),
+                content: Text('Veuillez activer la localisation svp'),
+              );
+            });
       }
     }
     return await Geolocator.getCurrentPosition(
-            desiredAccuracy: LocationAccuracy.high)
-        .then((Position position) async {
+            desiredAccuracy: LocationAccuracy.high,
+            forceAndroidLocationManager: true)
+        .then((Position position) {
+      debugPrint('position');
       setState(() {
         // Store the position in the variable
         _currentPosition = position;
+        latitude = _currentPosition?.latitude;
+        longitude = _currentPosition?.longitude;
         print('current location $_currentPosition');
 
         print('CURRENT POS: $_currentPosition');
@@ -70,23 +92,31 @@ class _MapsViewState extends State<MapsView> {
         markers.add(
           Marker(
               markerId: MarkerId(startLocation.toString()),
-              position: LatLng(
-                  _currentPosition!.latitude, _currentPosition!.longitude),
-              icon: BitmapDescriptor.defaultMarker),
+              position: LatLng(latitude!, longitude!),
+              icon: bitmapDescriptor,
+              draggable: true,
+              onDragEnd: (newPosition) {
+                setState(() {
+                  longitude = newPosition.longitude;
+                  latitude = newPosition.latitude;
+                  _getAddress();
+                });
+                debugPrint('new pos ${newPosition}');
+              }),
         );
       });
-      await _getAddress();
+      _getAddress();
     }).catchError((e) {
       print(e);
     });
+
   }
   // Method for retrieving the address
 
   _getAddress() async {
     try {
       // Places are retrieved using the coordinates
-      List<Placemark> p = await placemarkFromCoordinates(
-          _currentPosition!.latitude, _currentPosition!.longitude);
+      List<Placemark> p = await placemarkFromCoordinates(latitude!, longitude!);
 
       // Taking the most probable result
       Placemark place = p[0];
@@ -102,6 +132,8 @@ class _MapsViewState extends State<MapsView> {
         // Setting the user's present location as the starting address
         location = _currentAddress.toString();
       });
+
+      // debugPrint('new pos $_currentAddress');
     } catch (e) {
       print(e);
     }
@@ -112,6 +144,7 @@ class _MapsViewState extends State<MapsView> {
       SnackBar(content: Text(response.errorMessage!)),
     );
   }
+
   Future<void> _handlePressButton() async {
     // show input autocomplete with selected mode
     // then get the Prediction selected
@@ -140,6 +173,7 @@ class _MapsViewState extends State<MapsView> {
 
     displayPrediction(p, context);
   }
+
   Future<void> displayPrediction(Prediction? p, BuildContext context) async {
     if (p != null) {
       // get detail (lat/lng)
@@ -148,31 +182,123 @@ class _MapsViewState extends State<MapsView> {
         apiHeaders: await const GoogleApiHeaders().getHeaders(),
       );
       PlacesDetailsResponse detail =
-      await _places.getDetailsByPlaceId(p.placeId!);
-      final lat = detail.result.geometry!.location.lat;
-      final lng = detail.result.geometry!.location.lng;
+          await _places.getDetailsByPlaceId(p.placeId!,region: 'CM');
+      latitude = detail.result.geometry!.location.lat;
+      longitude = detail.result.geometry!.location.lng;
+      BitmapDescriptor bitmapDescriptor = await _bitmapDescriptorFromSvgAsset(
+          context, 'img/icon/svg/ic_location_on_black.svg');
       setState(() {
-        location = p.description!;
+        // location = p.description!;
         //move map camera to selected place with animation
-        mapController?.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(target: LatLng(lat,lng), zoom: 17)));
-        markers.add(
-          Marker(
-              markerId: MarkerId(startLocation.toString()),
-              position: LatLng(lat,lng),
-              icon: BitmapDescriptor.defaultMarker),
-        );
+        mapController?.animateCamera(CameraUpdate.newCameraPosition(
+            CameraPosition(target: LatLng(latitude!, longitude!), zoom: 17)));
+        markers.add(Marker(
+          draggable: true,
+          onDragEnd: (newPosition) {
+            longitude = newPosition.longitude;
+            latitude = newPosition.latitude;
+            _getAddress();
+          },
+          markerId: MarkerId(startLocation.toString()),
+          position: LatLng(latitude!, longitude!),
+          icon: bitmapDescriptor,
+        ));
       });
+      _getAddress();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("${p.description} - $lat/$lng")),
+        SnackBar(content: Text("${p.description} - $latitude/$longitude")),
       );
     }
   }
 
+  getPos(GoogleMapController _cntlr) async {
+    mapController = _cntlr;
+    bool serviceEnabled;
+    LocationPermission permission = await Geolocator
+        .checkPermission(); // Test if location services are enabled.
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        markers.add(
+          Marker(
+              draggable: true,
+              onDragEnd: (newPosition) {
+                debugPrint('new pos ${newPosition}');
+              },
+              markerId: MarkerId(startLocation.toString()),
+              position: startLocation,
+              icon: BitmapDescriptor.defaultMarker),
+        );
+        showDialog(
+            context: context,
+            builder: (context) {
+              return const AlertDialog(
+                title: Text('ERROR'),
+                content: Text('Veuillez activer la localisation svp'),
+              );
+            });
+      }
+    }
+    return await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.best,
+            forceAndroidLocationManager: true)
+        .then((Position position) {
+      debugPrint('position');
+      setState(() {
+        // Store the position in the variable
+        _currentPosition = position;
+        print('current location $_currentPosition');
+
+        print('CURRENT POS: $_currentPosition');
+
+        // For moving the camera to current location
+        mapController?.animateCamera(
+          CameraUpdate.newCameraPosition(
+            CameraPosition(
+              target: LatLng(position.latitude, position.longitude),
+              zoom: 18.0,
+            ),
+          ),
+        );
+        markers.add(
+          Marker(
+              draggable: true,
+              onDragEnd: (newPosition) {
+                debugPrint('new pos ${newPosition}');
+              },
+              markerId: MarkerId(startLocation.toString()),
+              position: LatLng(
+                  _currentPosition!.latitude, _currentPosition!.longitude),
+              icon: BitmapDescriptor.defaultMarker),
+        );
+      });
+      _getAddress();
+    }).catchError((e) {
+      print(e);
+    });
+  }
+
+  initPos() async {
+    BitmapDescriptor bitmapDescriptor = await _bitmapDescriptorFromSvgAsset(
+        context, 'img/icon/svg/ic_location_on_black.svg');
+    markers.add(
+      Marker(
+        draggable: true,
+        onDragEnd: (newPosition) {
+        },
+        markerId: MarkerId(startLocation.toString()),
+        position: startLocation,
+        icon: bitmapDescriptor,
+      ),
+    );
+  }
 
   @override
   void initState() {
-    _getCurrentLocation();
     super.initState();
+      _getCurrentLocation();
+      initPos();
   }
 
   @override
@@ -182,12 +308,22 @@ class _MapsViewState extends State<MapsView> {
       height: MediaQuery.of(context).size.height,
       child: Scaffold(
         floatingActionButton: FloatingActionButton(
-          onPressed: (){
-            Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (BuildContext context)=>const Restaurant()));
+          onPressed: () {
+            // Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (BuildContext context)=> CommandeCoursier(
+            //   currentAddress: location,
+            //   currentLocation: _currentPosition,
+            // )));
+            var data = {
+              "location": location,
+              "Latitude": latitude,
+              "Longitude": longitude,
+            };
+            print('latLng // $latitude / $longitude');
+            Navigator.of(context).pop(data);
           },
           child: const Icon(Icons.check),
         ),
-        body: Stack(children: [
+        body: Stack(alignment: Alignment.center, children: [
           GoogleMap(
             //Map widget from google_maps_flutter package
             markers: Set<Marker>.from(markers),
@@ -195,7 +331,7 @@ class _MapsViewState extends State<MapsView> {
             zoomControlsEnabled: false, //enable Zoom in, out on map
             initialCameraPosition: initialPosition,
             mapType: MapType.normal, //map type
-            onMapCreated: (controller) {
+            onMapCreated: (GoogleMapController controller) {
               //method called when map is created
               setState(() {
                 mapController = controller;
@@ -245,29 +381,7 @@ class _MapsViewState extends State<MapsView> {
                         height: 56,
                         child: Icon(Icons.my_location),
                       ),
-                      onTap: () {
-                        var loc = LatLng(_currentPosition!.latitude,
-                            _currentPosition!.longitude);
-                        markers.add(
-                          Marker(
-                              markerId: MarkerId(startLocation.toString()),
-                              position: loc,
-                              icon: BitmapDescriptor.defaultMarker),
-                        );
-                        print('new loc $loc');
-                        _getCurrentLocation();
-                        mapController?.animateCamera(
-                          CameraUpdate.newCameraPosition(
-                            CameraPosition(
-                              target: LatLng(
-                                _currentPosition?.latitude ?? 0.0,
-                                _currentPosition?.longitude ?? 0.0,
-                              ),
-                              zoom: 14.0,
-                            ),
-                          ),
-                        );
-                      },
+                      onTap: _getCurrentLocation,
                     ),
                   ),
                 ),
@@ -439,5 +553,32 @@ class _MapsViewState extends State<MapsView> {
         // ),
       ),
     );
+  }
+
+  Future<BitmapDescriptor> _bitmapDescriptorFromSvgAsset(
+      BuildContext context, String assetName) async {
+    // Read SVG file as String
+    String svgString =
+        await DefaultAssetBundle.of(context).loadString(assetName);
+    // Create DrawableRoot from SVG String
+    DrawableRoot svgDrawableRoot = await svg.fromSvgString(svgString, '');
+
+    // toPicture() and toImage() don't seem to be pixel ratio aware, so we calculate the actual sizes here
+    MediaQueryData queryData = MediaQuery.of(context);
+    double devicePixelRatio = queryData.devicePixelRatio;
+    double width =
+        36 * devicePixelRatio; // where 32 is your SVG's original width
+    double height = 36 * devicePixelRatio; // same thing
+
+    // Convert to ui.Picture
+    ui.Picture picture = svgDrawableRoot.toPicture(size: Size(width, height));
+    int nWidth = width.toInt();
+    int nHeight = height.toInt();
+    // Convert to ui.Image. toImage() takes width and height as parameters
+    // you need to find the best size to suit your needs and take into account the
+    // screen DPI
+    ui.Image image = await picture.toImage(nWidth, nHeight);
+    ByteData? bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+    return BitmapDescriptor.fromBytes(bytes!.buffer.asUint8List());
   }
 }

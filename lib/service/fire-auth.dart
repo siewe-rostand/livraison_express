@@ -7,6 +7,7 @@ import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../data/local_db/db-helper.dart';
 import 'api_auth_service.dart';
 
 class FireAuth{
@@ -31,6 +32,8 @@ class FireAuth{
       }
       else if(e.code == 'email-already-in-use') {
         print('Account already exist for that email');
+      }else{
+        print(e);
       }
     }catch (e){
       print(e);
@@ -122,7 +125,6 @@ class FireAuth{
       await googleSignInAccount.authentication;
 
       final AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleSignInAuthentication.accessToken,
         idToken: googleSignInAuthentication.idToken,
       );
 
@@ -131,10 +133,12 @@ class FireAuth{
         await auth.signInWithCredential(credential);
 
         user = userCredential.user;
+        auth.currentUser?.getIdToken();
         String? token =await user?.getIdToken();
+        debugPrint('token$token');
         user?.getIdToken().then((value) {
           print('user token from firebase $value');
-          ApiAuthService.getAccessToken( firebaseTokenId: value);
+          var q = ApiAuthService.getAccessToken( firebaseTokenId: value);
         });
 
         // print('user  $user');
@@ -164,6 +168,8 @@ class FireAuth{
               Text('Error occurred while accessing credentials. Try again.'),
             ),
           );
+        }else{
+          print(e);
         }
       } catch (e) {
         print('err $e');
@@ -177,28 +183,11 @@ class FireAuth{
 
     return user;
   }
-  static Future<UserCredential> signInWithGoogleF() async {
-    // Trigger the authentication flow
-    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
-    // Obtain the auth details from the request
-    final GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
-
-    // Create a new credential
-    final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth?.accessToken,
-      idToken: googleAuth?.idToken,
-    );
-
-    // Once signed in, return the UserCredential
-    return await FirebaseAuth.instance.signInWithCredential(credential);
-  }
-
-  static Future<User?> signInUsingEmailPassword({required String email, required String password,
+  static Future<User?> signInUsingEmailPassword({required String email, required String password,required BuildContext context
   }) async {
     FirebaseAuth auth = FirebaseAuth.instance;
     User? user;
-
     try {
       UserCredential userCredential = await auth.signInWithEmailAndPassword(
         email: email,
@@ -206,12 +195,15 @@ class FireAuth{
       );
       user = userCredential.user;
       print('success $user');
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found') {
-        print('No user found for that email.');
-      } else if (e.code == 'wrong-password') {
-        print('Wrong password provided.');
-      }
+    // }
+    // on FirebaseAuthException catch (e) {
+    //   if (e.code == 'user-not-found') {
+    //     showMessage(e, context);
+    //     print('No user found for that email.');
+    //   } else if (e.code == 'wrong-password') {
+    //     showMessage(e, context);
+    //     print('Wrong password provided.');
+    //   }
     }catch(e){
       print(e);
     }
@@ -232,10 +224,12 @@ class FireAuth{
   static Future<void> signOutFromGoogle() async{
     SharedPreferences preferences = await SharedPreferences.getInstance();
     preferences.clear();
+    DBHelper dbHelper=DBHelper();
+    await dbHelper.deleteAll();
     final FirebaseAuth _auth = FirebaseAuth.instance;
     final GoogleSignIn _googleSignIn = GoogleSignIn();
     User? user = _auth.currentUser;
-    print(user!.providerData[0].providerId);
+    // print(user!.providerData[0].providerId);
     if(user!= null){
       if(user.providerData[0].providerId == 'facebook.com'){
         await FacebookAuth.instance.logOut();
@@ -265,6 +259,7 @@ class FireAuth{
      print('/// ${b.body}');
    }on FirebaseAuthException catch (e) {
      if (e.code == 'account-exists-with-different-credential') {
+       debugPrint('account-exists-with-different-credential $e');
        List<String> emailList = await FirebaseAuth.instance
            .fetchSignInMethodsForEmail(e.email!);
        showMessage(e,context);
@@ -278,6 +273,7 @@ class FireAuth{
          ),
        );
      } else if (e.code == 'invalid-credential') {
+       debugPrint('invalid credential $e');
        showMessage(e,context);
        ScaffoldMessenger.of(context).showSnackBar(
          const SnackBar(
@@ -294,7 +290,7 @@ class FireAuth{
    return user;
   }
 
-  static void showMessage(FirebaseAuthException e,BuildContext context) {
+  static void showMessage(FirebaseAuthException e,BuildContext context,{bool? isLoading}) {
     showDialog(
         context: context,
         builder: (BuildContext builderContext) {
@@ -306,16 +302,7 @@ class FireAuth{
                 child: const Text("Ok"),
                 onPressed: () async {
                   Navigator.of(builderContext).pop();
-                  print(e.code);
-                  if (e.code == 'account-exists-with-different-credential') {
-                    List<String> emailList = await FirebaseAuth.instance
-                        .fetchSignInMethodsForEmail(e.email!);
-                    // if (emailList.first == "google.com") {
-                    //   await this.service.signInwithGoogle(true, e.credential);
-                    //   Navigator.pushNamedAndRemoveUntil(
-                    //       context, Constants.homeNavigate, (route) => false);
-                    // }
-                  }
+                  isLoading=false;
                 },
               )
             ],
@@ -332,5 +319,10 @@ class FireAuth{
       print(error);
     }
   }
-
+  static Future<void> signOut()async{
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    preferences.clear();
+    DBHelper dbHelper=DBHelper();
+    await dbHelper.deleteAll();
+  }
 }

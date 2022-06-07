@@ -55,6 +55,9 @@
 	<false/>
 	<key>FacebookAppID</key>
     <string>fbid</string>
+
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>access location in background</string>
     <key>CFBundleURLTypes</key>
     	<array>
     		<dict>

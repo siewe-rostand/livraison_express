@@ -1,11 +1,72 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:livraison_express/data/local_db/db-helper.dart';
+import 'package:livraison_express/service/course_service.dart';
+import 'package:livraison_express/service/fire-auth.dart';
+import 'package:livraison_express/views/home-page.dart';
 import 'package:livraison_express/views/main/about.dart';
 import 'package:livraison_express/views/main/login.dart';
 import 'package:livraison_express/views/main/profil.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class MyHomeDrawer extends StatelessWidget {
+class MyHomeDrawer extends StatefulWidget {
   const MyHomeDrawer({Key? key}) : super(key: key);
+
+  @override
+  State<MyHomeDrawer> createState() => _MyHomeDrawerState();
+}
+
+class _MyHomeDrawerState extends State<MyHomeDrawer> {
+  bool _isProcessing = false;
+
+  void showMessage({required String message, required String title}) {
+    showDialog(
+        context: context,
+        builder: (BuildContext buildContext) {
+          return AlertDialog(
+            title: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SvgPicture.asset(
+                  'img/icon/svg/ic_warning_yellow.svg',
+                  color: const Color(0xffFFAE42),
+                ),
+                Text(title)
+              ],
+            ),
+            content: Text(message),
+            actions: [
+              TextButton(
+                child: const Text("Réessayer"),
+                onPressed: () async {
+                  Navigator.of(buildContext).pop();
+                  getOrders();
+                },
+              ),
+              TextButton(
+                child: const Text("Annuler"),
+                onPressed: () {
+                  Navigator.of(buildContext).pop();
+                },
+              ),
+            ],
+          );
+        });
+  }
+
+  getOrders() async {
+    await CourseApi.getOrders().then((value) {
+      var body = json.decode(value.body);
+      var res = body['data'];
+      debugPrint('commends // $res');
+    }).catchError((onError) {
+      showMessage(message: onError.toString(), title: 'Alerte');
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,26 +106,32 @@ class MyHomeDrawer extends StatelessWidget {
                   ListTile(
                     onTap: () {
                       Navigator.of(context).push(MaterialPageRoute(
-                          builder: (BuildContext context) =>
-                              const LoginScreen()));
+                          builder: (BuildContext context) => const HomePage()));
                     },
                     title: const Text('Accueil'),
                     leading: const Icon(Icons.home),
                   ),
-                  const ListTile(
-                    title: Text('Mes Commandes'),
-                    leading: Icon(Icons.list),
+                  ListTile(
+                    title: const Text('Mes Commandes'),
+                    leading:
+                        SvgPicture.asset('img/icon/svg/ic_view_list_black.svg'),
+                    onTap: () async {
+                      getOrders();
+                    },
                   ),
-                  const ListTile(
-                    title: Text('Mes Adresses'),
-                    leading: Icon(Icons.import_contacts),
+                  ListTile(
+                    title: const Text('Mes Adresses'),
+                    leading: SvgPicture.asset(
+                      'img/icon/svg/ic_address.svg',
+                      height: 24,
+                    ),
                   ),
                   ListTile(
                     title: const Text('Mon Profil'),
                     leading: const Icon(Icons.person),
                     onTap: () {
                       Navigator.of(context).push(MaterialPageRoute(
-                          builder: (BuildContext context) => Profile()));
+                          builder: (BuildContext context) => const Profile()));
                     },
                   ),
                   Builder(builder: (BuildContext context) {
@@ -78,35 +145,75 @@ class MyHomeDrawer extends StatelessWidget {
                     title: const Text('Deconnexion'),
                     leading: const Icon(Icons.power_settings_new),
                     onTap: () {
-                      Navigator.of(context).push(MaterialPageRoute(
-                          builder: (BuildContext context) =>
-                              const LoginScreen()));
+                      showDialog(
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              title: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SvgPicture.asset(
+                                    'img/icon/svg/ic_warning_yellow.svg',
+                                    color: const Color(0xffFFAE42),
+                                  ),
+                                  const Text('Attention')
+                                ],
+                              ),
+                              content: const Text(
+                                  'Vous allez être déconnecté et toute vos informations non-enregistrée seront supprimé.'),
+                              actions: [
+                                TextButton(
+                                  child: const Text("Ok"),
+                                  onPressed: () async {
+                                    await FireAuth.signOut()
+                                        .then((value) {
+                                      Navigator.of(context).pushReplacement(
+                                          MaterialPageRoute(
+                                              builder: (    BuildContext context
+                                                  ) =>
+                                                  const LoginScreen()));
+                                    });
+                                  },
+                                ),
+                                TextButton(
+                                  child: const Text("Annuler"),
+                                  onPressed: () async {
+                                    Navigator.of(context).pop();
+                                  },
+                                )
+                              ],
+                            );
+                          });
                     },
                   ),
                 ],
               ),
             ),
             Container(
-                color: const Color(0xffF3F3F3),
-                width: double.infinity,
-                alignment: FractionalOffset.bottomCenter,
-                child: ListTile(
-                title: const Center(child: Text('A propos',style: TextStyle(color: Color(0xff263238),fontSize: 16),)),
-                leading:  Image.asset('img/icon/ic_about.png'),
+              color: const Color(0xffF3F3F3),
+              width: double.infinity,
+              alignment: FractionalOffset.bottomCenter,
+              child: ListTile(
+                title: const Center(
+                    child: Text(
+                  'A propos',
+                  style: TextStyle(color: Color(0xff263238), fontSize: 16),
+                )),
+                leading: Image.asset('img/icon/ic_about.png'),
                 onTap: () {
                   Navigator.of(context).push(MaterialPageRoute(
                       builder: (BuildContext context) => const AboutPage()));
                 },
               ),
-                // Row(
-                //   mainAxisAlignment: MainAxisAlignment.spaceAround,
-                //   children: const [
-                //     Icon(Icons.info_outline),
-                //     Center(child: Text('A propos')),
-                //   ],
-                // )
-
-                )
+              // Row(
+              //   mainAxisAlignment: MainAxisAlignment.spaceAround,
+              //   children: const [
+              //     Icon(Icons.info_outline),
+              //     Center(child: Text('A propos')),
+              //   ],
+              // )
+            )
           ],
         ),
       ),

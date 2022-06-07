@@ -3,6 +3,7 @@ import 'package:badges/badges.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:livraison_express/model/cart-model.dart';
+import 'package:livraison_express/model/module_color.dart';
 import 'package:livraison_express/model/product.dart';
 import 'package:livraison_express/views/super-market/cart-provider.dart';
 import 'package:livraison_express/views/super-market/cart.dart';
@@ -212,11 +213,14 @@ class _ChocolateState extends State<Chocolate> {
                     ),
           child: IconButton(
             onPressed: (){
+              ModuleColor moduleColor=ModuleColor();
               Navigator.push(
                           context,
                           MaterialPageRoute(
                               builder: (BuildContext context) =>
-                                  const CartPage()));
+                                  CartPage(
+                                    moduleColor: moduleColor,
+                                  )));
 
             },
             icon: const Icon(Icons.shopping_cart,color:  Color(0xff00a117),),

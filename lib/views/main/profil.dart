@@ -1,4 +1,14 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:livraison_express/data/user_helper.dart';
+import 'package:livraison_express/model/user.dart';
+import 'package:livraison_express/service/api_auth_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'login.dart';
 
 class Profile extends StatefulWidget {
   const Profile({Key? key}) : super(key: key);
@@ -13,43 +23,95 @@ class _ProfileState extends State<Profile> {
   TextEditingController emailController= TextEditingController();
   TextEditingController tel1Controller= TextEditingController();
   TextEditingController tel2Controller= TextEditingController();
-  var name= 'Rostand';
-  var fullName= 'Guy Rostand';
-  var fName= 'Guy';
-  String email= 'rostand.siewe9@gmail.com';
-  var tel1= '+237678312256';
-  var tel2= '+237655418165';
+  late SharedPreferences sharedPreferences;
+  String name= '';
+  String initialName= '';
+  String uid= '';
+  String fullName= '';
+  String fName= '';
+  String email= '';
+  String tel1= '';
+  String tel2= '';
+  initData()async{
+    sharedPreferences = await SharedPreferences.getInstance();
+    String? userString =sharedPreferences.getString("userData");
+    var extractedUserData =json.decode(userString!);
+    // print(extractedUserData);
+    if(extractedUserData != null) {
+      setState(() {
+        email = extractedUserData['email'];
+        uid = extractedUserData['uid'];
+        name = extractedUserData['firstname'];
+        fName = extractedUserData['lastname'];
+        fullName = extractedUserData['fullname'];
+        tel1 = extractedUserData['telephone'];
+        tel2 = extractedUserData['telephone_alt'];
+        initialName =fullName.substring(0,1).toUpperCase();
+        print(initialName);
+      });
+    }else{
+      if(UserHelper.currentUser !=null){
+        extractedUserData =UserHelper.currentUser;
+      }else{
+        showDialog(context: context, builder: (BuildContext buildContext){
+          return AlertDialog(
+            title: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SvgPicture.asset('img/icon/svg/ic_warning_yellow.svg',color: const Color(0xffFFAE42),),
+                const Text('Attention')
+              ],),
+            content: const Text('Votre session a expiré'),
+            actions: [
+              TextButton(
+                child: const Text("OK"),
+                onPressed: () async {
+                  Navigator.of(buildContext).pop();
+                  Navigator.of(buildContext).pushReplacement(MaterialPageRoute(builder: (buildContext)=>const LoginScreen()));
+                },
+              )
+            ],
+          );
+        });
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    initData();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
-    var v=MediaQuery.of(context).size.height*.2;
-    print(v);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mon Profil'),
       ),
       body: Stack(
         children: [
-          Container(
+          SizedBox(
             height: MediaQuery.of(context).size.height,
             child: ListView(
               shrinkWrap: true,
               children: [
                 Container(
                   height: MediaQuery.of(context).size.height*0.35,
-                  color: Colors.blue.shade800,
+                  color: const Color(0xff2A5CA8),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      CircleAvatar(
-                        radius: 35,
+                    children:  [
+                       CircleAvatar(
+                        radius: 55,
                         backgroundColor: Colors.white,
-                        child: Text('G',style: TextStyle(fontSize: 30,fontWeight: FontWeight.bold),),
+                        child: Text(initialName,style: const TextStyle(fontSize: 50,fontWeight: FontWeight.bold),),
                       ),
-                      SizedBox(
+                      const SizedBox(
                         height: 8,
                       ),
-                      Text('Guy Rostand',style: TextStyle(color: Colors.white,fontSize: 25),)
+                      Text(fullName,style: const TextStyle(color: Colors.white,fontSize: 25),)
                     ],
                   ),
                 ),
@@ -61,19 +123,19 @@ class _ProfileState extends State<Profile> {
                         title: Text(
                             fullName,
                         ),
-                        leading: Icon(Icons.person_rounded),
+                        leading: const Icon(Icons.person_rounded),
                       ),
                       ListTile(
                         title: Text(email),
-                        leading: Icon(Icons.email),
+                        leading: const Icon(Icons.email),
                       ),
                       ListTile(
                         title: Text(tel1),
-                        leading: Icon(Icons.call),
+                        leading: const Icon(Icons.call),
                       ),
                       ListTile(
                         title: Text(tel2),
-                        leading: Icon(Icons.call),
+                        leading: const Icon(Icons.call),
                       ),
                     ],
                   ),
@@ -103,10 +165,12 @@ class _ProfileState extends State<Profile> {
                           child: AlertDialog(
                             title: const Text( ' Modifier mon profil ',
                               style: TextStyle(
-                                  fontWeight: FontWeight.bold,color: Colors.blue),
+                                  fontWeight: FontWeight.bold,color: Color(0xff2A5CA8)),
                             ),
                             content: Column(
                               mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Column(
                                   children: [
@@ -155,8 +219,52 @@ class _ProfileState extends State<Profile> {
                                   width:double.infinity,
                                   height:45,
                                   child: ElevatedButton(
-                                      onPressed: () {
-                                        Navigator.of(context).pop();
+                                      onPressed: () async{
+                                        SharedPreferences pref= await SharedPreferences.getInstance();
+                                        var data={
+                                          "uid":uid,
+                                          "firstname":nameController.text,
+                                          'lastname':fNameController.text,
+                                          "email":emailController.text,
+                                          "telephone":tel1Controller.text,
+                                          "telephone_alt":tel2Controller.text,
+                                          "fullname":fNameController.text + " " + nameController.text,
+                                          "is_guest":true
+                                        };
+                                        await ApiAuthService.edit(data: data).then((value){
+                                          var res = json.decode(value.body);
+                                          var msg =res['message'];
+                                          var user= res['data'];
+                                          setState(() {
+                                            nameController.text =user['firstname'];
+                                            fNameController.text =user['lastname'];
+                                            emailController.text =user['email'];
+                                            tel2Controller.text =user['telephone'];
+                                            tel1Controller.text =user['telephone_alt'];
+                                            fullName =user['fullname'];
+
+                                            fName =fNameController.text;
+                                          });
+                                          var data2={
+                                            "uid":uid,
+                                            "firstname":nameController.text,
+                                            'lastname':fNameController.text,
+                                            "email":emailController.text,
+                                            "telephone":tel1Controller.text,
+                                            "telephone_alt":tel2Controller.text,
+                                            "fullname":fNameController.text + " " + nameController.text,
+                                            "is_guest":true
+                                          };
+                                          print({data2});
+                                          var userData=json.encode(data2);
+                                          pref.reload();
+                                          pref.setString("userData", userData);
+                                          Navigator.of(context).pop();
+                                          Fluttertoast.showToast(
+                                              msg: msg,
+                                            backgroundColor: Colors.green
+                                          );
+                                        });
                                       },
                                       child: const Text(
                                         'ENREGISTRER',

@@ -10,7 +10,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:1037926031065:android:76b60d667b99685a3ae8c8",
         "android_client_info": {
-          "package_name": "com.israel.flutter_livraison_express"
+          "package_name": "com.example.livraison_express"
         }
       },
       "oauth_client": [
@@ -18,7 +18,7 @@
           "client_id": "1037926031065-dus11h99bvrlj8j0vqde2nltrkldr8e0.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.israel.flutter_livraison_express",
+            "package_name": "com.example.livraison_express",
             "certificate_hash": "04ca28112bdca7fe7fcb2a93f8618d2c7ca8c610"
           }
         },
@@ -33,6 +33,9 @@
         },
         {
           "current_key": "AIzaSyCzD-aaPMOgXlXixDGulOwHpprD89qW9S8"
+        },
+        {
+          "current_key": "AIzaSyA09ACWVKr31ZrllFIYS2Tkm50roEA5ZG0"
         }
       ],
       "services": {

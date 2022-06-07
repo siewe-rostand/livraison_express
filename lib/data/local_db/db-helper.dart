@@ -26,8 +26,6 @@ class DBHelper{
 
   Future<Database> get db async {
     return _db ??= await initDatabase();
-
-
   }
 
 
@@ -46,11 +44,15 @@ class DBHelper{
   Future<CartItem> insert(CartItem cartItem)async{
     print("Cart items ${cartItem.toMap()}");
     var dbClient = await db ;
-    await dbClient.insert(tableName, cartItem.toMap());
+    // await dbClient.insert(tableName, cartItem.toMap());
+    var batch=dbClient.batch();
+    batch.insert(tableName, cartItem.toMap());
+    await batch.commit(noResult: true);
     return cartItem ;
   }
   Future<List<CartItem>> getCartList()async{
     var dbClient = await db ;
+    var batch=dbClient.batch();
     final List<Map<String , Object?>> queryResult =  await dbClient.query(tableName);
     return queryResult.map((e) => CartItem.fromMap(e)).toList();
 

@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:livraison_express/constant/app-constant.dart';
+import 'package:livraison_express/model/user.dart';
+import 'package:livraison_express/service/api_auth_service.dart';
 import 'package:livraison_express/service/fire-auth.dart';
+import 'package:livraison_express/views/main/login.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class RegistrationPage extends StatefulWidget {
@@ -18,20 +21,33 @@ class _RegistrationPageState extends State<RegistrationPage> {
   int _currentStep = 0;
   final _phoneTextController = TextEditingController();
   final _phone2TextController = TextEditingController();
+  final _phone1TextController = TextEditingController();
   final nameTextController = TextEditingController();
   final surnameTextController = TextEditingController();
   final emailTextController = TextEditingController();
   final passwordTextController = TextEditingController();
   final confirmPasswordTextController = TextEditingController();
   final verificationCodeTextController = TextEditingController();
-  late String phoneNo;
+  String phoneNo = '';
   late String smsOTP;
   late String verificationId;
   String errorMessage = '';
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool isLoading = false;
+  bool isClicked = false;
   String? _verificationId;
+  String countryCode='';
+  bool isEmpty =true;
+  getPhone()async{
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    phoneNo =preferences.getString('phone1')??'';
+  }
+  @override
+  void initState() {
+    getPhone();
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion(
@@ -48,120 +64,227 @@ class _RegistrationPageState extends State<RegistrationPage> {
                   width: 150,
                   child: Image.asset('img/logo.png'),
                 ),
-               !isLoading? Form(
-                 key: _formKey,
-                 child: Stepper(
-                      controlsBuilder: (BuildContext context, ControlsDetails detail) {
-                        return _currentStep == 1 ?ElevatedButton(
-                            onPressed: () async{
-                              if (_formKey.currentState!.validate()) {
-                                setState(() {
-                                  isLoading = true;
-                                });}
-                              if(passwordTextController.text == confirmPasswordTextController.text) {
-                                User? user = await FireAuth.registerUsingEmailPassword(name: nameTextController.text, email: emailTextController.text, password: passwordTextController.text);
-                                await phoneSignIn(phoneNumber: _phone2TextController.text).then((value) => debugPrint('success'));
-                              }else{
-                                debugPrint('error');
-                              }
+                !isLoading
+                    ? Form(
+                        key: _formKey,
+                        child: Stepper(
+                            controlsBuilder:
+                                (BuildContext context, ControlsDetails detail) {
+                              return _currentStep == 1
+                                  ? ElevatedButton(
+                                      onPressed: () async {
+                                        if (_formKey.currentState!.validate()) {
+                                          setState(() {
+                                            isLoading = true;
+                                          });
+                                        }
+                                        print('contry code $countryCode');
+                                        if (passwordTextController.text ==
+                                            confirmPasswordTextController
+                                                .text) {
+                                         AppUser user =await ApiAuthService.register(
+                                             username: "+"+countryCode+_phoneTextController.text,
+                                             firstName: nameTextController.text,
+                                             lastName: surnameTextController.text, email: emailTextController.text,
+                                             password: passwordTextController.text, telephoneAlt: _phone2TextController.text,
+                                             pwdConfirm: confirmPasswordTextController.text, telephone: _phoneTextController.text,
+                                             countryCode: countryCode, licence: true.toString()).then((value){
+                                               print('on value $value');
+                                               return value;
+                                         }).catchError((onError){
+                                           print('errpp// $onError');
+                                           showMessage(onError.toString());
 
+                                         });
+                                         setState(() {
+                                           isLoading=false;
+                                         });
+                                         if(user !=null){
+                                           Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context)=>ConfirmCode()));
+                                         }else{
+                                           print('===');
+                                           setState(() {
+                                             isLoading =false;
+                                           });
+                                         }
+                                          // await phoneSignIn(
+                                          //         phoneNumber:
+                                          //             _phone2TextController
+                                          //                 .text)
+                                          //     .then((value) =>
+                                          //         debugPrint('success'));
+                                          debugPrint('registered user //$user');
+                                        } else {
+                                          debugPrint('error');
+                                        }
+                                      },
+                                      child: const Text(
+                                        "ENREGISTRER",
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold),
+                                      ))
+                                  : SizedBox(
+                                width: MediaQuery.of(context).size.width*0.7,
+                                    height: 40,
+                                    child: ElevatedButton(
+                                        onPressed: detail.onStepContinue,
+                                        child: const Text(
+                                          "CONTINUER",
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                            color: Color(0xffF3F3F3)
+                                          ),
+                                        )),
+                                  );
                             },
-                            child: const Text(
-                              "ENREGISTRER",
-                              style: TextStyle(
-                                  fontWeight:
-                                  FontWeight.bold),
-                            )):
-                        ElevatedButton(
-                            onPressed: detail.onStepContinue,
-                            child: const Text(
-                              "CONTINUER",
-                              style: TextStyle(
-                                  fontWeight:
-                                  FontWeight.bold),
-                            )) ;
-                      },
-                      type: StepperType.vertical,
-                      physics: const ScrollPhysics(),
-                      onStepContinue: continued,
-                      currentStep: _currentStep,
-                      onStepTapped: (step) => tapped(step),
-                      steps: [
-                        Step(
-                            title: const Text('Information Personnelles'),
-                            isActive: _currentStep >=0,
-                            state: _currentStep >0? StepState.complete:StepState.indexed,
-                            content: Column(
-                              children: [
-                                TextFormField(
-                                  decoration:
-                                  const InputDecoration(hintText: 'Nom '),
-                                  controller: nameTextController,
-                                ),
-                                TextFormField(
-                                  decoration:
-                                  const InputDecoration(hintText: 'Prenom '),
-                                  controller: surnameTextController,
-                                ),
-                                TextFormField(
-                                  decoration:
-                                  const InputDecoration(hintText: 'Email '),
-                                  controller: emailTextController,
-                                ),
-                                IntlPhoneField(
-                                  controller: _phoneTextController,
-                                  showCountryFlag: false,
-                                  dropdownIconPosition: IconPosition.trailing,
-                                  decoration: const InputDecoration(
-                                    hintText: 'Telephone 1',
-                                  ),
-                                  onChanged: (phone) {
-                                    print(phone.completeNumber);
-                                  },
-                                  initialCountryCode: 'CM',
-                                  invalidNumberMessage: constantUtil.invalid_phone,
-                                ),
-                                IntlPhoneField(
-                                  controller: _phone2TextController,
-                                  showCountryFlag: false,
-                                  dropdownIconPosition: IconPosition.trailing,
-                                  decoration: const InputDecoration(
-                                    hintText: 'Telephone 2',
-                                  ),
-                                  onChanged: (phone) {
-                                    print(phone.completeNumber);
-                                  },
-                                  initialCountryCode: 'CM',
-                                  invalidNumberMessage: constantUtil.invalid_phone,
-                                ),
-                              ],
-                            )),
-                        Step(
-                            title: const Text('Authentification'),
-                            isActive: _currentStep >=0,
-                            state: _currentStep >1? StepState.complete:StepState.indexed,
-                            content: Column(
-                              children: [
-                                TextFormField(
-                                  decoration:
-                                  const InputDecoration(labelText: 'Telephone '),
-                                  initialValue: _phoneTextController.text,
-                                  enabled: false,
-                                ),
-                                TextFormField(
-                                  decoration:
-                                  const InputDecoration(hintText: 'Mot de passe '),
-                                  controller: passwordTextController,
-                                ),
-                                TextFormField(
-                                  decoration:
-                                  const InputDecoration(hintText: 'Confirmer le mot de passe'),
-                                  controller: confirmPasswordTextController,
-                                ),
-                              ],
-                            ))
-                      ]),
-               ):CircularProgressIndicator()
+                            type: StepperType.vertical,
+                            physics: const ScrollPhysics(),
+                            onStepContinue: continued,
+                            currentStep: _currentStep,
+                            onStepTapped: (step) => tapped(step),
+                            steps: [
+                              Step(
+                                  title: const Text('Information Personnelles'),
+                                  isActive: _currentStep >= 0,
+                                  state: _currentStep > 0
+                                      ? StepState.complete
+                                      : StepState.indexed,
+                                  content: Column(
+                                    children: [
+                                      TextFormField(
+                                        decoration:  InputDecoration(
+                                            hintText: 'Nom ',
+                                          errorText: isClicked?'veuillez remplir ce champs':null,
+                                          suffixIcon:isEmpty==false ?IconButton(onPressed:(){
+                                            print('veuillez remplir ce champs');
+                                              setState(() {
+                                                isClicked =true;
+                                              });
+                                          }, icon: const Icon(Icons.error,color: Colors.red,)):null
+                                        ),
+                                        controller: nameTextController,
+                                        inputFormatters: [
+                                          FilteringTextInputFormatter.allow(
+                                            RegExp(r"[a-zA-Z]+|\s"),
+                                          )
+                                        ],
+                                        validator: (value){
+                                          if(value!.isEmpty){
+                                            return'veuillez remplir ce champs';
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                      TextFormField(
+                                        decoration: const InputDecoration(
+                                            hintText: 'Prenom '),
+                                        controller: surnameTextController,
+                                        inputFormatters: [
+                                          FilteringTextInputFormatter.allow(
+                                            RegExp(r"[a-zA-Z]+|\s"),
+                                          )
+                                        ],
+                                        validator: (value){
+                                          if(value!.isEmpty){
+                                            return'veuillez remplir ce champs';
+                                          }else if( value.length<4){
+                                            return 'minimum 4 lettres svp!';
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                      TextFormField(
+                                        decoration: const InputDecoration(
+                                            hintText: 'Email '),
+                                        controller: emailTextController,
+                                        validator: (val){
+                                          if(!val!.isValidEmail){
+                                            return 'veuillez remplir ce champs';
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                      IntlPhoneField(
+                                        controller: _phoneTextController,
+                                        showCountryFlag: false,
+                                        dropdownIconPosition:
+                                            IconPosition.trailing,
+                                        decoration: const InputDecoration(
+                                          hintText: 'Telephone 1',
+                                        ),
+                                        onChanged: (phone) {
+                                          print(phone.completeNumber);
+                                          phoneNo=phone.number;
+                                          countryCode =phone.countryCode;
+                                        },
+                                        initialCountryCode: 'CM',
+                                        invalidNumberMessage:
+                                            constantUtil.invalid_phone,
+                                      ),
+                                      IntlPhoneField(
+                                        showCountryFlag: false,
+                                        autovalidateMode: AutovalidateMode.disabled,
+                                        dropdownIconPosition:
+                                            IconPosition.trailing,
+                                        decoration: const InputDecoration(
+                                          hintText: 'Telephone 2',
+                                        ),
+                                        onChanged: (phone) {
+                                          print(phone.completeNumber);
+                                        },
+                                        initialCountryCode: 'CM',
+                                        invalidNumberMessage:
+                                            constantUtil.invalid_phone,
+                                      ),
+                                    ],
+                                  )),
+                              Step(
+                                  title: const Text('Authentification'),
+                                  isActive: _currentStep >= 0,
+                                  state: _currentStep > 1
+                                      ? StepState.complete
+                                      : StepState.indexed,
+                                  content: Column(
+                                    children: [
+                                      TextFormField(
+                                        decoration: const InputDecoration(
+                                            labelText: 'Telephone '),
+                                        enabled: false,
+                                        controller: TextEditingController(text: _phoneTextController.text),
+                                      ),
+                                      TextFormField(
+                                        decoration: const InputDecoration(
+                                            hintText: 'Mot de passe '),
+                                        controller: passwordTextController,
+                                        validator: (val){
+                                          if(val!.isEmpty){
+                                            return "Veuillez remplir ce champ";
+                                          } else if(val.length<8){
+                                            return 'Le mot de passe doit contenir aumoins 8 caractères';
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                      TextFormField(
+                                        decoration: const InputDecoration(
+                                            hintText:
+                                                'Confirmer le mot de passe'),
+                                        controller:
+                                            confirmPasswordTextController,
+                                        validator: (val){
+                                          if(val!.isEmpty){
+                                            return "Veuillez remplir ce champ";
+                                          } else if(passwordTextController.text != confirmPasswordTextController.text){
+                                            return 'Contenu incorrect';
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                    ],
+                                  ))
+                            ]),
+                      )
+                    : const CircularProgressIndicator()
               ],
             ),
           ),
@@ -174,11 +297,13 @@ class _RegistrationPageState extends State<RegistrationPage> {
     setState(() => _currentStep = step);
   }
 
-  continued() async{
-    _currentStep < 3 ? setState(() => _currentStep += 1) : null;
+  continued() async {
+    if(_formKey.currentState!.validate()){
+      _currentStep < 3 ? setState(() => _currentStep += 1) : null;
+    }
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
     Map data = {
-      'nom':nameTextController.text,
+      'nom': nameTextController.text,
       'prenom': surnameTextController.text,
       'phone1': _phoneTextController.text,
       'phone2': _phone2TextController.text,
@@ -207,11 +332,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
       verificationCodeTextController.text = authCredential.smsCode!;
     });
     if (authCredential.smsCode != null) {
-      try{
+      try {
         UserCredential credential =
-        await user!.linkWithCredential(authCredential);
-      }on FirebaseAuthException catch(e){
-        if(e.code == 'provider-already-linked'){
+            await user!.linkWithCredential(authCredential);
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'provider-already-linked') {
           await _auth.signInWithCredential(authCredential);
         }
       }
@@ -244,11 +369,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
         context: context,
         builder: (BuildContext builderContext) {
           return AlertDialog(
-            title: Text("Error"),
+            title: const Text("Error"),
             content: Text(errorMessage),
             actions: [
               TextButton(
-                child: Text("Ok"),
+                child: const Text("Ok"),
                 onPressed: () async {
                   Navigator.of(builderContext).pop();
                 },
@@ -283,9 +408,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
                 ),
                 (errorMessage != ''
                     ? Text(
-                  errorMessage,
-                  style: const TextStyle(color: Colors.red),
-                )
+                        errorMessage,
+                        style: const TextStyle(color: Colors.red),
+                      )
                     : Container())
               ]),
             ),
@@ -294,9 +419,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
               TextButton(
                 child: const Text('Done'),
                 onPressed: () {
-
                   FirebaseAuth auth = FirebaseAuth.instance;
-                  User? user =_auth.currentUser;
+                  User? user = _auth.currentUser;
                   // auth.currentUser().then((user) {
                   //   if (user != null) {
                   //     Navigator.of(context).pop();
@@ -317,9 +441,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
         verificationId: verificationId,
         smsCode: smsOTP,
       );
-      final UserCredential userCredential = await _auth.signInWithCredential(credential);
-      User? user =userCredential.user;
-      final  currentUser = _auth.currentUser;
+      final UserCredential userCredential =
+          await _auth.signInWithCredential(credential);
+      User? user = userCredential.user;
+      final currentUser = _auth.currentUser;
       Navigator.of(context).pop();
       Navigator.of(context).pushReplacementNamed('/homepage');
     } catch (e) {
@@ -331,7 +456,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
     print(error);
     switch (error.code) {
       case 'ERROR_INVALID_VERIFICATION_CODE':
-        FocusScope.of(context).requestFocus(new FocusNode());
+        FocusScope.of(context).requestFocus(FocusNode());
         setState(() {
           errorMessage = 'Invalid Code';
         });
@@ -348,6 +473,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
         break;
     }
   }
+
   verifyPhone() async {
     final PhoneCodeSent smsOTPSent = (String verId, [int? forceCodeResend]) {
       verificationId = verId;
@@ -364,7 +490,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
             verificationId = verId;
           },
           codeSent:
-          smsOTPSent, // WHEN CODE SENT THEN WE OPEN DIALOG TO ENTER OTP.
+              smsOTPSent, // WHEN CODE SENT THEN WE OPEN DIALOG TO ENTER OTP.
           timeout: const Duration(seconds: 20),
           verificationCompleted: (AuthCredential phoneAuthCredential) {
             print(phoneAuthCredential);
@@ -377,48 +503,54 @@ class _RegistrationPageState extends State<RegistrationPage> {
     }
   }
 
-  Future<void> phoneSignIn1({required String phoneNumber,required BuildContext context}) async {
+  Future<void> phoneSignIn1(
+      {required String phoneNumber, required BuildContext context}) async {
     FirebaseAuth auth = FirebaseAuth.instance;
-     codeSent (String verId, [int? forceCodeResend]){
-      _verificationId =verId;
+    codeSent(String verId, [int? forceCodeResend]) {
+      _verificationId = verId;
       TextEditingController controller = TextEditingController();
-      showDialog(context: context,
-          builder: (BuildContext buildContext){
+      showDialog(
+          context: context,
+          builder: (BuildContext buildContext) {
             return AlertDialog(
               content: TextFormField(
                 controller: controller,
-                decoration: const InputDecoration(
-                    labelText: 'Verification code'
-                ),
-                onChanged: (value){
+                decoration:
+                    const InputDecoration(labelText: 'Verification code'),
+                onChanged: (value) {
                   smsOTP = value;
                 },
               ),
-              actions: [TextButton(
-                  onPressed: () async {
-                    try {
-                      final AuthCredential credential = PhoneAuthProvider.credential(
-                        verificationId: verificationId,
-                        smsCode: smsOTP,
-                      );
-                      final UserCredential userCredential = await _auth.signInWithCredential(credential);
-                      User? user =userCredential.user;
-                      final  currentUser = _auth.currentUser;
-                      print(user);
-                      Navigator.of(context).pop();
-                    } catch (e) {
-                      print(e);
-                    }
-                  },
-                  child: const Text('OK'))],
+              actions: [
+                TextButton(
+                    onPressed: () async {
+                      try {
+                        final AuthCredential credential =
+                            PhoneAuthProvider.credential(
+                          verificationId: verificationId,
+                          smsCode: smsOTP,
+                        );
+                        final UserCredential userCredential =
+                            await _auth.signInWithCredential(credential);
+                        User? user = userCredential.user;
+                        final currentUser = _auth.currentUser;
+                        print(user);
+                        Navigator.of(context).pop();
+                      } catch (e) {
+                        print(e);
+                      }
+                    },
+                    child: const Text('OK'))
+              ],
             );
-          }
-      );
-    };
-    try{
+          });
+    }
+
+    ;
+    try {
       await auth.verifyPhoneNumber(
-        phoneNumber: '+237 '+ phoneNumber,
-        verificationCompleted: (PhoneAuthCredential credential){
+        phoneNumber: '+237 ' + phoneNumber,
+        verificationCompleted: (PhoneAuthCredential credential) {
           print(credential);
         },
         timeout: const Duration(minutes: 1),
@@ -428,8 +560,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
               const SnackBar(
                 duration: Duration(milliseconds: 250),
                 backgroundColor: Colors.red,
-                content:
-                Text('The provided phone number is not valid.'),
+                content: Text('The provided phone number is not valid.'),
               ),
             );
             print('The provided phone number is not valid.');
@@ -440,10 +571,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
         codeSent: codeSent,
         codeAutoRetrievalTimeout: (String verificationId) {
           // Auto-resolution timed out...
-        },);
-    }catch(e){
+        },
+      );
+    } catch (e) {
       print(e);
-    };
+    }
+    ;
   }
 }
 
@@ -454,11 +587,35 @@ class VerificationCode extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Column(
-        children: [
-
-        ],
+        children: [],
       ),
     );
   }
 }
+extension ExString on String {
+  bool get isValidEmail {
+    final emailRegExp = RegExp(r"^[a-zA-Z0-9.]+@[a-zA-Z0-9]+\.[a-zA-Z]+");
+    return emailRegExp.hasMatch(this);
+  }
 
+  bool get isValidName{
+    final nameRegExp = RegExp(r"^\s*([A-Za-z]{1,}([\.,] |[-']| ))+[A-Za-z]+\.?\s*$");
+    return nameRegExp.hasMatch(this);
+  }
+
+  bool get isValidPassword{
+    final passwordRegExp =
+    RegExp(r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[!@#\><*~]).{8,}/pre>');
+    return passwordRegExp.hasMatch(this);
+  }
+
+  bool get isNotNull{
+    return this!=null;
+  }
+
+  bool get isValidPhone{
+    final phoneRegExp = RegExp(r"^\+?0[0-9]{10}$");
+    return phoneRegExp.hasMatch(this);
+  }
+
+}

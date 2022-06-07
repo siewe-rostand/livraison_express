@@ -14,12 +14,19 @@ class Options{
     OptionsConstant.price: options.price
   };
 
-  factory Options.fromJson(Map<String, dynamic> json) {
-    return Options(
-      id: json[OptionsConstant.id],
-      name: json[OptionsConstant.name],
-      price: json[OptionsConstant.price],
-      quantity: json[OptionsConstant.quantity],
-    );
+  Options.fromJson(Map<String, dynamic> json) {
+    id = json['id'];
+    name = json['libelle'];
+    price = json['prix'];
+    quantity = json['quantite'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['libelle'] = name;
+    data['prix'] = price;
+    data['quantite'] = quantity;
+    return data;
   }
 }
