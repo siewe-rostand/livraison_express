@@ -1,9 +1,6 @@
-import 'package:json_annotation/json_annotation.dart';
-import 'package:livraison_express/constant/some-constant.dart';
+
 
 import 'day.dart';
-import 'module_day.dart';
-part 'horaire.g.dart';
 
 class Horaires {
   List<Days>? items;
@@ -52,24 +49,4 @@ class Horaires {
     data['readme'] = readme;
     return data;
   }
-}
-
-@JsonSerializable(includeIfNull: true)
-class Horaire{
-  final List<ModuleDays>? items;
-  final ModuleDays? today;
-  final ModuleDays? tomorrow;
-  final int? dayOfWeek;
-  final int? tomorrowDayOfWeek;
-
-  Horaire({
-    this.items,
-    this.dayOfWeek,
-    this.today,
-    this.tomorrow,
-    this.tomorrowDayOfWeek
-});
-
-  factory Horaire.fromJson(Map<String,dynamic> json) =>_$HoraireFromJson(json);
-  Map<String, dynamic> toJson()=>_$HoraireToJson(this);
 }

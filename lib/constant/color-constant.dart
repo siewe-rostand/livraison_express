@@ -13,4 +13,6 @@ class ColorConstant{
     static const pharmacyGreen ='0XFF00A117';
     static const pharmacyGreenDark ='0XFF007100';
     static const grey80 ='0XFF37474F';
+    static const grey90 ='0XFF263238';
+    static const grey40 ='0XFF999999';
 }

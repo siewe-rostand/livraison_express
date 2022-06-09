@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:livraison_express/data/local_db/db-helper.dart';
 import 'package:livraison_express/service/course_service.dart';
 import 'package:livraison_express/service/fire-auth.dart';
 import 'package:livraison_express/views/home-page.dart';
@@ -10,7 +9,6 @@ import 'package:livraison_express/views/main/about.dart';
 import 'package:livraison_express/views/main/login.dart';
 import 'package:livraison_express/views/main/profil.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class MyHomeDrawer extends StatefulWidget {
   const MyHomeDrawer({Key? key}) : super(key: key);

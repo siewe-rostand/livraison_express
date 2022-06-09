@@ -36,24 +36,24 @@ class AppUser {
   });
 
   static Map<String, dynamic> toMap(AppUser user) => {
-    UserConstant.id: user.id,
-    UserConstant.username: user.username,
-    UserConstant.image: user.image,
-    UserConstant.firstname: user.firstname,
-    UserConstant.fullName: user.fullName,
-    UserConstant.lastname:user.lastname,
-    UserConstant.providerId:user.providerId,
-    UserConstant.providerName:user.providerName,
-    UserConstant.email:user.email,
-    UserConstant.telephone:user.telephone,
-    UserConstant.roles:user.roles,
-    UserConstant.token:user.token,
-    UserConstant.fcmToken:user.fcmToken,
-    UserConstant.uuid:user.uuid,
-    UserConstant.rememberToken:user.rememberToken
-  };
+        UserConstant.id: user.id,
+        UserConstant.username: user.username,
+        UserConstant.image: user.image,
+        UserConstant.firstname: user.firstname,
+        UserConstant.fullName: user.fullName,
+        UserConstant.lastname: user.lastname,
+        UserConstant.providerId: user.providerId,
+        UserConstant.providerName: user.providerName,
+        UserConstant.email: user.email,
+        UserConstant.telephone: user.telephone,
+        UserConstant.roles: user.roles,
+        UserConstant.token: user.token,
+        UserConstant.fcmToken: user.fcmToken,
+        UserConstant.uuid: user.uuid,
+        UserConstant.rememberToken: user.rememberToken
+      };
 
-  factory AppUser.fromJson(Map<String,dynamic>json){
+  factory AppUser.fromJson(Map<String, dynamic> json) {
     return AppUser(
       id: json[UserConstant.id],
       providerId: json[UserConstant.providerId],
@@ -72,9 +72,7 @@ class AppUser {
       uuid: json[UserConstant.uuid],
     );
   }
-
 }
-
 
 class AppUser1 {
   int? id;
@@ -101,7 +99,6 @@ class AppUser1 {
   dynamic? lastLoginIp;
   String? onesignalEmailAuthHash;
   dynamic? agenda;
-  dynamic? nbreCoursesDistribuable;
   dynamic? cautionIncrementationCoursesDistribuable;
   List<dynamic>? magasinsIds;
   String? emailVerifiedAt;
@@ -114,7 +111,42 @@ class AppUser1 {
   String? updatedAt;
   dynamic? deletedAt;
 
-  AppUser1({this.id, this.uid, this.uuid, this.providerId, this.providerName, this.email, this.emailMasked, this.name, this.fullname, this.firstname, this.lastname, this.telephone, this.telephoneMasked, this.telephoneAlt, this.quote, this.qualite, this.ville, this.description, this.modules, this.adresse, this.lastLoginAt, this.lastLoginIp, this.onesignalEmailAuthHash, this.agenda, this.nbreCoursesDistribuable, this.cautionIncrementationCoursesDistribuable, this.magasinsIds, this.emailVerifiedAt, this.phoneVerifiedAt, this.roles, this.permissions, this.city, this.zones, this.createdAt, this.updatedAt, this.deletedAt});
+  AppUser1(
+      {this.id,
+      this.uid,
+      this.uuid,
+      this.providerId,
+      this.providerName,
+      this.email,
+      this.emailMasked,
+      this.name,
+      this.fullname,
+      this.firstname,
+      this.lastname,
+      this.telephone,
+      this.telephoneMasked,
+      this.telephoneAlt,
+      this.quote,
+      this.qualite,
+      this.ville,
+      this.description,
+      this.modules,
+      this.adresse,
+      this.lastLoginAt,
+      this.lastLoginIp,
+      this.onesignalEmailAuthHash,
+      this.agenda,
+      this.cautionIncrementationCoursesDistribuable,
+      this.magasinsIds,
+      this.emailVerifiedAt,
+      this.phoneVerifiedAt,
+      this.roles,
+      this.permissions,
+      this.city,
+      this.zones,
+      this.createdAt,
+      this.updatedAt,
+      this.deletedAt});
 
   AppUser1.fromJson(Map<String, dynamic> json) {
     id = json["id"];
@@ -141,12 +173,12 @@ class AppUser1 {
     lastLoginIp = json["last_login_ip"];
     onesignalEmailAuthHash = json["onesignal_email_auth_hash"];
     agenda = json["agenda"];
-    nbreCoursesDistribuable = json["nbre_courses_distribuable"];
-    cautionIncrementationCoursesDistribuable = json["caution_incrementation_courses_distribuable"];
+    cautionIncrementationCoursesDistribuable =
+        json["caution_incrementation_courses_distribuable"];
     magasinsIds = json["magasins_ids"] ?? [];
     emailVerifiedAt = json["email_verified_at"];
     phoneVerifiedAt = json["phone_verified_at"];
-    roles = json["roles"]==null ? null : List<String>.from(json["roles"]);
+    roles = json["roles"] == null ? null : List<String>.from(json["roles"]);
     permissions = json["permissions"] ?? [];
     city = json["city"] ?? [];
     zones = json["zones"] ?? [];
@@ -181,20 +213,15 @@ class AppUser1 {
     data["last_login_ip"] = lastLoginIp;
     data["onesignal_email_auth_hash"] = onesignalEmailAuthHash;
     data["agenda"] = agenda;
-    data["nbre_courses_distribuable"] = nbreCoursesDistribuable;
-    data["caution_incrementation_courses_distribuable"] = cautionIncrementationCoursesDistribuable;
-    if(magasinsIds != null)
-      data["magasins_ids"] = magasinsIds;
+    data["caution_incrementation_courses_distribuable"] =
+        cautionIncrementationCoursesDistribuable;
+    if (magasinsIds != null) data["magasins_ids"] = magasinsIds;
     data["email_verified_at"] = emailVerifiedAt;
     data["phone_verified_at"] = phoneVerifiedAt;
-    if(roles != null)
-      data["roles"] = roles;
-    if(permissions != null)
-      data["permissions"] = permissions;
-    if(city != null)
-      data["city"] = city;
-    if(zones != null)
-      data["zones"] = zones;
+    if (roles != null) data["roles"] = roles;
+    if (permissions != null) data["permissions"] = permissions;
+    if (city != null) data["city"] = city;
+    if (zones != null) data["zones"] = zones;
     data["created_at"] = createdAt;
     data["updated_at"] = updatedAt;
     data["deleted_at"] = deletedAt;

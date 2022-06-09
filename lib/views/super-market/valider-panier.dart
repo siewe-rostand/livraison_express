@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'cart-provider.dart';
 
-enum Contact { moi, autre }
+enum contact { moi, autre }
 enum DeliveryType { express, heure_livraison }
 
 class ValiderPanier extends StatefulWidget {
@@ -15,7 +15,7 @@ class ValiderPanier extends StatefulWidget {
 }
 
 class _ValiderPanierState extends State<ValiderPanier> {
-  Contact? _contact = Contact.moi;
+  contact? _contact = contact.moi;
   DeliveryType? _deliveryType;
   int _currentStep = 0;
   StepperType stepperType = StepperType.vertical;
@@ -545,22 +545,22 @@ class _ValiderPanierState extends State<ValiderPanier> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Radio<Contact>(
+                            Radio<contact>(
                               activeColor: const Color(0xff00a117),
-                              value: Contact.moi,
+                              value: contact.moi,
                               groupValue: _contact,
-                              onChanged: (Contact? value) {
+                              onChanged: (contact? value) {
                                 setState(() {
                                   _contact = value;
                                 });
                               },
                             ),
                             const Text('Moi'),
-                            Radio<Contact>(
+                            Radio<contact>(
                               activeColor: const Color(0xff00a117),
-                              value: Contact.autre,
+                              value: contact.autre,
                               groupValue: _contact,
-                              onChanged: (Contact? value) {
+                              onChanged: (contact? value) {
                                 setState(() {
                                   _contact = value;
                                 });

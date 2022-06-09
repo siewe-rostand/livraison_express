@@ -6,11 +6,14 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
+import 'package:livraison_express/constant/all-constant.dart';
 import 'package:livraison_express/model/address-favorite.dart';
 import 'package:livraison_express/model/address.dart';
 import 'package:livraison_express/model/auto_gene.dart';
 import 'package:livraison_express/model/client.dart';
 import 'package:livraison_express/model/day.dart';
+import 'package:livraison_express/model/distance_matrix.dart';
+import 'package:livraison_express/model/infos.dart';
 import 'package:livraison_express/model/payment.dart';
 import 'package:livraison_express/service/course_service.dart';
 import 'package:livraison_express/service/favorite_address_api.dart';
@@ -19,9 +22,11 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../model/day_item.dart';
+import '../../model/order.dart';
 import '../../model/quartier.dart';
+import '../super-market/cart-provider.dart';
 
-enum Contact { moi, autre }
+enum contact { moi, autre }
 enum DeliveryType { express, heure_livraison }
 
 class CommandeCoursier extends StatefulWidget {
@@ -57,6 +62,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
   DeliveryType? _deliveryType;
   StepperType stepperType = StepperType.vertical;
   bool isChecked = false;
+  bool isChecked1 = false;
   bool isToday = false;
   List addresses = [];
   String newCity = '';
@@ -87,7 +93,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
   double? placeLonDepart;
   String? location;
   String quartierDepart = '';
-  Contact? _contact = Contact.autre;
+  contact? _contact = contact.autre;
   bool isMeDest = true;
 
 //step 2 variables
@@ -113,7 +119,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
   double? placeLonDestination;
   String? locationDestination;
   String quartierDestination = '';
-  Contact? _contactDest = Contact.autre;
+  contact? _contactDest = contact.autre;
   bool isLoading = false;
   bool isMeDepart = true;
 
@@ -128,15 +134,27 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
   late String selectTodayTime;
   Duration step = const Duration(minutes: 10);
   String chooseTime = '';
-  bool? initialDeliveryPrice;
-  bool? deliveryPrice;
+  String currentTime = '';
+  String currentDate = '';
+  int? initialDeliveryPrice;
+  int? deliveryPrice;
   String? durationText;
   String? distanceText;
   bool isTodayOpened = false;
   Shops shops = Shops();
+  int delay=0;
+  String deliveryTime='';
 
   //step4 variables
   Payment payment = Payment();
+  String payMode='';
+  Order order =Order();
+  Info info =Info();
+  Client client = Client();
+  String codePromo ='';
+  int duration = 0;
+  int distance = 0;
+  int? payOption;
 
   @override
   void initState() {
@@ -559,11 +577,8 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
     });
   }
 
-  setSender() async {
-    SharedPreferences sharedPreferences =
-    await SharedPreferences.getInstance();
-    var id= sharedPreferences.getInt('city_id');
-    var villeId =sharedPreferences.getInt('cityId');
+  setSender(){
+    var providerName="livraison-express";
     sender.fullName = nomDepartTextController.text;
     sender.telephone = phoneDepartTextController.text;
     sender.telephoneAlt = phone2DepartTextController.text;
@@ -575,18 +590,18 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
     senderAddress.longitude = placeLonDepart.toString();
     senderAddress.latLng =
         senderAddress.latitude! + ',' + senderAddress.longitude!;
-    senderAddress.providerName = 'livraison-express';
-    senderAddress.id = null;
-    senderAddress.providerId = null;
     if(selectedAddressDepart.toString().isNotEmpty){
       senderAddress.id=selectedAddressDepart.id;
       senderAddress.providerId=selectedAddressDepart.id;
       senderAddress.providerName=selectedAddressDepart.providerName;
     }
+    senderAddress.providerName="livraison-express";
+    debugPrint("${sender.name} ${senderAddress.providerName}");
       List<Address> addresses = [];
       addresses.add(senderAddress);
       sender.addresses = addresses;
-
+      print('///${sender.toJson()}');
+      print('///address${sender.addresses![0].toJson()}');
     setState(() {
       _currentStep++;
     });
@@ -597,6 +612,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
     receiver.telephone = phoneDestinationTextController.text;
     receiver.telephoneAlt = phoneDestinationTextController.text;
     receiver.email = emailDestinationTextController.text;
+    receiver.providerName=
     receiverAddress.nom = locationDestination;
     receiverAddress.quarter = quartierDestination;
     receiverAddress.description = descDestinationTextController.text;
@@ -606,8 +622,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
     receiverAddress.latLng =
         receiverAddress.latitude! + ',' + receiverAddress.longitude!;
     // String? latLong = receiver.addresses![0].latLng;
-    print('receiverAddress ${receiverAddress.latLng}');
-    receiverAddress.providerName = 'livraison-express';
+    receiverAddress.providerName = "livraison-express";
     receiverAddress.id = null;
     receiverAddress.providerId = null;
 
@@ -624,6 +639,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
     List<Address> addresses = [];
     addresses.add(receiverAddress);
     receiver.addresses = addresses;
+    print('///${receiver.toJson()}');
     String? origin = sender.addresses![0].latLng;
     String? destination = receiver.addresses![0].latLng;
     debugPrint("distances $origin // $destination");
@@ -632,18 +648,105 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
         .then((response) {
       var body = json.decode(response.body);
       var message = body['message'];
+      var data = body['data'];
+      DistanceMatrix distanceMatrix =DistanceMatrix.fromJson(data);
       setState(() {
+        duration =distanceMatrix.duration!;
+        distanceText =distanceMatrix.distanceText;
+        distance = distanceMatrix.distance!;
+        durationText = distanceMatrix.durationText;
+        deliveryPrice =distanceMatrix.prix;
+        initialDeliveryPrice=distanceMatrix.prix;
         isLoading = true;
+        _currentStep++;
       });
+
+      print(deliveryPrice);
       Fluttertoast.showToast(msg: message, backgroundColor: Colors.green);
     }).catchError((onError) {
       print('eroo/');
     });
-    setState(() {
-      _currentStep++;
+  }
+  setPaymentMode(){
+    if(payMode.isNotEmpty){
+      if(payMode == 'cash'){
+        payment.message=null;
+        payment.paymentMode=payMode;
+        payment.totalAmount=deliveryPrice;
+        payment.status =null;
+        payment.paymentIntent=null;
+      }else if(payMode == 'card'){
+
+      }
+    }else{
+      Fluttertoast.showToast(msg: "Veuillez choisir un moyen de paiement");
+    }
+  }
+  confirmOrder()async {
+    SharedPreferences sharedPreferences =
+    await SharedPreferences.getInstance();
+    String? userString =
+    sharedPreferences.getString("userData");
+    final extractedUserData =
+    json.decode(userString!);
+    var email = extractedUserData['email'];
+    var fullName = extractedUserData['fullname'];
+    var telephone = extractedUserData['telephone'];
+    var userId= extractedUserData['provider_id'];
+    var providerName= extractedUserData['provider_name'];
+    order.module ="delivery";
+    order.magasinId=widget.shops.id;
+    order.description=descColisTextController.text;
+    order.montantLivraison=deliveryPrice;
+    // order.articles=[];
+    order.promoCode=codePromo;
+    order.commentaire="";
+    info.origin="Livraison express";
+    info.platform="Mobile";
+    info.dateLivraison=currentDate + " "+ currentTime;
+    info.dateChargement = currentDate;
+    info.heureLivraison = currentTime;
+    info.jourLivraison=currentDate;
+    info.villeLivraison=widget.city;
+    info.duration = duration;
+    info.durationText=durationText;
+    info.distanceText=distanceText;
+    info.statusHuman='';
+    info.type='';
+    client.id=userId;
+    client.providerName=providerName;
+    client.fullName=fullName;
+    client.telephone=telephone;
+    client.email=email;
+    setPaymentMode();
+    Map data = {
+      "infos":info,
+      "client":client,
+      "receiver":receiver,
+      "sender":sender,
+      "orders":order,
+      "paiement":payment,
+    };
+    // debugPrint('infos ${info.toJson()}');
+    // debugPrint('client ${client.toJson()}');
+    // debugPrint('receiver ${receiver.toJson()}');
+    // debugPrint('sender ${sender.toJson()}');
+    // debugPrint('orders ${order.toJson()}');
+    debugPrint('paiement ${data}');
+    await CourseApi.commnander( data: data).then((response) {
+      var body = json.decode(response.body);
+      var res = body['data'];
+      var infos = body['infos'];
+      debugPrint('data $res /// info $infos');
+      // AppUser appUsers=AppUser.fromJson(res);
+    }).catchError((onError){
+      print(onError);
     });
   }
-
+  String swapDate(String date) {
+    List<String> dateElements = date.split("-");
+    return dateElements[2] + "-" + dateElements[1] + "-" + dateElements[0];
+  }
   bool isFavoriteAddress(AddressFavorite addressFavorite, Address address) {
     if (addressFavorite.toString().isEmpty) {
       return false;
@@ -664,6 +767,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
   @override
   Widget build(BuildContext context) {
     final quarter = Provider.of<QuarterProvider>(context);
+    final cartProvider = Provider.of<CartProvider>(context);
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
@@ -691,7 +795,9 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                         ? SizedBox(
                             width: MediaQuery.of(context).size.width * 0.7,
                             child: ElevatedButton(
-                                onPressed: () {},
+                                onPressed: () {
+                                  confirmOrder();
+                                },
                                 child: const Text(
                                   "COMMANDER",
                                   style: TextStyle(fontWeight: FontWeight.bold),
@@ -731,10 +837,10 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Radio<Contact>(
-                                  value: Contact.moi,
+                                Radio<contact>(
+                                  value: contact.moi,
                                   groupValue: _contact,
-                                  onChanged: (Contact? value) async {
+                                  onChanged: (contact? value) async {
                                     SharedPreferences sharedPreferences =
                                         await SharedPreferences.getInstance();
                                     String? userString =
@@ -760,14 +866,15 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                       // print(sender.id);
                                       sender.providerName =
                                           extractedUserData['provider_name'];
+                                      senderAddress.providerName = "livraison-express";
                                     });
                                   },
                                 ),
                                 const Text('Moi'),
-                                Radio<Contact>(
-                                  value: Contact.autre,
+                                Radio<contact>(
+                                  value: contact.autre,
                                   groupValue: _contact,
-                                  onChanged: (Contact? value) {
+                                  onChanged: (contact? value) {
                                     fullName = '';
                                     email = '';
                                     telephone1 = '';
@@ -1081,10 +1188,10 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Radio<Contact>(
-                                  value: Contact.moi,
+                                Radio<contact>(
+                                  value: contact.moi,
                                   groupValue: _contactDest,
-                                  onChanged: (Contact? value) async {
+                                  onChanged: (contact? value) async {
                                     SharedPreferences sharedPreferences =
                                         await SharedPreferences.getInstance();
                                     String? userString =
@@ -1108,18 +1215,18 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                           telephone;
                                       emailDestinationTextController.text =
                                           email;
-                                      sender.id = id.toString();
+                                      receiver.id = id.toString();
                                       // print(sender.id);
-                                      sender.providerName =
+                                      receiver.providerName =
                                           extractedUserData['provider_name'];
                                     });
                                   },
                                 ),
                                 const Text('Moi'),
-                                Radio<Contact>(
-                                  value: Contact.autre,
+                                Radio<contact>(
+                                  value: contact.autre,
                                   groupValue: _contactDest,
-                                  onChanged: (Contact? value) {
+                                  onChanged: (contact? value) {
                                     fullName = '';
                                     email = '';
                                     telephone1 = '';
@@ -1421,7 +1528,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                           : StepState.indexed,
                     ),
                     Step(
-                      title: const Text('Heure de livraison'),
+                      title: const Text('Informations de livraison'),
                       content: Form(
                         key: _formKeys[2],
                         child: Column(
@@ -1626,22 +1733,166 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                     Step(
                       title: const Text('Confirmation'),
                       content: Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Text("contact de l'expediteur"),
-                          TextFormField(
-                            decoration: const InputDecoration(
-                                labelText: 'Nom et prenom *'),
+                          Container(
+                            margin:const EdgeInsets.only(bottom: 5),
+                            child:  Text("Résumé",style: TextStyle(color: Color(int.parse(ColorConstant.grey40))),),
+                            alignment: Alignment.centerLeft,
+                            decoration: BoxDecoration(
+                                border: Border(
+                                    bottom: BorderSide(color: Color(int.parse(ColorConstant.grey40)))
+                                )
+                            ),
                           ),
-                          TextFormField(
-                            decoration:
-                                const InputDecoration(labelText: 'Password'),
+                          Container(
+                            margin: const EdgeInsets.only(bottom: 4),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('Distance :  ',style: TextStyle(color: Color(int.parse(ColorConstant.grey90))),),
+                                Text(distance.toString() + ' km',style: TextStyle(color: Color(int.parse(ColorConstant.grey90))),)
+                              ],
+                            ),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children:  [
+                              Text('Prix de livraison : ',style: TextStyle(color: Color(int.parse(ColorConstant.grey90))),),
+                              Text(deliveryPrice.toString() + ' FCFA',style: TextStyle(color: Color(int.parse(ColorConstant.grey90))),)
+                            ],
+                          ),
+                          Container(
+                              alignment: Alignment.centerLeft,
+                              margin: const EdgeInsets.only(top: 5,bottom: 5),
+                              child:  Text("Promotion",style: TextStyle(color: Color(int.parse(ColorConstant.grey40))),),
+                            decoration: BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(color: Color(int.parse(ColorConstant.grey40)))
+                              )
+                            ),
+                          ),
+
+                          GestureDetector(
+                            onTap: () {
+                              showDialog<void>(
+                                  context: context,
+                                  builder: (context) {
+                                    return Center(
+                                      child: AlertDialog(
+                                        content: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            TextFormField(
+                                              decoration: const InputDecoration(
+                                                  labelText: 'Code Promo'),
+                                            ),
+                                            Row(
+                                              mainAxisAlignment:
+                                              MainAxisAlignment.end,
+                                              children: [
+                                                ElevatedButton(
+                                                    style: ButtonStyle(
+                                                        backgroundColor:
+                                                        MaterialStateProperty
+                                                            .all(Colors
+                                                            .white)),
+                                                    onPressed: () {
+                                                      Navigator.of(context).pop();
+                                                    },
+                                                    child: const Text(
+                                                      'Annuler',
+                                                      style: TextStyle(
+                                                          fontWeight:
+                                                          FontWeight.bold,
+                                                          color: Colors.black87),
+                                                    )),
+                                                const Spacer(
+                                                  flex: 2,
+                                                ),
+                                                ElevatedButton(
+                                                    style: ButtonStyle(
+                                                        backgroundColor:
+                                                        MaterialStateProperty
+                                                            .all(Colors
+                                                            .white)),
+                                                    onPressed: () {
+                                                      Navigator.of(context).pop();
+                                                    },
+                                                    child: const Text(
+                                                      'Valider',
+                                                      style: TextStyle(
+                                                          fontWeight:
+                                                          FontWeight.bold,
+                                                          color: Colors.black38),
+                                                    ))
+                                              ],
+                                            )
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  });
+                            },
+                            child: Row(
+                              children:  [
+                                Container(
+                                  margin:const EdgeInsets.only(right: 3),
+                                    child: SvgPicture.asset('img/icon/svg/ic_link_black.svg',color:Color(int.parse(ColorConstant.grey40)) ,)),
+                                 Text('Ajouter un code promo',style: TextStyle(color: Color(int.parse(ColorConstant.colorPrimary))),),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            alignment: Alignment.centerLeft,
+                            margin: const EdgeInsets.only(top: 5,bottom: 5),
+                            child:  Text("Mode de paiement",style: TextStyle(color: Color(int.parse(ColorConstant.grey40))),),
+                            decoration: BoxDecoration(
+                                border: Border(
+                                    bottom: BorderSide(color: Color(int.parse(ColorConstant.grey40)))
+                                )
+                            ),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Radio(
+                                  value: 0,
+                                  groupValue: payOption,
+                                  onChanged: (int? value) {
+                                    setState(() {
+                                      payOption =value;
+                                      payMode = 'cash';
+                                    });
+                                  }
+                              ),
+                              const Text('Paiement à la livraison'),
+                              SvgPicture.asset('img/icon/svg/ic_link_black.svg',color:Color(int.parse(ColorConstant.grey40)) ,)
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Radio(
+                                value: 1,
+                                groupValue: payOption,
+                                onChanged: (int? value) {
+                                  setState(() {
+                                    payOption =value;
+                                    payMode = 'card';
+                                  });
+                                }
+                              ),
+                              Text('Payer par carte bancaire',style: TextStyle(color: Color(int.parse(ColorConstant.grey90))),),
+                              SvgPicture.asset('img/icon/svg/ic_credit_card_black.svg',)
+                            ],
                           ),
                         ],
                       ),
                       isActive: _currentStep >= 0,
-                      state: _currentStep > 3
+                      state: _currentStep >= 3
                           ? StepState.complete
-                          : StepState.indexed,
+                          : StepState.disabled,
                     ),
                   ],
                 )
@@ -1671,6 +1922,14 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
           break;
         case 1:
           setReceiver();
+          break;
+        case 2:
+          setState(() {
+            dateFormat=DateFormat.Hms();
+            currentTime=dateFormat.format(now);
+            currentDate =DateFormat("yyyy-MM-dd").format(now);
+            _currentStep++;
+          });
           break;
       }
     }

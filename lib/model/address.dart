@@ -1,7 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:livraison_express/constant/some-constant.dart';
 
-part 'address.g.dart';
 
 class Address{
    int? id;
@@ -59,65 +57,19 @@ class Address{
 
    Map<String, dynamic> toJson() {
      final Map<String, dynamic> data = <String, dynamic>{};
-     data["id"] = this.id;
-     data["ville_id"] = this.villeId;
-     data["latitude"] = this.latitude;
-     data["longitude"] = this.longitude;
-     data["nom"] = this.nom;
-     data["description"] = this.description;
-     data["quartier"] = this.quarter;
-     data["est_favorite"] = this.isFavorite;
-     data["provider_id"] = this.providerId;
-     data["provider_name"] = this.providerName;
-     data["lat_lng"] = this.latLng;
+     data["id"] = id;
+     data["ville_id"] = villeId;
+     data["latitude"] = latitude;
+     data["longitude"] = longitude;
+     data["nom"] = nom;
+     data["description"] = description;
+     data["quartier"] = quarter;
+     data["est_favorite"] = isFavorite;
+     data["provider_id"] = providerId;
+     data["provider_name"] = providerName;
+     data["lat_lng"] = latLng;
      return data;
    }
-}
-@JsonSerializable(includeIfNull: false)
-class Addresses{
-  final int? id;
-  @JsonKey(name:MagasinConstant.ville_id)
-  final int? villeId;
-  final String? titre;
-  final String? quarter;
-  final String? description;
-  final String? nom;
-  final String? address;
-  final String? latitude;
-  final String? longitude;
-  @JsonKey(name: AddressConstant.longitudeLatitude)
-  final String? latLng;
-  final String? ville;
-  final String? pays;
-  @JsonKey(ignore: true)
-  final String? providerId;
-  @JsonKey(ignore: true)
-  final String? providerName;
-  final String? creationDate;
-  final String? modificationDate;
-  final bool? isFavorite;
-
-  Addresses({
-    this.id,this.villeId,
-    this.providerName,
-    this.longitude,
-    this.latitude,
-    this.description,
-    this.providerId,
-    this.quarter,
-    this.address,
-    this.creationDate,
-    this.isFavorite,
-    this.latLng,
-    this.modificationDate,
-    this.nom,
-    this.pays,
-    this.titre,
-    this.ville
-  });
-
-  factory Addresses.fromJson(Map<String,dynamic> json) =>_$AddressesFromJson(json);
-  Map<String, dynamic> toJson()=>_$AddressesToJson(this);
 }
 
 class Adresse {
@@ -175,29 +127,29 @@ class Adresse {
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
-    data["id"] = this.id;
-    data["client_id"] = this.clientId;
-    data["ville_id"] = this.villeId;
-    data["creator_id"] = this.creatorId;
-    data["updater_id"] = this.updaterId;
-    data["latitude"] = this.latitude;
-    data["longitude"] = this.longitude;
-    data["nom"] = this.nom;
-    data["surnom"] = this.surnom;
-    data["description"] = this.description;
-    data["photo_id"] = this.photoId;
-    data["photo_url"] = this.photoUrl;
-    data["quartier"] = this.quartier;
-    data["quartier_id"] = this.quartierId;
-    data["est_favorite"] = this.estFavorite;
-    data["created_at"] = this.createdAt;
-    data["updated_at"] = this.updatedAt;
-    data["deleted_at"] = this.deletedAt;
-    data["provider_id"] = this.providerId;
-    data["provider_name"] = this.providerName;
-    data["map_static_url"] = this.mapStaticUrl;
-    data["update_allowed"] = this.updateAllowed;
-    data["lat_lng"] = this.latLng;
+    data["id"] = id;
+    data["client_id"] = clientId;
+    data["ville_id"] = villeId;
+    data["creator_id"] = creatorId;
+    data["updater_id"] = updaterId;
+    data["latitude"] = latitude;
+    data["longitude"] = longitude;
+    data["nom"] = nom;
+    data["surnom"] = surnom;
+    data["description"] = description;
+    data["photo_id"] = photoId;
+    data["photo_url"] = photoUrl;
+    data["quartier"] = quartier;
+    data["quartier_id"] = quartierId;
+    data["est_favorite"] = estFavorite;
+    data["created_at"] = createdAt;
+    data["updated_at"] = updatedAt;
+    data["deleted_at"] = deletedAt;
+    data["provider_id"] = providerId;
+    data["provider_name"] = providerName;
+    data["map_static_url"] = mapStaticUrl;
+    data["update_allowed"] = updateAllowed;
+    data["lat_lng"] = latLng;
     return data;
   }
 }

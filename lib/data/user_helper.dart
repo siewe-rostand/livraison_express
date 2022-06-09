@@ -11,10 +11,10 @@ class UserHelper{
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
     String? userString =sharedPreferences.getString("userData");
     final extractedUserData =json.decode(userString!);
-    if(currentUser != null){
+    if(currentUser.toString().isNotEmpty){
       appUser1 =UserHelper.currentUser;
     }else{
-      if(userString != null){
+      if(userString.isNotEmpty){
         appUser1 =extractedUserData;
         currentUser =appUser1;
       }

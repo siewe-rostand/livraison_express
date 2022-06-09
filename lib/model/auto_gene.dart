@@ -128,7 +128,6 @@ class Shops {
   int? moduleId;
   String? nom;
   String? slug;
-  Null? nbreCoursesDistribuable;
   Null? cautionIncrementationCoursesDistribuable;
   int? displayRank;
   String? description;
@@ -164,7 +163,6 @@ class Shops {
         this.moduleId,
         this.nom,
         this.slug,
-        this.nbreCoursesDistribuable,
         this.cautionIncrementationCoursesDistribuable,
         this.displayRank,
         this.description,
@@ -200,7 +198,6 @@ class Shops {
     moduleId = json['module_id'];
     nom = json['nom'];
     slug = json['slug'];
-    nbreCoursesDistribuable = json['nbre_courses_distribuable'];
     cautionIncrementationCoursesDistribuable =
     json['caution_incrementation_courses_distribuable'];
     displayRank = json['display_rank'];
@@ -237,49 +234,48 @@ class Shops {
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
-    data['id'] = this.id;
-    data['creator_id'] = this.creatorId;
-    data['updater_id'] = this.updaterId;
-    data['etablissement_id'] = this.etablissementId;
-    data['partenaire_id'] = this.partenaireId;
-    data['module_id'] = this.moduleId;
-    data['nom'] = this.nom;
-    data['slug'] = this.slug;
-    data['nbre_courses_distribuable'] = this.nbreCoursesDistribuable;
+    data['id'] = id;
+    data['creator_id'] = creatorId;
+    data['updater_id'] = updaterId;
+    data['etablissement_id'] = etablissementId;
+    data['partenaire_id'] = partenaireId;
+    data['module_id'] = moduleId;
+    data['nom'] = nom;
+    data['slug'] = slug;
     data['caution_incrementation_courses_distribuable'] =
-        this.cautionIncrementationCoursesDistribuable;
-    data['display_rank'] = this.displayRank;
-    data['description'] = this.description;
-    data['contact_id'] = this.contactId;
-    data['ville_id'] = this.villeId;
-    data['adresse_id'] = this.adresseId;
-    data['image'] = this.image;
-    data['is_master'] = this.isMaster;
-    if (this.horaires != null) {
-      data['horaires'] = this.horaires!.toJson();
+        cautionIncrementationCoursesDistribuable;
+    data['display_rank'] = displayRank;
+    data['description'] = description;
+    data['contact_id'] = contactId;
+    data['ville_id'] = villeId;
+    data['adresse_id'] = adresseId;
+    data['image'] = image;
+    data['is_master'] = isMaster;
+    if (horaires != null) {
+      data['horaires'] = horaires!.toJson();
     }
-    data['tags'] = this.tags;
-    data['is_active'] = this.isActive;
-    data['is_available'] = this.isAvailable;
-    data['base_delivery_meters'] = this.baseDeliveryMeters;
-    data['base_delivery_amount'] = this.baseDeliveryAmount;
+    data['tags'] = tags;
+    data['is_active'] = isActive;
+    data['is_available'] = isAvailable;
+    data['base_delivery_meters'] = baseDeliveryMeters;
+    data['base_delivery_amount'] = baseDeliveryAmount;
     data['base_delivery_meters_as_step_unit'] =
-        this.baseDeliveryMetersAsStepUnit;
-    data['base_delivery_amount_per_step'] = this.baseDeliveryAmountPerStep;
-    data['free_shipping_cart_amount'] = this.freeShippingCartAmount;
-    data['shipping_preparation_time'] = this.shippingPreparationTime;
+        baseDeliveryMetersAsStepUnit;
+    data['base_delivery_amount_per_step'] = baseDeliveryAmountPerStep;
+    data['free_shipping_cart_amount'] = freeShippingCartAmount;
+    data['shipping_preparation_time'] = shippingPreparationTime;
     data['shipping_duration_max_accept_minutes'] =
-        this.shippingDurationMaxAcceptMinutes;
+        shippingDurationMaxAcceptMinutes;
     data['shipping_distance_max_accept_meters'] =
-        this.shippingDistanceMaxAcceptMeters;
-    data['created_at'] = this.createdAt;
-    data['updated_at'] = this.updatedAt;
-    data['deleted_at'] = this.deletedAt;
-    if (this.adresse != null) {
-      data['adresse'] = this.adresse!.toJson();
+        shippingDistanceMaxAcceptMeters;
+    data['created_at'] = createdAt;
+    data['updated_at'] = updatedAt;
+    data['deleted_at'] = deletedAt;
+    if (adresse != null) {
+      data['adresse'] = adresse!.toJson();
     }
-    if (this.contact != null) {
-      data['contact'] = this.contact!.toJson();
+    if (contact != null) {
+      data['contact'] = contact!.toJson();
     }
     return data;
   }
@@ -415,7 +411,6 @@ class Contact {
   String? modules;
   String? token;
   Null? fcmToken;
-  Null? nbreCoursesDistribuable;
   Null? cautionIncrementationCoursesDistribuable;
   int? statut;
   bool? isGuest;
@@ -455,7 +450,6 @@ class Contact {
         this.modules,
         this.token,
         this.fcmToken,
-        this.nbreCoursesDistribuable,
         this.cautionIncrementationCoursesDistribuable,
         this.statut,
         this.isGuest,
@@ -495,7 +489,6 @@ class Contact {
     modules = json['modules'];
     token = json['token'];
     fcmToken = json['fcm_token'];
-    nbreCoursesDistribuable = json['nbre_courses_distribuable'];
     cautionIncrementationCoursesDistribuable =
     json['caution_incrementation_courses_distribuable'];
     statut = json['statut'];
@@ -538,7 +531,6 @@ class Contact {
     data['modules'] = modules;
     data['token'] = token;
     data['fcm_token'] = fcmToken;
-    data['nbre_courses_distribuable'] = nbreCoursesDistribuable;
     data['caution_incrementation_courses_distribuable'] =
         cautionIncrementationCoursesDistribuable;
     data['statut'] = statut;

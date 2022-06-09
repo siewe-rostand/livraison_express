@@ -271,7 +271,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       password: passwordTextController.text)
                                   .then((response) {
                                 var body = json.decode(response.body);
-                                // print(value);
+                                print(body);
                                 String accessToken = body['access_token'];
                                 token = accessToken;
                                 getUserInfo(false);
