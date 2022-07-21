@@ -3,7 +3,6 @@ import 'package:flutter_google_places/flutter_google_places.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_webservice/places.dart';
-import 'package:location/location.dart'as l;
 import 'package:uuid/uuid.dart';
 import 'package:google_api_headers/google_api_headers.dart';
 
@@ -28,7 +27,6 @@ class _MapPageState extends State<MapPage> {
   LatLng startLocation = const LatLng(4.0511, 9.7679);
 
   GoogleMapController? _controller;
-  l.Location currentLocation = l.Location();
 
 
   void onError(PlacesAutocompleteResponse response) {
@@ -39,13 +37,7 @@ class _MapPageState extends State<MapPage> {
   void _onMapCreated(GoogleMapController _cntlr)
   {
     _controller = _cntlr;
-    currentLocation.onLocationChanged.listen((loc) {
-      _controller?.animateCamera(
-        CameraUpdate.newCameraPosition(
-          CameraPosition(target: LatLng(loc.latitude!, loc.longitude!),zoom: 10),
-        ),
-      );
-    });
+
   }
    getPos()async{
 

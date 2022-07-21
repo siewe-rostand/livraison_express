@@ -5,12 +5,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:livraison_express/model/user.dart';
+import 'package:logger/logger.dart';
+import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/local_db/db-helper.dart';
+import '../data/user_helper.dart';
 import 'api_auth_service.dart';
 
 class FireAuth{
+  final logger = Logger();
+  final ProgressDialog progressDialog;
+  FireAuth({required this.progressDialog});
   // register new user
   static Future<User?> registerUsingEmailPassword({
     required String name,
@@ -111,7 +118,7 @@ class FireAuth{
     };
   }
 
-  static Future<User?> signInWithGoogle({required BuildContext context}) async {
+   Future<User?> signInWithGoogle({required BuildContext context}) async {
     FirebaseAuth auth = FirebaseAuth.instance;
     User? user;
 
@@ -133,51 +140,53 @@ class FireAuth{
         await auth.signInWithCredential(credential);
 
         user = userCredential.user;
-        auth.currentUser?.getIdToken();
-        String? token =await user?.getIdToken();
-        debugPrint('token$token');
-        user?.getIdToken().then((value) {
-          print('user token from firebase $value');
-          var q = ApiAuthService.getAccessToken( firebaseTokenId: value);
-        });
+        if(user !=null){
+          final idToken = await user.getIdToken();
+          ApiAuthService(context: context,fromLogin: true,progressDialog: getProgressDialog(context: context)).getAccessToken( firebaseTokenId: idToken);
 
-        // print('user  $user');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            backgroundColor: Colors.green,
-            content:
-            Text('Successful sign in with google account'),
-          ),
-        );
-      } on FirebaseAuthException catch (e) {
-        if (e.code == 'account-exists-with-different-credential') {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              duration: Duration(seconds: 1),
-              backgroundColor: Colors.red,
-              dismissDirection: DismissDirection.up,
-              content:
-              Text('The account already exists with a different credential.'),
-            ),
-          );
-        } else if (e.code == 'invalid-credential') {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              backgroundColor: Colors.red,
-              content:
-              Text('Error occurred while accessing credentials. Try again.'),
-            ),
-          );
         }else{
-          print(e);
+          ApiAuthService(context: context,progressDialog: getProgressDialog(context: context)).unAuthenticated();
         }
       } catch (e) {
-        print('err $e');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Error occurred using Google Sign-In. Try again.'),
-          ),
-        );
+        e is FirebaseException?ApiAuthService(context: context,progressDialog:getProgressDialog(context: context) ).unAuthenticated(message: e.message):
+            ApiAuthService(context: context,progressDialog: getProgressDialog(context: context)).unAuthenticated();
+      }
+    }
+
+    return user;
+  }
+  static Future<User?> signInWithGoogle1({required BuildContext context}) async {
+    FirebaseAuth auth = FirebaseAuth.instance;
+    User? user;
+
+    final GoogleSignIn googleSignIn = GoogleSignIn();
+
+    final GoogleSignInAccount? googleSignInAccount =
+    await googleSignIn.signIn();
+
+    if (googleSignInAccount != null) {
+      final GoogleSignInAuthentication googleSignInAuthentication =
+      await googleSignInAccount.authentication;
+
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleSignInAuthentication.accessToken,
+        idToken: googleSignInAuthentication.idToken,
+      );
+
+      try {
+        final UserCredential userCredential =
+        await auth.signInWithCredential(credential);
+
+        user = userCredential.user;
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'account-exists-with-different-credential') {
+          // handle the error here
+        }
+        else if (e.code == 'invalid-credential') {
+          // handle the error here
+        }
+      } catch (e) {
+        // handle the error here
       }
     }
 
@@ -195,22 +204,21 @@ class FireAuth{
       );
       user = userCredential.user;
       print('success $user');
-    // }
-    // on FirebaseAuthException catch (e) {
-    //   if (e.code == 'user-not-found') {
-    //     showMessage(e, context);
-    //     print('No user found for that email.');
-    //   } else if (e.code == 'wrong-password') {
-    //     showMessage(e, context);
-    //     print('Wrong password provided.');
-    //   }
+    }
+    on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') {
+        showMessage(e, context);
+        print('No user found for that email.');
+      } else if (e.code == 'wrong-password') {
+        showMessage(e, context);
+        print('Wrong password provided.');
+      }
     }catch(e){
       print(e);
     }
 
     return user;
   }
-
   // refresh user info
   static Future<User?> refreshUser(User user) async {
     FirebaseAuth auth = FirebaseAuth.instance;
@@ -225,7 +233,7 @@ class FireAuth{
     SharedPreferences preferences = await SharedPreferences.getInstance();
     preferences.clear();
     DBHelper dbHelper=DBHelper();
-    await dbHelper.deleteAll();
+    // await dbHelper.deleteAll();
     final FirebaseAuth _auth = FirebaseAuth.instance;
     final GoogleSignIn _googleSignIn = GoogleSignIn();
     User? user = _auth.currentUser;
@@ -241,8 +249,9 @@ class FireAuth{
     }
     await _auth.signOut();
   }
-  static Future<User?> signInWithFacebook({required BuildContext context}) async {
+   Future<User?> signInWithFacebook({required BuildContext context}) async {
     User? user;
+    progressDialog.show();
    try{
      // Trigger the sign-in flow
      final LoginResult loginResult = await FacebookAuth.instance.login();
@@ -253,15 +262,18 @@ class FireAuth{
      // Once signed in, return the UserCredential
      UserCredential? userCredential =await FirebaseAuth.instance.signInWithCredential(facebookAuthCredential);
      user =userCredential.user;
+     AppUser1 appUser1=AppUser1();
+     appUser1.email =user?.email;
+     appUser1.firstname =user?.displayName;
+     appUser1.lastname =user?.displayName;
+     // appUser1.id =user?.uid as int?;
      String? token =await user?.getIdToken();
-      print('firebase token $token');
-     var b=await ApiAuthService.getAccessToken(firebaseTokenId: token!);
+      print('firebase token ${loginResult.accessToken}');
+     var b=await ApiAuthService(context: context,fromLogin: true,progressDialog: getProgressDialog(context: context)).getAccessToken(firebaseTokenId: token!);
      print('/// ${b.body}');
    }on FirebaseAuthException catch (e) {
      if (e.code == 'account-exists-with-different-credential') {
        debugPrint('account-exists-with-different-credential $e');
-       List<String> emailList = await FirebaseAuth.instance
-           .fetchSignInMethodsForEmail(e.email!);
        showMessage(e,context);
        ScaffoldMessenger.of(context).showSnackBar(
          const SnackBar(
@@ -285,7 +297,7 @@ class FireAuth{
      }
    }
    catch(e){
-     print(e);
+     print(" face book $e");
    }
    return user;
   }
@@ -321,8 +333,12 @@ class FireAuth{
   }
   static Future<void> signOut()async{
     SharedPreferences preferences = await SharedPreferences.getInstance();
+    final FirebaseAuth _auth = FirebaseAuth.instance;
+    final GoogleSignIn _googleSignIn = GoogleSignIn();
     preferences.clear();
+    await _auth.signOut();
+    await _googleSignIn.signOut();
     DBHelper dbHelper=DBHelper();
-    await dbHelper.deleteAll();
+    // await dbHelper.deleteAll();
   }
 }

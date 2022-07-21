@@ -2,10 +2,33 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart';
+import 'package:logger/logger.dart';
 
+import '../model/address.dart';
 import 'api_auth_service.dart';
 
 class FavoriteAddressApi{
+  final logger = Logger();
+
+  Future<List<Adresse>> getAddresses(String accessToken) async {
+    List<Adresse> addressList = [];
+    String url = "$baseUrl/user/adresses";
+    final headers = {
+      'Accept': 'application/json',
+      'Authorization': accessToken
+    };
+    final response = await get(
+        Uri.parse(url),
+        headers: headers
+    );
+    if (response.statusCode == 200) {
+      List addresses = jsonDecode(response.body)['data'] as List;
+      addresses.map((json) =>Adresse.fromJson(json)).toList();
+    } else {
+      logger.e(response.body);
+    }
+    return addressList;
+  }
   static Future<Response> getAddressList() async {
     String url = '$baseUrl/user/adresses';
     Response response = await get(Uri.parse(url), headers: {

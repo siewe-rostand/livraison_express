@@ -1,15 +1,19 @@
 
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart';
 import 'package:livraison_express/model/auto_gene.dart';
 import 'package:livraison_express/model/category.dart';
 import 'package:livraison_express/model/magasin.dart';
+import 'package:livraison_express/utils/main_utils.dart';
+import 'package:logger/logger.dart';
 
 import 'api_auth_service.dart';
 
 class ShopServices{
+  final logger = Logger();
 
   static Future<List<Shops>> getCategoriesFromShop({required int? shopId}) async{
     String url = "$baseUrl/magasins/?shopId=$shopId/categories";
@@ -102,7 +106,7 @@ class ShopServices{
       throw Exception('error loading module data from getMiniCategories');
     }
   }
-  static Future<List<Magasin>> getShops({required int moduleId, required String city,
+  Future<List<Shops>> getShops({required int moduleId, required String city,
     required double latitude,required double longitude,
     required int inner_radius,
     required int outer_radius
@@ -128,12 +132,23 @@ class ShopServices{
     if(response.statusCode == 200){
       var body=jsonDecode(response.body);
       var rest = body['data'];
-      print(rest);
-      List<Magasin> magasins;
-      magasins =rest.map<Magasin>((json) =>Magasin.fromJson(json)).toList();
+      // log(rest);
+      List<Shops> magasins;
+      magasins =rest.map<Shops>((json) =>Shops.fromJson(json)).toList();
       return magasins;
     }else{
-      throw Exception('et shops error');
+      if (response.statusCode == 401) {
+        throw (onErrorMessage);
+      } else if (response.statusCode == 404 ||response.statusCode == 408||
+          response.statusCode == 422 ||
+          response.statusCode == 400 ||
+          response.statusCode == 499) {
+        logger.e(response.statusCode);
+        logger.d(response.body);
+        throw (onFailureMessage);
+      }else{
+        throw (onFailureMessage);
+      }
     }
 
   }

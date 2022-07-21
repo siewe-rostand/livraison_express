@@ -1,3 +1,6 @@
+import 'package:livraison_express/model/client.dart';
+
+import 'address-favorite.dart';
 import 'day.dart';
 import 'horaire.dart';
 
@@ -128,6 +131,7 @@ class Shops {
   int? moduleId;
   String? nom;
   String? slug;
+  Client? contact;
   Null? cautionIncrementationCoursesDistribuable;
   int? displayRank;
   String? description;
@@ -152,7 +156,8 @@ class Shops {
   String? updatedAt;
   Null? deletedAt;
   Adresse? adresse;
-  Contact? contact;
+  AddressFavorite? adresseFavorite;
+  Client? client;
 
   Shops(
       {this.id,
@@ -187,7 +192,8 @@ class Shops {
         this.updatedAt,
         this.deletedAt,
         this.adresse,
-        this.contact});
+        this.client,
+      this.contact});
 
   Shops.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -228,8 +234,10 @@ class Shops {
     deletedAt = json['deleted_at'];
     adresse =
     json['adresse'] != null ? Adresse.fromJson(json['adresse']) : null;
-    contact =
-    json['contact'] != null ? Contact.fromJson(json['contact']) : null;
+    adresseFavorite = json["adresse"] == null ? null : AddressFavorite.fromJson(json["adresse"]);
+    client =
+    json['contact'] != null ? Client.fromJson(json['contact']) : null;
+    contact = json["contact"] == null ? null : Client.fromJson(json["contact"]);
   }
 
   Map<String, dynamic> toJson() {
@@ -274,8 +282,8 @@ class Shops {
     if (adresse != null) {
       data['adresse'] = adresse!.toJson();
     }
-    if (contact != null) {
-      data['contact'] = contact!.toJson();
+    if (client != null) {
+      data['contact'] = client!.toJson();
     }
     return data;
   }
@@ -382,169 +390,6 @@ class Adresse {
     data['map_static_url'] = mapStaticUrl;
     data['update_allowed'] = updateAllowed;
     data['lat_lng'] = latLng;
-    return data;
-  }
-}
-
-class Contact {
-  int? id;
-  String? holderId;
-  String? creatorId;
-  String? updaterId;
-  Null? adresseFavoriteId;
-  String? uuid;
-  String? username;
-  String? avatar;
-  String? fullname;
-  String? firstname;
-  String? lastname;
-  String? email;
-  String? emailVerifiedAt;
-  String? phoneVerifiedAt;
-  String? telephone;
-  String? telephoneAlt;
-  String? genre;
-  String? providerId;
-  String? providerName;
-  Null? langue;
-  String? description;
-  String? modules;
-  String? token;
-  Null? fcmToken;
-  Null? cautionIncrementationCoursesDistribuable;
-  int? statut;
-  bool? isGuest;
-  int? type;
-  String? createdAt;
-  String? updatedAt;
-  Null? deletedAt;
-  Null? lastLoginAt;
-  Null? lastLoginIp;
-  Null? stripeId;
-  Null? cardBrand;
-  Null? cardLastFour;
-  Null? trialEndsAt;
-
-  Contact(
-      {this.id,
-        this.holderId,
-        this.creatorId,
-        this.updaterId,
-        this.adresseFavoriteId,
-        this.uuid,
-        this.username,
-        this.avatar,
-        this.fullname,
-        this.firstname,
-        this.lastname,
-        this.email,
-        this.emailVerifiedAt,
-        this.phoneVerifiedAt,
-        this.telephone,
-        this.telephoneAlt,
-        this.genre,
-        this.providerId,
-        this.providerName,
-        this.langue,
-        this.description,
-        this.modules,
-        this.token,
-        this.fcmToken,
-        this.cautionIncrementationCoursesDistribuable,
-        this.statut,
-        this.isGuest,
-        this.type,
-        this.createdAt,
-        this.updatedAt,
-        this.deletedAt,
-        this.lastLoginAt,
-        this.lastLoginIp,
-        this.stripeId,
-        this.cardBrand,
-        this.cardLastFour,
-        this.trialEndsAt});
-
-  Contact.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    holderId = json['holder_id'];
-    creatorId = json['creator_id'];
-    updaterId = json['updater_id'];
-    adresseFavoriteId = json['adresse_favorite_id'];
-    uuid = json['uuid'];
-    username = json['username'];
-    avatar = json['avatar'];
-    fullname = json['fullname'];
-    firstname = json['firstname'];
-    lastname = json['lastname'];
-    email = json['email'];
-    emailVerifiedAt = json['email_verified_at'];
-    phoneVerifiedAt = json['phone_verified_at'];
-    telephone = json['telephone'];
-    telephoneAlt = json['telephone_alt'];
-    genre = json['genre'];
-    providerId = json['provider_id'];
-    providerName = json['provider_name'];
-    langue = json['langue'];
-    description = json['description'];
-    modules = json['modules'];
-    token = json['token'];
-    fcmToken = json['fcm_token'];
-    cautionIncrementationCoursesDistribuable =
-    json['caution_incrementation_courses_distribuable'];
-    statut = json['statut'];
-    isGuest = json['is_guest'];
-    type = json['type'];
-    createdAt = json['created_at'];
-    updatedAt = json['updated_at'];
-    deletedAt = json['deleted_at'];
-    lastLoginAt = json['last_login_at'];
-    lastLoginIp = json['last_login_ip'];
-    stripeId = json['stripe_id'];
-    cardBrand = json['card_brand'];
-    cardLastFour = json['card_last_four'];
-    trialEndsAt = json['trial_ends_at'];
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['id'] = id;
-    data['holder_id'] = holderId;
-    data['creator_id'] = creatorId;
-    data['updater_id'] = updaterId;
-    data['adresse_favorite_id'] = adresseFavoriteId;
-    data['uuid'] = uuid;
-    data['username'] = username;
-    data['avatar'] = avatar;
-    data['fullname'] = fullname;
-    data['firstname'] = firstname;
-    data['lastname'] = lastname;
-    data['email'] = email;
-    data['email_verified_at'] = emailVerifiedAt;
-    data['phone_verified_at'] = phoneVerifiedAt;
-    data['telephone'] = telephone;
-    data['telephone_alt'] = telephoneAlt;
-    data['genre'] = genre;
-    data['provider_id'] = providerId;
-    data['provider_name'] = providerName;
-    data['langue'] = langue;
-    data['description'] = description;
-    data['modules'] = modules;
-    data['token'] = token;
-    data['fcm_token'] = fcmToken;
-    data['caution_incrementation_courses_distribuable'] =
-        cautionIncrementationCoursesDistribuable;
-    data['statut'] = statut;
-    data['is_guest'] = isGuest;
-    data['type'] = type;
-    data['created_at'] = createdAt;
-    data['updated_at'] = updatedAt;
-    data['deleted_at'] = deletedAt;
-    data['last_login_at'] = lastLoginAt;
-    data['last_login_ip'] = lastLoginIp;
-    data['stripe_id'] = stripeId;
-    data['card_brand'] = cardBrand;
-    data['card_last_four'] = cardLastFour;
-    data['trial_ends_at'] = trialEndsAt;
     return data;
   }
 }

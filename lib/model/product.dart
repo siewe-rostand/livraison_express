@@ -53,66 +53,6 @@ class Product {
   //   'unitPrice': unitPrice,
   // };
 }
-
-// class Products {
-//   int? id;
-//   int? magasinId;
-//   int? categoryId;
-//   int? unitPrice;
-//   int? totalPrice;
-//   int? quantityAvailable;
-//   int? preparationTime;
-//   String? name;
-//   String? image;
-//   String? detail;
-//   List<Attributes>? attributes;
-//
-//   Products(
-//       {this.id,
-//       this.name,
-//       this.image,
-//       this.totalPrice,
-//       this.unitPrice,
-//       this.detail,
-//       this.attributes,
-//       this.categoryId,
-//       this.magasinId,
-//       this.preparationTime,
-//       this.quantityAvailable});
-//
-//   static Map<String, dynamic>toMap(Products products)=>{
-//   ProductConstant.id :products.id,
-//     ProductConstant.name:products.name,
-//     ProductConstant.magasinId:products.magasinId,
-//     ProductConstant.categoryId:products.categoryId,
-//     ProductConstant.unitPrice:products.unitPrice,
-//     ProductConstant.quantity:products.quantityAvailable,
-//     ProductConstant.preparationTime:products.preparationTime,
-//     ProductConstant.image:products.image,
-//     ProductConstant.description:products.detail,
-//     ProductConstant.complement:products.attributes
-//   };
-//
-//   factory Products.fromJson(Map<String,dynamic> json){
-//     var list = json[ProductConstant.complement] as List;
-//     print(list.runtimeType);
-//     List<Attributes> attributes = list.map((i) => Attributes.fromJson(i)).toList();
-//     return Products(
-//       id: json[ProductConstant.id],
-//       magasinId: json[ProductConstant.magasinId],
-//       categoryId: json[ProductConstant.categoryId],
-//       unitPrice: json[ProductConstant.unitPrice],
-//       quantityAvailable: json[ProductConstant.quantity],
-//       preparationTime: json[ProductConstant.preparationTime],
-//       name: json[ProductConstant.name],
-//       image: json[ProductConstant.image],
-//       detail: json[ProductConstant.description],
-//       attributes: attributes
-//     );
-//   }
-//
-//
-// }
 class Products {
   int? id;
   int? magasinId;
@@ -137,7 +77,7 @@ class Products {
   int? tempsPreparation;
   Null? maxOption;
   List<Null>? horaires;
-  List<Null>? attributes;
+  List<Attributes>? attributes;
   List<Null>? availableInCities;
   String? createdAt;
   String? updatedAt;
@@ -199,34 +139,38 @@ class Products {
     createdAt = json['created_at'];
     updatedAt = json['updated_at'];
     deletedAt = json['deleted_at'];
+    attributes=json["attributes"]==null ? null : (json["attributes"] as List).map((e)=>Attributes.fromJson(e)).toList();
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['magasin_id'] = this.magasinId;
-    data['possession_id'] = this.possessionId;
-    data['possession_categorie_id'] = this.possessionCategorieId;
-    data['categorie_id'] = this.categorieId;
-    data['libelle'] = this.libelle;
-    data['detail'] = this.detail;
-    data['slug'] = this.slug;
-    data['prix_unitaire'] = this.prixUnitaire;
-    data['quantite_dispo'] = this.quantiteDispo;
-    data['disponibilite_general'] = this.disponibiliteGeneral;
-    data['brand_name'] = this.brandName;
-    data['brand_logo'] = this.brandLogo;
-    data['tags'] = this.tags;
-    data['type'] = this.type;
-    data['image'] = this.image;
-    data['type_human'] = this.typeHuman;
-    data['is_active'] = this.isActive;
-    data['is_available'] = this.isAvailable;
-    data['temps_preparation'] = this.tempsPreparation;
-    data['max_option'] = this.maxOption;
-    data['created_at'] = this.createdAt;
-    data['updated_at'] = this.updatedAt;
-    data['deleted_at'] = this.deletedAt;
+    data['id'] = id;
+    data['magasin_id'] = magasinId;
+    data['possession_id'] = possessionId;
+    data['possession_categorie_id'] = possessionCategorieId;
+    data['categorie_id'] = categorieId;
+    data['libelle'] = libelle;
+    data['detail'] = detail;
+    data['slug'] = slug;
+    data['prix_unitaire'] = prixUnitaire;
+    data['quantite_dispo'] = quantiteDispo;
+    data['disponibilite_general'] = disponibiliteGeneral;
+    data['brand_name'] = brandName;
+    data['brand_logo'] = brandLogo;
+    data['tags'] = tags;
+    data['type'] = type;
+    data['image'] = image;
+    data['type_human'] = typeHuman;
+    data['is_active'] = isActive;
+    data['is_available'] = isAvailable;
+    data['temps_preparation'] = tempsPreparation;
+    data['max_option'] = maxOption;
+    data['created_at'] = createdAt;
+    data['updated_at'] = updatedAt;
+    data['deleted_at'] = deletedAt;
+    if(attributes != null) {
+        data["attributes"] = attributes?.map((e)=>e.toJson()).toList();
+    }
     return data;
   }
 }

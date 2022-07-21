@@ -1,6 +1,7 @@
 import 'package:badges/badges.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:livraison_express/data/user_helper.dart';
 import 'package:livraison_express/views/main/product_page.dart';
 import 'package:provider/provider.dart';
 
@@ -172,7 +173,7 @@ class _SubCategoryState extends State<SubCategory> {
                                                       shopId: shopId,
                                                       moduleColor:
                                                       widget.moduleColor,
-                                                      categoryId: catId!,
+                                                      category: categoryList[index],
                                                       title: title!,
                                                       fromCategory: false,
                                                       subCategoryId: sousCategoryId,
@@ -233,6 +234,7 @@ class _SubCategoryState extends State<SubCategory> {
                         MaterialPageRoute(
                             builder: (BuildContext context) => CartPage(
                               moduleColor: widget.moduleColor,
+                              slug: UserHelper.shops.slug!,
                             )));
                   },
                   icon: Icon(

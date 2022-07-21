@@ -36,9 +36,10 @@ class _ProfileState extends State<Profile> {
     sharedPreferences = await SharedPreferences.getInstance();
     String? userString =sharedPreferences.getString("userData");
     var extractedUserData =json.decode(userString!);
-    // print(extractedUserData);
-    if(extractedUserData != null) {
-      setState(() {
+    AppUser1 user1=AppUser1.fromJson(extractedUserData);
+    AppUser1? appUser1 = UserHelper.currentUser1??user1;
+    setState(() {
+      /*
         email = extractedUserData['email'];
         uid = extractedUserData['uid'];
         name = extractedUserData['firstname'];
@@ -46,36 +47,17 @@ class _ProfileState extends State<Profile> {
         fullName = extractedUserData['fullname'];
         tel1 = extractedUserData['telephone'];
         tel2 = extractedUserData['telephone_alt'];
-        initialName =fullName.substring(0,1).toUpperCase();
-        print(initialName);
-      });
-    }else{
-      if(UserHelper.currentUser !=null){
-        extractedUserData =UserHelper.currentUser;
-      }else{
-        showDialog(context: context, builder: (BuildContext buildContext){
-          return AlertDialog(
-            title: Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SvgPicture.asset('img/icon/svg/ic_warning_yellow.svg',color: const Color(0xffFFAE42),),
-                const Text('Attention')
-              ],),
-            content: const Text('Votre session a expiré'),
-            actions: [
-              TextButton(
-                child: const Text("OK"),
-                onPressed: () async {
-                  Navigator.of(buildContext).pop();
-                  Navigator.of(buildContext).pushReplacement(MaterialPageRoute(builder: (buildContext)=>const LoginScreen()));
-                },
-              )
-            ],
-          );
-        });
-      }
-    }
+        */
+      email =appUser1.email!;
+      uid =appUser1.uid!;
+      name =appUser1.firstname!;
+      fName =appUser1.lastname!;
+      tel1 =appUser1.telephone!;
+      tel2 =appUser1.telephoneAlt??'';
+      fullName =appUser1.fullname!;
+      initialName =fullName.substring(0,1).toUpperCase();
+      print(appUser1.firstname);});
+
   }
 
   @override
@@ -231,7 +213,7 @@ class _ProfileState extends State<Profile> {
                                           "fullname":fNameController.text + " " + nameController.text,
                                           "is_guest":true
                                         };
-                                        await ApiAuthService.edit(data: data).then((value){
+                                        await ApiAuthService(context: context,progressDialog: getProgressDialog(context: context)).edit(data: data).then((value){
                                           var res = json.decode(value.body);
                                           var msg =res['message'];
                                           var user= res['data'];
@@ -257,8 +239,9 @@ class _ProfileState extends State<Profile> {
                                           };
                                           print({data2});
                                           var userData=json.encode(data2);
-                                          pref.reload();
-                                          pref.setString("userData", userData);
+                                          // pref.reload();
+                                          // pref.setString("userData", userData);
+                                          UserHelper.currentUser1 =AppUser1.fromJson(data2);
                                           Navigator.of(context).pop();
                                           Fluttertoast.showToast(
                                               msg: msg,

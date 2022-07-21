@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:livraison_express/utils/size_config.dart';
 import 'dart:io';
 
 import 'package:url_launcher/url_launcher.dart';
@@ -23,23 +25,33 @@ class _FancyFabState extends State<FancyFab>
   bool isOpened = false;
   late AnimationController _animationController;
   late Animation<Color?> _animateColor;
-  late Animation<double> _animateIcon;
-  late Animation<double> _translateButton;
-  Curve _curve = Curves.easeOut;
-  final double _fabHeight = 56.0;
+  final Curve _curve = Curves.easeOut;
+  late Animation<Offset> _offsetLeftAnimation;
+  late Animation<Offset> _offsetRightAnimation;
   String message = '';
   DateTime now = DateTime.now();
   var midi = const TimeOfDay(hour: 12, minute: 0);
 
   @override
   initState() {
-    _animationController =
-    AnimationController(vsync: this, duration: Duration(milliseconds: 500))
-      ..addListener(() {
-        setState(() {});
-      });
-    _animateIcon =
-        Tween<double>(begin: 0.0, end: 1.0).animate(_animationController);
+    _animationController =AnimationController(
+        duration: const Duration(milliseconds: 1000),
+        vsync: this
+    );
+    _offsetLeftAnimation = Tween<Offset>(
+        begin: const Offset(10.0, 0.0),
+        end: Offset.zero
+    ).animate(CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.ease
+    ));
+    _offsetRightAnimation = Tween<Offset>(
+      begin: const Offset(-10.0, 0.0),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.ease
+    ));
     _animateColor = ColorTween(
       begin: Colors.white,
       end: Colors.white,
@@ -48,17 +60,6 @@ class _FancyFabState extends State<FancyFab>
       curve: Interval(
         0.00,
         1.00,
-        curve: _curve,
-      ),
-    ));
-    _translateButton = Tween<double>(
-      begin: _fabHeight,
-      end: -14.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Interval(
-        0.0,
-        0.75,
         curve: _curve,
       ),
     ));
@@ -93,63 +94,79 @@ class _FancyFabState extends State<FancyFab>
       backgroundColor: _animateColor.value,
       onPressed: animate,
       tooltip: 'Toggle',
-      child: isOpened?const Icon(Icons.clear,color: Colors.black,):CircleAvatar(
+      child: isOpened?SvgPicture.asset('img/icon/svg/ic_cross.svg'):CircleAvatar(
         backgroundColor: Colors.white,
         radius: 27,
         child: ClipRRect(
             borderRadius: BorderRadius.circular(32),
-            child: Image.asset(
-              'img/call.png',
-              height: 53,
-              fit: BoxFit.fill,
-            )),
+            child: SvgPicture.asset('img/icon/svg/ic_call_center.svg')),
       ),
     );
   }
   Widget sms() {
-    return  FloatingActionButton(
-      heroTag: 'sms',
-      onPressed: ()async{
-        launchSMS(phone: 655418165, message: message);
-      },
-      tooltip: 'Sms',
-      child: Icon(Icons.sms),
+    return  SizedBox(
+      height: getProportionateScreenHeight(45),
+      child: FloatingActionButton(
+        backgroundColor: Colors.white,
+        heroTag: 'sms',
+        onPressed: ()async{
+          launchSMS(phone: 655418165, message: message);
+        },
+        tooltip: 'Sms',
+        child: SvgPicture.asset('img/icon/svg/ic_message.svg',height: getProportionateScreenHeight(25),),
+      ),
     );
   }
   Widget whatsapp() {
-    return  FloatingActionButton(
-      heroTag: 'whatsapp',
-      onPressed: (){
-        launchWhatsApp(phone: 00237655418165, message: message);
-      },
-      tooltip: 'Whatsapp',
-      child: const Icon(Icons.whatsapp),
+    return  SizedBox(
+      height: getProportionateScreenHeight(45),
+      child: FloatingActionButton(
+        backgroundColor: Colors.white,
+        heroTag: 'whatsapp',
+        onPressed: (){
+          launchWhatsApp(phone: 00237655418165, message: message);
+        },
+        tooltip: 'Whatsapp',
+        child: SvgPicture.asset('img/icon/svg/ic_whatsapp.svg',height: getProportionateScreenHeight(25),),
+      ),
     );
   }
   Widget messenger() {
-    return const FloatingActionButton(
-      heroTag: 'messenger',
-      onPressed: null,
-      tooltip: 'Messenger',
-      child: Icon(Icons.mms),
+    return  SizedBox(
+      height: getProportionateScreenHeight(45),
+      child: FloatingActionButton(
+        backgroundColor: Colors.white,
+        heroTag: 'messenger',
+        onPressed: null,
+        tooltip: 'Messenger',
+        child: SvgPicture.asset('img/icon/svg/ic_messenger.svg',height: getProportionateScreenHeight(25),),
+      ),
     );
   }
   Widget _call() {
-    return  FloatingActionButton(
-      heroTag: 'image',
-      onPressed: (){
-        launch('tel:+237655418165');
-      },
-      tooltip: 'Image',
-      child: Icon(Icons.call),
+    return  SizedBox(
+      height: getProportionateScreenHeight(45),
+      child: FloatingActionButton(
+        backgroundColor: Colors.white,
+        heroTag: 'phone',
+        onPressed: (){
+          launchUrl(Uri.parse('tel:+237655418165'));
+        },
+        tooltip: 'phone',
+        child: SvgPicture.asset('img/icon/svg/ic_phone_call.svg',height: getProportionateScreenHeight(25),),
+      ),
     );
   }
   Widget inbox() {
-    return const FloatingActionButton(
-      heroTag: 'inbox',
-      onPressed: null,
-      tooltip: 'Inbox',
-      child: Icon(Icons.inbox),
+    return  SizedBox(
+      height: getProportionateScreenHeight(45),
+      child: FloatingActionButton(
+        backgroundColor: Colors.white,
+        heroTag: 'inbox',
+        onPressed: null,
+        tooltip: 'Inbox',
+        child: SvgPicture.asset('img/icon/svg/ic_messenger.svg',height: getProportionateScreenHeight(25),),
+      ),
     );
   }
 
@@ -204,31 +221,29 @@ class _FancyFabState extends State<FancyFab>
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Transform(
-            transform: Matrix4.translationValues(
-                _translateButton.value*2.0,
-                0,
-                0),
-            child: _call()),
-        Transform(
-            transform: Matrix4.translationValues(
-                _translateButton.value*1.0,
-                0,
-                0),
-            child: sms()),
+        SlideTransition(position: _offsetRightAnimation,
+          child: Row(
+            children: [
+              Container(
+                margin:const EdgeInsets.all(5),
+                  child: _call()),
+              sms()
+            ],
+          ),
+        ),
         toggle(),
-        Transform(
-            transform: Matrix4.translationValues(
-                _translateButton.value* -6.0,
-                0,
-                0),
-            child: whatsapp()),
-        Transform(
-            transform: Matrix4.translationValues(
-                _translateButton.value*3.0,
-                0,
-                0),
-            child: messenger()),
+        SlideTransition(position: _offsetLeftAnimation,
+          child:Row(
+            children: [
+              Container(
+                margin:const EdgeInsets.only(left: 3),
+                  child: messenger()),
+              Container(
+                margin: const EdgeInsets.only(left: 5),
+                  child: whatsapp())
+            ],
+          ) ,
+        )
       ],
     );
   }

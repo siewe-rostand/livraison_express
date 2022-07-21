@@ -1,4 +1,5 @@
 
+import 'address-favorite.dart';
 import 'address.dart';
 import 'client.dart';
 import 'distance_matrix.dart';
@@ -14,6 +15,7 @@ class Magasin {
   String? image;
   DistanceMatrix? distancematrix;
   Adresse? adresse;
+  AddressFavorite? adresseFavorite;
   Client? contact;
   dynamic? adresses;
   List<dynamic>? produits;
@@ -40,6 +42,7 @@ class Magasin {
     image = json["image"];
     distancematrix = json["distancematrix"] == null ? null : DistanceMatrix.fromJson(json["distancematrix"]);
     adresse = json["adresse"] == null ? null : Adresse.fromJson(json["adresse"]);
+    adresseFavorite = json["adresse"] == null ? null : AddressFavorite.fromJson(json["adresse"]);
     contact = json["contact"] == null ? null : Client.fromJson(json["contact"]);
     adresses = json["adresses"];
     produits = json["produits"] ?? [];

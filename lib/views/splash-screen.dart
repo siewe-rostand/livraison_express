@@ -1,17 +1,20 @@
 import 'dart:async';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:livraison_express/model/user.dart';
-import 'package:livraison_express/service/main_api_call.dart';
 import 'package:livraison_express/views/main/login.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../data/user_helper.dart';
 import '../model/auto_gene.dart';
 import '../service/api_auth_service.dart';
-import 'home-page.dart';
+import '../utils/size_config.dart';
+import 'home/home-page.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
+  static String routeName = "/splash";
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -33,14 +36,23 @@ class _SplashScreenState extends State<SplashScreen>
 
     }
     }
+  fetchConnectionState(BuildContext context) async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    final token = preferences.getString(UserHelper.token);
+    if (token != null) {
+      // await Firebase.initializeApp();
+      ApiAuthService(context: context,fromLogin: false).getUserProfile(token);
+    } else {
+      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context)=>const LoginScreen()));
+    }
+  }
   @override
   void initState() {
     super.initState();
     Timer(
         const Duration(seconds: 3),
             () async{
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (BuildContext context) =>  const LoginScreen()));});
+              fetchConnectionState(context);});
     animationController = AnimationController(vsync: this,duration: const Duration(seconds: 2));
     fadeInFadeOut = Tween(begin: 0.0, end: 0.5).animate(animationController);
 
@@ -61,6 +73,7 @@ class _SplashScreenState extends State<SplashScreen>
   }
   @override
   Widget build(BuildContext context) {
+    SizeConfig().init(context);
     return Scaffold(
       body: Stack(
         children: [
@@ -72,6 +85,7 @@ class _SplashScreenState extends State<SplashScreen>
           ),
           Container(
             alignment: Alignment.bottomCenter,
+            margin: const EdgeInsets.only(bottom: 20),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
@@ -79,7 +93,7 @@ class _SplashScreenState extends State<SplashScreen>
                 CircularProgressIndicator(
                   semanticsValue: 'chargement en cours',
                 ),
-                Text('chargement en cours')
+                Text('chargement en cours ..')
               ],
             ),
           ),
@@ -88,13 +102,3 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 }
-/*
-AnimatedSplashScreen(
-      splash: 'img/logo.png',
-      duration: 2500,
-      animationDuration: const Duration(milliseconds: 2500),
-      nextScreen: const HomePage(),
-      splashTransition: SplashTransition.slideTransition,
-      pageTransitionType: PageTransitionType.topToBottom,
-    )
- */

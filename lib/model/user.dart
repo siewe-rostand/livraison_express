@@ -87,6 +87,7 @@ class AppUser1 {
   String? firstname;
   String? lastname;
   String? telephone;
+  String? token;
   String? telephoneMasked;
   dynamic? telephoneAlt;
   dynamic? quote;
@@ -120,6 +121,7 @@ class AppUser1 {
       this.email,
       this.emailMasked,
       this.name,
+        this.token,
       this.fullname,
       this.firstname,
       this.lastname,
@@ -155,6 +157,7 @@ class AppUser1 {
     providerId = json["provider_id"];
     providerName = json["provider_name"];
     email = json["email"];
+    token = json["token"];
     emailMasked = json["email_masked"];
     name = json["name"];
     fullname = json["fullname"];
@@ -195,6 +198,7 @@ class AppUser1 {
     data["provider_id"] = providerId;
     data["provider_name"] = providerName;
     data["email"] = email;
+    data["token"] = token;
     data["email_masked"] = emailMasked;
     data["name"] = name;
     data["fullname"] = fullname;

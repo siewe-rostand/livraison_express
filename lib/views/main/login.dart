@@ -10,6 +10,7 @@ import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:livraison_express/constant/all-constant.dart';
 import 'package:livraison_express/data/user_helper.dart';
 import 'package:livraison_express/service/api_auth_service.dart';
+import 'package:livraison_express/utils/size_config.dart';
 import 'package:livraison_express/views/main/register.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -17,10 +18,11 @@ import '../../model/auto_gene.dart';
 import '../../model/city.dart';
 import '../../service/fire-auth.dart';
 import '../../service/main_api_call.dart';
-import '../home-page.dart';
+import '../home/home-page.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
+  static String routeName = "/login_screen";
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -82,67 +84,6 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  getUserInfo(bool fromFb) async {
-    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    await ApiAuthService.getUser().then((appUser1) {
-      debugPrint("login user ${appUser1.emailVerifiedAt}");
-      String fullName = appUser1.fullname ?? '';
-      String phone = appUser1.telephone ?? '';
-      List<String>? roles = appUser1.roles;
-      List rolesList = [];
-      String? phoneVerifiedAt = appUser1.phoneVerifiedAt;
-      String? emailVerifiedAt = appUser1.emailVerifiedAt;
-      if (!fromFb && emailVerifiedAt!.isEmpty && phoneVerifiedAt!.isEmpty) {
-        showMessage(
-            message:
-                "Votre compte n'a pas été activé pour accéder a l'application veuillez activer votre compte",
-            title: "Alerte");
-      } else {
-        for (int i = 0; i < roles!.length; i++) {
-          rolesList.add(roles[i]);
-        }
-        UserHelper.currentUser = appUser1;
-        final userData = json.encode(appUser1);
-        sharedPreferences.setString("userData", userData);
-        String? userString = sharedPreferences.getString("userData");
-        final extractedUserData = json.decode(userString!);
-        print("/// ${extractedUserData['fullname']}");
-        getModulesConfigs();
-      }
-    }).catchError((onError) {
-      showMessage(message: "Erreur d'authentification", title: "Alerte");
-    });
-  }
-
-  getModulesConfigs() async {
-    SharedPreferences sharedPreferences =
-    await SharedPreferences.getInstance();
-    List<Modules> modules;
-    await MainApi.getModuleConfigs(city: "douala").then((response) {
-      var body=json.decode(response.body);
-      var rest = body['data']['modules'] as List;
-      var city = body['data']['cities'] as List;
-      // print('nci == $city');
-      modules = rest.map<Modules>((json) =>Modules.fromJson(json)).toList();
-      cities = city.map<City>((json) =>City.fromJson(json)).toList();
-      var lastCity=cities[0].name;
-      var cityData =json.encode(cities);
-      var moduleData =json.encode(modules);
-      sharedPreferences.setString('cities', cityData);
-      sharedPreferences.setString('modules', moduleData);
-      Navigator.of(context).pushReplacement(MaterialPageRoute(
-          builder: (BuildContext context) => HomePage(
-                modules: modules,
-            cities: cities,
-            city: lastCity,
-              )));
-    }).catchError((onError) {
-      print('onError??');
-      print(onError);
-      showMessage(message: onError.toString(), title: "Erreur");
-    });
-  }
-
   @override
   void initState() {
     _isPhone = true;
@@ -153,8 +94,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    SizeConfig().init(context);
     return AnnotatedRegion(
-      value: SystemUiOverlayStyle(statusBarColor: Color(int.parse(ColorConstant.colorPrimary))),
+      value: const SystemUiOverlayStyle(statusBarColor: primaryColor),
       child: Scaffold(
         body: Container(
             margin: const EdgeInsets.all(15),
@@ -260,41 +202,31 @@ class _LoginScreenState extends State<LoginScreen> {
                             borderRadius: BorderRadius.circular(25.0),
                           ))),
                           onPressed: () async {
-                            setState(() {
-                              _isProcessing = true;
-                            });
                             if (_phoneTextController.text.isNotEmpty) {
                               print(countryCode);
-                              await ApiAuthService.login(
+                              await ApiAuthService(context: context,fromLogin: true,progressDialog: getProgressDialog(context: context)).signInWithPhone(
                                       telephone: _phoneTextController.text,
                                       countryCode: countryCode,
-                                      password: passwordTextController.text)
-                                  .then((response) {
-                                var body = json.decode(response.body);
-                                print(body);
-                                String accessToken = body['access_token'];
-                                token = accessToken;
-                                getUserInfo(false);
-                              }).catchError((onError) {
-                                print(onError);
-                                showMessage(
-                                    message:
-                                        "Vérifiez votre connexion internet puis réessayez. Si le problème persiste, veuillez contacter le service technique",
-                                    title: "Alerte");
-                              });
+                                      password: passwordTextController.text);
+                              //     .then((response) {
+                              //   var body = json.decode(response.body);
+                              //   // print(body);
+                              //   String accessToken = body['access_token'];
+                              //   token = accessToken;
+                              //   getUserInfo(false);
+                              // }).catchError((onError) {
+                              //   print(onError);
+                              //   showMessage(
+                              //       message:onError.toString(),
+                              //       title: "Alerte");
+                              //   // showMessage(
+                              //   //     message:
+                              //   //         "Vérifiez votre connexion internet puis réessayez. Si le problème persiste, veuillez contacter le service technique",
+                              //   //     title: "Alerte");
+                              // });
                             }
                             if (emailTextController.text.isNotEmpty) {
-                              await FireAuth.signInUsingEmailPassword(
-                                      email: emailTextController.text,
-                                      password: passwordTextController.text,
-                                      context: context)
-                                  .then((value) {
-                                getUserInfo(false);
-                                print('sucees');
-                              }).catchError((onError) {
-                                FireAuth.showMessage(onError, context,
-                                    isLoading: false);
-                              });
+                              ApiAuthService(context: context,fromLogin: true,progressDialog: getProgressDialog(context: context)).signInWithEmail(emailTextController.text, passwordTextController.text);
                               // FirebaseAuth auth = FirebaseAuth.instance;
                               // UserCredential userCredential = await auth.signInWithEmailAndPassword(
                               //   email: emailTextController.text,
@@ -323,7 +255,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 Row(children: const [
                   Expanded(
-                    child: Divider(),
+                    child: Divider(
+                      thickness: 1.5,),
                   ),
                   Padding(
                     padding: EdgeInsets.all(8.0),
@@ -342,25 +275,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       InkWell(
                         onTap: () async {
-                          User? user =
-                              await FireAuth.signInWithGoogle(context: context);
+                              await FireAuth(progressDialog: getProgressDialog(context: context)).signInWithGoogle(context: context);
                           // GoogleSignIn googleSignIn = GoogleSignIn();
                           // GoogleSignInAccount? account = await googleSignIn.signIn();
                           // // User? user= userCredential.user;
                           // var ur= await FireAuth.firebaseGoogleAuth(account!, context: context);
                           // debugPrint('google sign $ur');
-                          setState(() {
-                            _isProcessing = false;
-                          });
+                          // setState(() {
+                          //   _isProcessing = false;
+                          // });
                           // print(user);
-
-                          if (user != null) {
-                            Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(
-                                builder: (context) => const HomePage(),
-                              ),
-                            );
-                          }
                         },
                         child: CircleAvatar(
                             backgroundColor: const Color(0xff4d000000),
@@ -375,12 +299,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       InkWell(
                         onTap: () async {
-                          User? user =
-                              await FireAuth.signInWithFacebook(context: context);
-                          print(user);
-                          setState(() {
-                            _isProcessing = true;
-                          });
+
+                              await FireAuth(progressDialog: getProgressDialog(context: context)).signInWithFacebook(context: context).then((value){
+                                // setState(() {
+                                //   _isProcessing = true;
+                                // });
+                              }).catchError((onError){
+
+                              });
+
 
                           // if (user != null) {
                           //   Navigator.of(context)
@@ -752,8 +679,8 @@ class _MotDePasseState extends State<MotDePasse> {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion(
-      value: SystemUiOverlayStyle(
-          statusBarColor: Color(int.parse(ColorConstant.colorPrimary))),
+      value: const SystemUiOverlayStyle(
+          statusBarColor:primaryColor),
       child: Scaffold(
         body: Container(
           margin: const EdgeInsets.only(top: 100, left: 20, right: 20),
@@ -761,15 +688,15 @@ class _MotDePasseState extends State<MotDePasse> {
             key: _formKey,
             child: Column(
               children: [
-                Text(
+                const Text(
                   'Mot de Passe oublie.',
                   style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Color(int.parse(ColorConstant.grey80))),
+                      color: grey80),
                 ),
                 SvgPicture.asset(
                   'img/icon/svg/ic_forgot_password.svg',
-                  color: Color(int.parse(ColorConstant.colorPrimary)),
+                  color: primaryColor,
                   height: 100,
                   width: 100,
                 ),
@@ -782,11 +709,10 @@ class _MotDePasseState extends State<MotDePasse> {
                               _isPhone = !_isPhone;
                             });
                           },
-                          child: Text(
+                          child: const Text(
                             "Utiliser l'adresse email ?",
                             style: TextStyle(
-                                color: Color(
-                                    int.parse(ColorConstant.colorPrimary))),
+                                color: primaryColor),
                           ))
                       : TextButton(
                           onPressed: () {
@@ -794,11 +720,10 @@ class _MotDePasseState extends State<MotDePasse> {
                               _isPhone = !_isPhone;
                             });
                           },
-                          child: Text(
+                          child: const Text(
                               "Se connecter avec le numero de telephone ?",
                               style: TextStyle(
-                                  color: Color(
-                                      int.parse(ColorConstant.colorPrimary))))),
+                                  color: primaryColor))),
                 ),
                 _isPhone
                     ? IntlPhoneField(
@@ -814,6 +739,7 @@ class _MotDePasseState extends State<MotDePasse> {
                         onChanged: (phone) {
                           countryCode = phone.countryCode;
                         },
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                         initialCountryCode: 'CM',
                         validator: (val) {
                           if (val!.toString().isEmpty) {
@@ -837,6 +763,7 @@ class _MotDePasseState extends State<MotDePasse> {
                           }
                           return null;
                         },
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                       ),
                 const SizedBox(
                   height: 20,
@@ -852,11 +779,11 @@ class _MotDePasseState extends State<MotDePasse> {
                             borderRadius: BorderRadius.circular(5.0),
                           )),
                           backgroundColor: MaterialStateProperty.all(
-                              Color(int.parse(ColorConstant.colorPrimary)))),
+                              primaryColor)),
                       onPressed: () async {
                         if (_isPhone) {
                           try {
-                            await ApiAuthService.forgotPasswordCode(
+                            await ApiAuthService(context: context,fromLogin: true,progressDialog: getProgressDialog(context: context)).forgotPasswordCode(
                                     telephone: phoneController.text,
                                     countryCode: countryCode)
                                 .then((response) {
@@ -894,6 +821,7 @@ class _MotDePasseState extends State<MotDePasse> {
                                       builder: (BuildContext context) =>
                                           ConfirmCode(
                                             email: email,
+
                                           )));
                             }).catchError((onError) {
                               // showMessage(message: onError.toString(), title: "Alerte");
@@ -926,9 +854,11 @@ class _MotDePasseState extends State<MotDePasse> {
 }
 
 class ConfirmCode extends StatelessWidget {
-  const ConfirmCode({Key? key, this.phone, this.email}) : super(key: key);
+  const ConfirmCode({Key? key, this.phone, this.email, this.token, this.resetPassword}) : super(key: key);
   final String? phone;
   final String? email;
+  final String? token;
+  final bool? resetPassword;
 
   @override
   Widget build(BuildContext context) {

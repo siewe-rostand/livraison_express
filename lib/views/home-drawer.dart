@@ -1,14 +1,22 @@
 import 'dart:convert';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:livraison_express/service/course_service.dart';
 import 'package:livraison_express/service/fire-auth.dart';
-import 'package:livraison_express/views/home-page.dart';
+import 'package:livraison_express/utils/size_config.dart';
+import 'package:livraison_express/views/home/home-page.dart';
 import 'package:livraison_express/views/main/about.dart';
 import 'package:livraison_express/views/main/login.dart';
 import 'package:livraison_express/views/main/profil.dart';
+import 'package:livraison_express/views/widgets/custom_dialog.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../data/user_helper.dart';
+import '../model/module_color.dart';
+import '../model/user.dart';
 
 class MyHomeDrawer extends StatefulWidget {
   const MyHomeDrawer({Key? key}) : super(key: key);
@@ -18,7 +26,11 @@ class MyHomeDrawer extends StatefulWidget {
 }
 
 class _MyHomeDrawerState extends State<MyHomeDrawer> {
+
+  ModuleColor moduleColor=ModuleColor();
   bool _isProcessing = false;
+  late SharedPreferences sharedPreferences;
+  String name= '', tel1= '',email='';
 
   void showMessage({required String message, required String title}) {
     showDialog(
@@ -65,6 +77,23 @@ class _MyHomeDrawerState extends State<MyHomeDrawer> {
       showMessage(message: onError.toString(), title: 'Alerte');
     });
   }
+  initView()async{
+    sharedPreferences = await SharedPreferences.getInstance();
+    String? userString =sharedPreferences.getString("userData");
+    var extractedUserData =json.decode(userString!);
+    AppUser1 user1=AppUser1.fromJson(extractedUserData);
+    AppUser1? appUser1 = UserHelper.currentUser1??user1;
+    setState(() {
+      name=appUser1.firstname!;
+      tel1=appUser1.telephone??appUser1.email!;
+
+    });
+  }
+  @override
+  void initState() {
+    initView();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -76,23 +105,23 @@ class _MyHomeDrawerState extends State<MyHomeDrawer> {
               child: ListView(
                 children: [
                   DrawerHeader(
-                    child: SizedBox(
-                      height: 176,
+                    child: Container(
+                      height: getProportionateScreenHeight(186),
+                      margin: const EdgeInsets.only(left: 10),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Icon(
-                            Icons.account_circle_outlined,
-                            size: 80,
-                            color: Colors.white,
-                          ),
+                        children:  [
+                          SvgPicture.asset('img/icon/svg/user_head.svg',height: getProportionateScreenHeight(80),
+                          width: getProportionateScreenWidth(80),color: Colors.white,),
+                          SizedBox(height: getProportionateScreenWidth(6),),
                           Text(
-                            '678312256',
-                            style: TextStyle(fontSize: 16, color: Colors.white),
+                            tel1,
+                            style: const TextStyle(fontSize: 16, color: Colors.white),
                           ),
+                          SizedBox(height: getProportionateScreenWidth(6),),
                           Text(
-                            'Rostand',
-                            style: TextStyle(fontSize: 16, color: Colors.white),
+                            name.toUpperCase(),
+                            style: const TextStyle(fontSize: 16, color: Colors.white),
                           )
                         ],
                       ),
@@ -143,46 +172,33 @@ class _MyHomeDrawerState extends State<MyHomeDrawer> {
                     title: const Text('Deconnexion'),
                     leading: const Icon(Icons.power_settings_new),
                     onTap: () {
-                      showDialog(
-                          context: context,
-                          builder: (context) {
-                            return AlertDialog(
-                              title: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  SvgPicture.asset(
-                                    'img/icon/svg/ic_warning_yellow.svg',
-                                    color: const Color(0xffFFAE42),
-                                  ),
-                                  const Text('Attention')
-                                ],
-                              ),
-                              content: const Text(
-                                  'Vous allez être déconnecté et toute vos informations non-enregistrée seront supprimé.'),
-                              actions: [
-                                TextButton(
-                                  child: const Text("Ok"),
-                                  onPressed: () async {
-                                    await FireAuth.signOut()
-                                        .then((value) {
-                                      Navigator.of(context).pushReplacement(
-                                          MaterialPageRoute(
-                                              builder: (    BuildContext context
-                                                  ) =>
-                                                  const LoginScreen()));
-                                    });
-                                  },
-                                ),
-                                TextButton(
-                                  child: const Text("Annuler"),
-                                  onPressed: () async {
-                                    Navigator.of(context).pop();
-                                  },
-                                )
-                              ],
-                            );
-                          });
+                      UserHelper.userExitDialog(
+                          context,
+                          false,
+                          CustomAlertDialog(
+                            svgIcon: "img/icon/svg/smiley_cry.svg",
+                            title: "Déconnexion",
+                            message:  "Voulez vous vraiment nous quitter?",
+                            negativeText: "Quitter",
+                            positiveText: 'Annuler',
+                            height: SizeConfig.screenHeight!*0.3,
+                            width: SizeConfig.screenWidth!*0.4,
+                            onContinue: () {
+                              Navigator.pop(context);
+                              Navigator.pop(context);
+                            },
+                            onCancel: () async {
+                              Navigator.pop(context);
+                              SharedPreferences pref = await SharedPreferences
+                                  .getInstance();
+                              pref.clear();
+                              FireAuth.signOutFromGoogle();
+                              Navigator.of(context).pushReplacement(
+                                  MaterialPageRoute(
+                                      builder: (    BuildContext contex
+                                          ) =>
+                                      const LoginScreen()));
+                            }, moduleColor: moduleColor,));
                     },
                   ),
                 ],

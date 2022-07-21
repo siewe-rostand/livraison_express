@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
@@ -5,13 +8,20 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:livraison_express/constant/color-constant.dart';
+import 'package:livraison_express/data/my_sharedPreference.dart';
+import 'package:livraison_express/data/user_helper.dart';
+import 'package:livraison_express/model/address-favorite.dart';
+import 'package:livraison_express/model/auto_gene.dart';
 import 'package:livraison_express/model/module_color.dart';
+import 'package:livraison_express/utils/size_config.dart';
 import 'package:livraison_express/views/MapView.dart';
 import 'package:livraison_express/views/restaurant/delivery_address.dart';
-import 'package:livraison_express/views/restaurant/map_page.dart';
+import 'package:livraison_express/views/restaurant/resto_home.dart';
+import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 
 import '../../model/magasin.dart';
 import '../../service/shopService.dart';
+import '../widgets/custom_dialog.dart';
 
 class Restaurant extends StatefulWidget {
   const Restaurant(
@@ -27,10 +37,16 @@ class Restaurant extends StatefulWidget {
 
 class _RestaurantState extends State<Restaurant> {
   double latitude = 0.0;
+  late ProgressDialog progressDialog;
   double longitude = 0.0;
-  bool isLoading = false;
-  bool isToday= false;
-  String currentTime='';
+  bool isLoading = false, canDeliver = false;
+  bool isToday = false;
+  String currentText = "";
+  String currentTime = '';
+  double? placeLat, placeLon;
+  String? location;
+  List addresses = [];
+  String message = '';
   late DateFormat dateFormat;
   late FToast fToast;
   _showToast() {
@@ -57,28 +73,18 @@ class _RestaurantState extends State<Restaurant> {
       gravity: ToastGravity.BOTTOM,
       toastDuration: const Duration(seconds: 2),
     );
-
-    // Custom Toast Position
-    // fToast.showToast(
-    //     child: toast,
-    //     toastDuration: const Duration(seconds: 2),
-    //     positionedToastBuilder: (context, child) {
-    //       return Positioned(
-    //         child: child,
-    //         top: 16.0,
-    //         left: 16.0,
-    //       );
-    //     });
   }
 
   Future _determinePosition() async {
     bool serviceEnabled;
-    LocationPermission permission;
+    LocationPermission permission = await Geolocator.checkPermission();
 
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      await Geolocator.requestPermission();
-      return _showToast();
+      if (permission == LocationPermission.denied) {
+        await Geolocator.requestPermission();
+        return _showToast();
+      }
     }
 
     permission = await Geolocator.checkPermission();
@@ -103,39 +109,40 @@ class _RestaurantState extends State<Restaurant> {
         desiredAccuracy: LocationAccuracy.high);
   }
 
-  getMagasin()async{
-
-  }
-
-  bool isOpened(List<DayItem> items){
+  bool isOpened(List<DayItem> items) {
     bool juge = false;
 
-    if(items.isNotEmpty){
-      for(DayItem item in items){
+    if (items.isNotEmpty) {
+      for (DayItem item in items) {
         String? openTime = item.openedAt;
         String? closeTime = item.closedAt;
-        if(openTime !=null && openTime.isNotEmpty && closeTime!=null && closeTime.isNotEmpty){
-          DateTime now =DateTime.now();
+        if (openTime != null &&
+            openTime.isNotEmpty &&
+            closeTime != null &&
+            closeTime.isNotEmpty) {
+          DateTime now = DateTime.now();
           dateFormat = DateFormat.Hm();
           currentTime = dateFormat.format(now);
-          try{
+          try {
             var nw1 = currentTime.substring(0, 2);
             var a1 = currentTime.substring(3, 5);
             var nw = openTime.substring(0, 2);
             var a = openTime.substring(3, 5);
             var cnm = closeTime.substring(0, 2);
             var cla = closeTime.substring(3, 5);
-            DateTime currentTimeStamp =
-            DateTime(now.year, now.month, now.day, int.parse(nw1), int.parse(a1), 0);
+            DateTime currentTimeStamp = DateTime(
+                now.year, now.month, now.day, int.parse(nw1), int.parse(a1), 0);
             DateTime openTimeStamp = DateTime(
                 now.year, now.month, now.day, int.parse(nw), int.parse(a), 0);
-            DateTime closeTimeStamp = DateTime(
-                now.year, now.month, now.day, int.parse(cnm), int.parse(cla), 0);
-            if(currentTimeStamp.isAtSameMomentAs(openTimeStamp)&&currentTimeStamp.isAfter(openTimeStamp)&&currentTimeStamp.isBefore(closeTimeStamp)){
-              juge=true;
+            DateTime closeTimeStamp = DateTime(now.year, now.month, now.day,
+                int.parse(cnm), int.parse(cla), 0);
+            if (currentTimeStamp.isAtSameMomentAs(openTimeStamp) &&
+                currentTimeStamp.isAfter(openTimeStamp) &&
+                currentTimeStamp.isBefore(closeTimeStamp)) {
+              juge = true;
               break;
             }
-          }catch(e){
+          } catch (e) {
             debugPrint('restaurant today time exce// $e');
           }
         }
@@ -144,260 +151,230 @@ class _RestaurantState extends State<Restaurant> {
     return juge;
   }
 
-  List addresses = [];
+  showError(String title, String message,
+      {String icon = 'img/icon/svg/alert_round.svg'}) {
+    UserHelper.userExitDialog(
+        context,
+        false,
+        CustomAlertDialog(
+          title: title,
+          message: message,
+          svgIcon: icon,
+          positiveText: 'Fermer',
+          onContinue: () {
+            Navigator.pop(context);
+          },
+          moduleColor: widget.moduleColor,
+        ));
+  }
+
+  getShops(
+    double latitude,
+    double longitude,
+  ) async {
+    await progressDialog.show();
+    String city = await UserHelper.getCity();
+    List<Shops> shops = await ShopServices()
+        .getShops(
+            moduleId: widget.moduleId!,
+            city: city,
+            latitude: latitude,
+            longitude: longitude,
+            inner_radius: 0,
+            outer_radius: 5)
+        .then((value) async{
+          await progressDialog.hide();
+      debugPrint('restaurant current pos// ${value[0].adresseFavorite}');
+      AddressFavorite? addressFav = value[0].adresseFavorite;
+      var avf = json.encode(addressFav);
+      // MySession.saveValue('delivery_address', avf);
+      return value;
+    }).catchError((onError) {
+      debugPrint('///$onError');
+      showError("Oops!!", "Désolé nous ne livrons pas encore dans cette zone.");
+    });
+    if (shops.isNotEmpty) {
+      Navigator.of(context).pushReplacement(MaterialPageRoute(
+          builder: (context) => DeliveryAddress(
+                moduleId: widget.moduleId!,
+                city: city,
+                latitude: latitude,
+                longitude: longitude,
+                moduleColor: widget.moduleColor,
+                shops: shops,
+              )));
+    }
+  }
+  addressOnMap()async{
+    String city =
+    await UserHelper.getCity();
+    var result =
+    await Navigator.of(context).push(
+        MaterialPageRoute(
+            builder: (context) =>
+            const MapsView()));
+    setState(() {
+      placeLon =
+          result['Longitude'] ?? 0.0;
+      placeLat =
+          result['Latitude'] ?? 0.0;
+      location = result['location'];
+      print(
+          '//received from map $placeLon / $placeLat');
+    });
+    if (placeLon != null &&
+        placeLon != 0.0 &&
+        placeLat != null &&
+        placeLat != 0.0) {
+      setState(() {
+        isLoading = !isLoading;
+        message = 'chargement ...';
+      });
+  }
+    getShops(placeLat!, placeLon!);
+  }
+
   @override
   void initState() {
+    progressDialog = getProgressDialog(context: context);
     super.initState();
     fToast = FToast();
     fToast.init(context);
     debugPrint('$isLoading');
+    message = 'Bienvenue dans mon restaurant.'
+        'Commencez par choisir une adresse de livraison.';
   }
 
   @override
   Widget build(BuildContext context) {
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle(
-          statusBarColor: widget.moduleColor.moduleColorDark),
-      child: Scaffold(
+    return Scaffold(
+      appBar: AppBar(
+        systemOverlayStyle: SystemUiOverlayStyle(
+            statusBarColor: widget.moduleColor.moduleColor),
         backgroundColor: widget.moduleColor.moduleColor,
-        appBar: AppBar(
-          backgroundColor: widget.moduleColor.moduleColor,
-          title: const Text('Restaurant'),
-        ),
-        body: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: ListView(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(bottom: 35, top: 10),
-                child: Row(
-                  children: [
-                    SvgPicture.asset(
-                      "img/icon/svg/ic_cook.svg",
-                      color: Colors.white,
-                      height: 100,
-                      width: 100,
-                      semanticsLabel: 'cook',
-                    ),
-                    Expanded(
-                      child: isLoading ==false
-                          ? const Text(
-                              'Bienvenue dans mon restaurant.'
-                              'Commencez par choisir une adresse de livraison.',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15,
-                                  color: Colors.white),
-                            )
-                          : Column(
-                              mainAxisSize: MainAxisSize.min,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: const [
-                                Center(child: CircularProgressIndicator()),
-                                Text('Chargement')
+        title: const Text('Restaurant'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: ListView(
+          children: [
+            SizedBox(
+              height: SizeConfig.screenHeight! * 0.05,
+            ),
+            Row(
+              children: [
+                SvgPicture.asset(
+                  "img/icon/svg/ic_cook.svg",
+                  color: Colors.black45,
+                  height: getProportionateScreenHeight(120),
+                  width: getProportionateScreenWidth(120),
+                  semanticsLabel: 'cook',
+                ),
+                SizedBox(
+                  width: getProportionateScreenWidth(10),
+                ),
+                Expanded(
+                  child: Text(
+                    message,
+                    style: TextStyle(color: Colors.grey[700], fontSize: 18),
+                  ),
+                )
+              ],
+            ),
+            SizedBox(
+              height: SizeConfig.screenHeight! * 0.05,
+            ),
+            RestauHome((option) async {
+              switch (option) {
+                case 0:
+                  await _determinePosition().then((pos) async {
+                    latitude = pos.latitude;
+                    longitude = pos.longitude;
+                    getShops(latitude, longitude);
+                  }).catchError((onError) {
+                    showError("Alerte",
+                        "Nous n'avons pas pu récupérer votre position. Veuillez nous accorder l'accès a votre position puis réessayez.");
+                  });
+                  break;
+                case 1:
+
+                  showDialog<void>(
+                      context: context,
+                      builder: (context) {
+                        return Center(
+                          child: AlertDialog(
+                            content: Column(
+                              mainAxisAlignment:
+                              MainAxisAlignment
+                                  .spaceBetween,
+                              children: [
+                                const Align(
+                                  child: Text(
+                                    ' Choisir votre adresse: ',
+                                    style: TextStyle(
+                                        fontWeight:
+                                        FontWeight
+                                            .bold,
+                                        color: Colors
+                                            .blue),
+                                  ),
+                                  alignment: Alignment
+                                      .topCenter,
+                                ),
+                                addresses.isEmpty
+                                    ? const Text(
+                                  ' Votre liste est vide ',
+                                  style: TextStyle(
+                                      fontWeight:
+                                      FontWeight
+                                          .bold),
+                                )
+                                    : ListView.builder(
+                                    itemBuilder:
+                                        (context,
+                                        index) {
+                                      return const Text(
+                                          'draw');
+                                    }),
+                                Align(
+                                  alignment: Alignment
+                                      .bottomCenter,
+                                  child: ElevatedButton(
+                                      style: ButtonStyle(
+                                          backgroundColor:
+                                          MaterialStateProperty.all(
+                                              Colors
+                                                  .white)),
+                                      onPressed: () {
+                                        Navigator.of(
+                                            context)
+                                            .pop();
+                                      },
+                                      child: const Text(
+                                        'FERMER',
+                                        style: TextStyle(
+                                            fontWeight:
+                                            FontWeight
+                                                .bold,
+                                            color: Colors
+                                                .black38),
+                                      )),
+                                )
                               ],
                             ),
-                    )
-                  ],
-                ),
-              ),
-              Card(
-                child: SizedBox(
-                  width: double.infinity,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child:
-                            Text('Veuillez choisir une addresse de livraison'),
-                      ),
-                      Container(
-                        margin: const EdgeInsets.only(top: 4, bottom: 4),
-                        child: const Divider(
-                          thickness: 1.5,
-                        ),
-                      ),
-                      Container(
-                        margin: const EdgeInsets.only(left: 10, right: 10),
-                        height: 30,
-                        child: InkWell(
-                          onTap: () async {
-                            Position pos = await _determinePosition();
-
-                            // debugPrint('pos ${pos.runtimeType}');
-                            if (pos != null) {
-                              latitude =pos.latitude;
-                              longitude =pos.longitude;
-                              setState(() {
-                                isLoading=!isLoading;
-                              });
-                              // debugPrint('load $isLoading');
-                              var moduleId = widget.moduleId;
-                              List<Magasin> mags =await ShopServices.getShops(
-                                  moduleId: widget.moduleId!,
-                                  city: widget.city,
-                                  latitude: latitude,
-                                  longitude: longitude,
-                                  inner_radius: 0,
-                                  outer_radius: 5).then((value) {
-                                debugPrint('restaurant current pos// $value');
-                                return value;
-                              }).catchError((onError){
-                                debugPrint('///$onError');
-                              });
-                              if(mags.isNotEmpty){
-                                Navigator.of(context).pushReplacement(MaterialPageRoute(
-                                          builder: (context) => DeliveryAddress(
-                                              moduleId: widget.moduleId!,
-                                              city: widget.city,
-                                              latitude: latitude,
-                                              longitude: longitude,
-                                              moduleColor: widget.moduleColor,
-                                          magasins: mags,)));
-                              }
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text("Nous n'avons pas pu récupérer votre position"),
-                                ),
-                              );
-                              isLoading = false;
-                            }
-                          },
-                          child: Row(
-                            children: [
-                              SvgPicture.asset(
-                                "img/icon/svg/ic_current_position.svg",
-                                semanticsLabel: 'current position',
-                                color: Color(int.parse(ColorConstant.grey80)),
-                                width: 20,
-                                height: 25,
-                              ),
-                              const Padding(
-                                padding: EdgeInsets.only(left: 8),
-                                child: Text('Ma position actuelle'),
-                              )
-                            ],
                           ),
-                        ),
-                      ),
-                      Container(
-                          margin: const EdgeInsets.only(top: 4, bottom: 4),
-                          child: const Divider(
-                            thickness: 1.5,
-                          )),
-                      InkWell(
-                        onTap: () {
-                          showDialog<void>(
-                              context: context,
-                              builder: (context) {
-                                return Center(
-                                  child: AlertDialog(
-                                    content: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        const Align(
-                                          child: Text(
-                                            ' Choisir votre adresse: ',
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.blue),
-                                          ),
-                                          alignment: Alignment.topCenter,
-                                        ),
-                                        addresses.isEmpty
-                                            ? const Text(
-                                                ' Votre liste est vide ',
-                                                style: TextStyle(
-                                                    fontWeight:
-                                                        FontWeight.bold),
-                                              )
-                                            : ListView.builder(
-                                                itemBuilder: (context, index) {
-                                                return Text('draw');
-                                              }),
-                                        Align(
-                                          alignment: Alignment.bottomCenter,
-                                          child: ElevatedButton(
-                                              style: ButtonStyle(
-                                                  backgroundColor:
-                                                      MaterialStateProperty.all(
-                                                          Colors.white)),
-                                              onPressed: () {
-                                                Navigator.of(context).pop();
-                                              },
-                                              child: const Text(
-                                                'FERMER',
-                                                style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Colors.black38),
-                                              )),
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              });
-                        },
-                        child: Container(
-                          margin: const EdgeInsets.only(left: 10, right: 10),
-                          child: Row(
-                            children: [
-                              SvgPicture.asset(
-                                "img/icon/svg/ic_address.svg",
-                                semanticsLabel: 'address',
-                                color: Color(int.parse(ColorConstant.grey80)),
-                                width: 20,
-                                height: 20,
-                              ),
-                              const Padding(
-                                padding: EdgeInsets.only(left: 8),
-                                child: Text("Consultez ma liste d'adresses"),
-                              )
-                            ],
-                          ),
-                        ),
-                      ),
-                      Container(
-                          margin: const EdgeInsets.only(top: 4, bottom: 4),
-                          child: const Divider(
-                            thickness: 1.5,
-                          )),
-                      InkWell(
-                        onTap: () {
-                          Navigator.of(context).push(MaterialPageRoute(
-                              builder: (BuildContext context) =>
-                                  const MapsView()));
-                        },
-                        child: Container(
-                          margin: const EdgeInsets.only(
-                              left: 10, right: 10, bottom: 4),
-                          child: Row(
-                            children: [
-                              SvgPicture.asset(
-                                'img/icon/svg/ic_map_location.svg',
-                                semanticsLabel: 'location',
-                                color: Color(int.parse(ColorConstant.grey80)),
-                                height: 20,
-                                width: 20,
-                              ),
-                              const Padding(
-                                padding: EdgeInsets.only(left: 8),
-                                child:
-                                    Text('Choisir une adresse sur la carte '),
-                              )
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-            ],
-          ),
+                        );
+                      });
+                  break;
+                case 2:
+                  var result =
+                  await Navigator.of(context).push(
+                      MaterialPageRoute(
+                          builder: (context) =>
+                          const MapsView()));
+              }
+            }),
+          ],
         ),
       ),
     );

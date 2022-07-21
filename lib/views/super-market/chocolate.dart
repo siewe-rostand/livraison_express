@@ -214,13 +214,14 @@ class _ChocolateState extends State<Chocolate> {
           child: IconButton(
             onPressed: (){
               ModuleColor moduleColor=ModuleColor();
-              Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (BuildContext context) =>
-                                  CartPage(
-                                    moduleColor: moduleColor,
-                                  )));
+              // Navigator.push(
+              //             context,
+              //             MaterialPageRoute(
+              //                 builder: (BuildContext context) =>
+              //                     CartPage(
+              //                       moduleColor: moduleColor,
+              //                       slug,
+              //                     )));
 
             },
             icon: const Icon(Icons.shopping_cart,color:  Color(0xff00a117),),

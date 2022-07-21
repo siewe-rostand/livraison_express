@@ -1,8 +1,12 @@
 import 'dart:convert';
+import 'dart:developer';
 
+import 'package:autocomplete_textfield/autocomplete_textfield.dart';
+import 'package:contacts_service/contacts_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
@@ -11,22 +15,25 @@ import 'package:livraison_express/model/address-favorite.dart';
 import 'package:livraison_express/model/address.dart';
 import 'package:livraison_express/model/auto_gene.dart';
 import 'package:livraison_express/model/client.dart';
-import 'package:livraison_express/model/day.dart';
 import 'package:livraison_express/model/distance_matrix.dart';
 import 'package:livraison_express/model/infos.dart';
 import 'package:livraison_express/model/payment.dart';
+import 'package:livraison_express/model/user.dart';
 import 'package:livraison_express/service/course_service.dart';
-import 'package:livraison_express/service/favorite_address_api.dart';
 import 'package:livraison_express/views/MapView.dart';
+import 'package:logger/logger.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../data/user_helper.dart';
 import '../../model/day_item.dart';
+import '../../model/horaire.dart';
+import '../../model/module_color.dart';
 import '../../model/order.dart';
 import '../../model/quartier.dart';
-import '../super-market/cart-provider.dart';
+import '../../utils/main_utils.dart';
 
-enum contact { moi, autre }
 enum DeliveryType { express, heure_livraison }
 
 class CommandeCoursier extends StatefulWidget {
@@ -35,13 +42,14 @@ class CommandeCoursier extends StatefulWidget {
   final String? currentAddress;
   final String? from;
   final Shops shops;
+  final ModuleColor moduleColor;
   const CommandeCoursier(
       {Key? key,
       this.city,
       this.currentLocation,
       this.currentAddress,
       this.from,
-      required this.shops})
+      required this.shops, required this.moduleColor})
       : super(key: key);
 
   @override
@@ -52,6 +60,8 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
   final GlobalKey<FormState> step1FormKey = GlobalKey<FormState>();
   final GlobalKey<FormState> step2FormKey = GlobalKey<FormState>();
   final GlobalKey<FormState> step3FormKey = GlobalKey<FormState>();
+  GlobalKey<AutoCompleteTextFieldState<String>> key = GlobalKey();
+  TextEditingController controller = TextEditingController();
   final List<GlobalKey<FormState>> _formKeys = [
     GlobalKey<FormState>(),
     GlobalKey<FormState>(),
@@ -59,11 +69,11 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
     GlobalKey<FormState>()
   ];
   int _currentStep = 0;
+  int radioSelected = 1;
+  int radioSelected2 = 1;
   DeliveryType? _deliveryType;
   StepperType stepperType = StepperType.vertical;
-  bool isChecked = false;
-  bool isChecked1 = false;
-  bool isToday = false;
+  bool isChecked = false,isToday = false,isChecked1 = false;
   List addresses = [];
   String newCity = '';
   late List<String> filteredList;
@@ -71,10 +81,8 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
 
   //order variables
   List<Address> addressList = [];
-  String fullName = '';
-  String telephone = '';
-  String telephone1 = '';
-  String email = '';
+  String fullName = '',telephone = '',telephone1 = '',email = '';
+  final TextEditingController _typeAheadController = TextEditingController();
 
 //step 1 variables
   Client sender = Client();
@@ -89,12 +97,14 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
   TextEditingController titleDepartTextController = TextEditingController();
   Address senderAddress = Address();
   AddressFavorite selectedAddressDepart = AddressFavorite();
-  double? placeLatDepart;
-  double? placeLonDepart;
+  double? placeLatDepart,placeLonDepart;
   String? location;
   String quartierDepart = '';
-  contact? _contact = contact.autre;
   bool isMeDest = true;
+  List<Contact> contacts=[];
+  List<Contact> contacts1=[];
+  Map contactMap ={};
+  List<String> contactsName=[];
 
 //step 2 variables
   Client receiver = Client();
@@ -115,13 +125,11 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
       TextEditingController();
   Address receiverAddress = Address();
   AddressFavorite selectedAddressDestination = AddressFavorite();
-  double? placeLatDestination;
-  double? placeLonDestination;
+  double? placeLatDestination,placeLonDestination;
   String? locationDestination;
   String quartierDestination = '';
-  contact? _contactDest = contact.autre;
-  bool isLoading = false;
-  bool isMeDepart = true;
+  bool isLoading = false,isMeDepart = true;
+
 
   //step 3 variables
   TextEditingController descColisTextController = TextEditingController();
@@ -133,14 +141,9 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
   late DateFormat dateFormat;
   late String selectTodayTime;
   Duration step = const Duration(minutes: 10);
-  String chooseTime = '';
-  String currentTime = '';
-  String currentDate = '';
-  int? initialDeliveryPrice;
-  int? deliveryPrice;
-  String? durationText;
-  String? distanceText;
-  bool isTodayOpened = false;
+  String chooseTime = '',currentDate = '',currentTime = '';
+  int? initialDeliveryPrice,deliveryPrice;
+  String? durationText,distanceText;
   Shops shops = Shops();
   int delay=0;
   String deliveryTime='';
@@ -152,21 +155,21 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
   Info info =Info();
   Client client = Client();
   String codePromo ='';
-  int duration = 0;
-  int distance = 0;
+  int duration = 0,distance = 0;
   int? payOption;
+  final logger =Logger();
+  String? city;
+  bool isTomorrowOpened = false;
+  bool isTodayOpened = false;
 
   @override
   void initState() {
     isToday = false;
     isChecked = false;
-    shops = widget.shops;
+    print(isMeDepart);
 
     DateTime startTime = DateTime(now.year, now.month, now.day, 8, 20, 0);
-    DateTime startTime1 = DateTime(now.year, now.month, now.day, 8, 30, 0);
     DateTime endTime = DateTime(now.year, now.month, now.day, 20, 30, 0);
-    cityDepartTextController = TextEditingController(text: widget.city);
-    cityDestinationTextController = TextEditingController(text: widget.city);
 
     while (startTime.isBefore(endTime)) {
       DateTime timeIncrement = startTime.add(step);
@@ -184,42 +187,14 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
   }
 
   initView() async {
-    SharedPreferences preferences = await SharedPreferences.getInstance();
-    var av = preferences.getString('city');
-    if (shops.horaires != null && shops.horaires?.today != null) {
-      Days? today = shops.horaires?.today;
-      List<DayItem>? itemsToday = today?.items;
-      for (DayItem i in itemsToday!) {
-        try {
-          DateTime now = DateTime.now();
-          String? openTime = i.openedAt;
-          String? closeTime = i.closedAt;
-          // var nw1 = currentTime.substring(0, 2);
-          // var a1 = currentTime.substring(3, 5);
-          var nw = openTime?.substring(0, 2);
-          var a = openTime?.substring(3, 5);
-          var cnm = closeTime?.substring(0, 2);
-          var cla = closeTime?.substring(3, 5);
-          DateTime openTimeStamp = DateTime(
-              now.year, now.month, now.day, int.parse(nw!), int.parse(a!), 0);
-          DateTime closeTimeStamp = DateTime(now.year, now.month, now.day,
-              int.parse(cnm!), int.parse(cla!), 0);
-          debugPrint('close time // $closeTimeStamp');
-          if ((now.isAtSameMomentAs(openTimeStamp) ||
-                  now.isAfter(openTimeStamp)) &&
-              now.isBefore(closeTimeStamp)) {
-            isTodayOpened = true;
-          }
-          print(isTodayOpened);
-          // if(isShopOpen(i.openedAt!, i.closedAt!)){
-          //   isTodayOpened =true;
-          // }
-        } catch (e) {
-          debugPrint('shop get time error $e');
-        }
-      }
-    }
-    print(av);
+    shops = widget.shops;
+    city =await UserHelper.getCity();
+    setState(() {
+      cityDepartTextController = TextEditingController(text: city);
+      cityDestinationTextController= TextEditingController(text: city);
+    });
+    isOpened1(shops.horaires?.today!.items);
+    // print(av);
     if (widget.from == 'map') {
       var position = widget.currentLocation;
       placeLonDepart = position?.longitude ?? 0.0;
@@ -565,7 +540,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
     String? origin = sender.addresses![0].latLng;
     String? destination = receiver.addresses![0].latLng;
     debugPrint("distances $origin // $destination");
-    await CourseApi.calculateOrderDistance(
+    await CourseApi().calculateDeliveryDistance(
             origin: origin!, destination: destination!)
         .then((value) {
       print(value);
@@ -577,6 +552,58 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
     });
   }
 
+  Future<List<Contact>> getContacts(String query) async {
+    //We already have permissions for contact when we get to this page, so we
+    // are now just retrieving it
+    final PermissionStatus permission = await Permission.contacts.status;
+    if(permission == PermissionStatus.granted) {
+      return await ContactsService.getContacts(query: query,
+        withThumbnails: false,photoHighResolution: false
+      );
+    }else{
+      await Permission.contacts.request().then((value) {
+        if(value==PermissionStatus.granted){
+          getContacts(query);
+        }
+      });
+      throw Exception('error');
+    }
+  }
+  autoComplete(){
+    return
+      TypeAheadField(
+        getImmediateSuggestions: true,
+        textFieldConfiguration:  TextFieldConfiguration(
+            decoration: const InputDecoration(labelText: 'Nom et prenom *'),
+          controller: _typeAheadController,
+           ),
+        suggestionsCallback: (pattern) {
+          // call the function to get suggestions based on text entered
+          return getContacts(pattern);
+        },
+        itemBuilder: (context,Contact suggestion) {
+          // show suggection list
+          suggestion.phones?.forEach((element) {
+            telephone=element.value!;
+          });
+          return ListTile(
+            title: Text(suggestion.displayName!),
+            subtitle: Text(
+              telephone,
+            ),
+          );
+        },
+        onSuggestionSelected: (Contact suggestion) {
+          suggestion.phones?.forEach((element) {
+            telephone=element.value!;
+          });
+          _typeAheadController.text=suggestion.displayName!;
+          phoneDepartTextController.text =telephone;
+        },
+        hideOnEmpty: true,
+        autoFlipDirection: true,
+      );
+  }
   setSender(){
     var providerName="livraison-express";
     sender.fullName = nomDepartTextController.text;
@@ -600,7 +627,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
       List<Address> addresses = [];
       addresses.add(senderAddress);
       sender.addresses = addresses;
-      print('///${sender.toJson()}');
+      logger.w(senderAddress.toJson());
       print('///address${sender.addresses![0].toJson()}');
     setState(() {
       _currentStep++;
@@ -640,16 +667,18 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
     addresses.add(receiverAddress);
     receiver.addresses = addresses;
     print('///${receiver.toJson()}');
+    logger.w('///${receiverAddress.toJson()}');
     String? origin = sender.addresses![0].latLng;
     String? destination = receiver.addresses![0].latLng;
     debugPrint("distances $origin // $destination");
-    await CourseApi.calculateOrderDistance(
+    await CourseApi().calculateDeliveryDistance(
             origin: origin!, destination: destination!)
         .then((response) {
       var body = json.decode(response.body);
       var message = body['message'];
       var data = body['data'];
       DistanceMatrix distanceMatrix =DistanceMatrix.fromJson(data);
+      logger.w(distanceMatrix.toJson());
       setState(() {
         duration =distanceMatrix.duration!;
         distanceText =distanceMatrix.distanceText;
@@ -662,7 +691,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
       });
 
       print(deliveryPrice);
-      Fluttertoast.showToast(msg: message, backgroundColor: Colors.green);
+      Fluttertoast.showToast(msg: message, backgroundColor: UserHelper.getColor());
     }).catchError((onError) {
       print('eroo/');
     });
@@ -692,8 +721,8 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
     var email = extractedUserData['email'];
     var fullName = extractedUserData['fullname'];
     var telephone = extractedUserData['telephone'];
-    var userId= extractedUserData['provider_id'];
     var providerName= extractedUserData['provider_name'];
+    var av = sharedPreferences.getString('city');
     order.module ="delivery";
     order.magasinId=widget.shops.id;
     order.description=descColisTextController.text;
@@ -707,13 +736,14 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
     info.dateChargement = currentDate;
     info.heureLivraison = currentTime;
     info.jourLivraison=currentDate;
-    info.villeLivraison=widget.city;
+    info.villeLivraison=av;
     info.duration = duration;
+    info.distance = distance.toString();
     info.durationText=durationText;
     info.distanceText=distanceText;
     info.statusHuman='';
     info.type='';
-    client.id=userId;
+    // client.id=int.parse(userId);
     client.providerName=providerName;
     client.fullName=fullName;
     client.telephone=telephone;
@@ -727,12 +757,12 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
       "orders":order,
       "paiement":payment,
     };
-    // debugPrint('infos ${info.toJson()}');
-    // debugPrint('client ${client.toJson()}');
-    // debugPrint('receiver ${receiver.toJson()}');
-    // debugPrint('sender ${sender.toJson()}');
-    // debugPrint('orders ${order.toJson()}');
-    debugPrint('paiement ${data}');
+    debugPrint('infos ${info.toJson()}');
+    debugPrint('client ${client.toJson()}');
+    debugPrint('receiver ${receiver.toJson()}');
+    debugPrint('sender ${sender.toJson()}');
+    debugPrint('orders ${order.toJson()}');
+    logger.wtf('paiement ${data}');
     await CourseApi.commnander( data: data).then((response) {
       var body = json.decode(response.body);
       var res = body['data'];
@@ -743,9 +773,122 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
       print(onError);
     });
   }
-  String swapDate(String date) {
-    List<String> dateElements = date.split("-");
-    return dateElements[2] + "-" + dateElements[1] + "-" + dateElements[0];
+  getStoredUserInfo(int value)async{
+    SharedPreferences sharedPreferences =
+    await SharedPreferences.getInstance();
+    String? userString =
+    sharedPreferences.getString("userData");
+    final extractedUserData =
+    json.decode(userString!);
+    AppUser1 user1=AppUser1.fromJson(extractedUserData);
+    AppUser1? appUser1 = UserHelper.currentUser1??user1;
+    email =radioSelected==0? appUser1.email!:'';
+    fullName =radioSelected==0? appUser1.fullname!:'';
+    telephone = radioSelected==0?appUser1.telephone!:'';
+    telephone1 =radioSelected==0?appUser1.telephoneAlt??'':'';
+    var id = appUser1.providerId;
+    setState(() {
+      radioSelected = value;
+      nomDepartTextController.text = fullName;
+      phone2DepartTextController.text =
+          telephone1;
+      phoneDepartTextController.text =
+          telephone;
+      emailDepartTextController.text = email;
+      // sender.id = int.parse(id);
+      print("${id.runtimeType}");
+      sender.providerName =radioSelected==0?
+      extractedUserData['provider_name']:'livraison-express';
+      senderAddress.providerName = "livraison-express";
+    });
+  }
+  bool isOpened(Horaires horaires) {
+    bool juge = false;
+    if(horaires.toString().isNotEmpty){
+      if(horaires.today!=null){
+        List<DayItem>? itemsToday =
+            horaires.today?.items;
+        for (DayItem i in itemsToday!) {
+          try {
+            DateTime now = DateTime.now();
+            String? openTime = i.openedAt;
+            String? closeTime = i.closedAt;
+            var nw = openTime?.substring(0, 2);
+            var a = openTime?.substring(3, 5);
+            var cnm = closeTime?.substring(0, 2);
+            var cla = closeTime?.substring(3, 5);
+            DateTime openTimeStamp = DateTime(now.year, now.month,
+                now.day, int.parse(nw!), int.parse(a!), 0);
+            DateTime closeTimeStamp = DateTime(now.year, now.month,
+                now.day, int.parse(cnm!), int.parse(cla!), 0);
+            debugPrint('close time // $closeTimeStamp');
+            if ((now.isAtSameMomentAs(openTimeStamp) ||
+                now.isAfter(openTimeStamp)) &&
+                now.isBefore(closeTimeStamp)) {
+              isTodayOpened = true;
+              juge=true;
+              break;
+            }
+            log('commande coursier',error: isTodayOpened.toString());
+          } catch (e) {
+            debugPrint('shop get time error $e');
+          }
+        }
+      }
+      if (horaires.tomorrow != null) {
+        List<DayItem>? itemsToday =
+            horaires.tomorrow?.items;
+        for (DayItem i in itemsToday!) {
+          try {
+            String? openTime = i.openedAt;
+            String? closeTime = i.closedAt;
+            if (openTime!.isNotEmpty && closeTime!.isNotEmpty) {
+              isTomorrowOpened = true;
+              juge=true;
+              break;
+            }
+            log('from home page',error: isTomorrowOpened.toString());
+          } catch (e) {
+            debugPrint('shop get time error $e');
+          }
+        }
+      }
+    }
+    return juge;
+  }
+  bool isOpened1(List<DayItem>? itemsToday) {
+    bool juge = false;
+    if(itemsToday!.isNotEmpty) {
+      for (DayItem i in itemsToday) {
+        try {
+          DateTime now = DateTime.now();
+          String? openTime = i.openedAt;
+          String? closeTime = i.closedAt;
+          var nw = openTime?.substring(0, 2);
+          var a = openTime?.substring(3, 5);
+          var cnm = closeTime?.substring(0, 2);
+          var cla = closeTime?.substring(3, 5);
+          DateTime openTimeStamp = DateTime(
+              now.year, now.month, now.day, int.parse(nw!), int.parse(a!), 0);
+          DateTime closeTimeStamp = DateTime(now.year, now.month, now.day,
+              int.parse(cnm!), int.parse(cla!), 0);
+          debugPrint('close time // $closeTimeStamp');
+          if ((now.isAtSameMomentAs(openTimeStamp) ||
+              now.isAfter(openTimeStamp)) &&
+              now.isBefore(closeTimeStamp)) {
+            setState(() {
+              isTodayOpened = true;
+              juge = true;
+            });
+            break;
+          }
+          log('from home page today', error: isTodayOpened.toString());
+        } catch (e) {
+          debugPrint('shop get time error $e');
+        }
+      }
+    }
+    return juge;
   }
   bool isFavoriteAddress(AddressFavorite addressFavorite, Address address) {
     if (addressFavorite.toString().isEmpty) {
@@ -761,13 +904,20 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
 
   @override
   void dispose() {
+    controller.dispose();
+    phone2DestinationTextController.dispose();
+    cityDestinationTextController.dispose();
+    cityDepartTextController.dispose();
+    titleDestinationTextController.dispose();
+    descDestinationTextController.dispose();
+    addressDestinationTextController.dispose();
+    emailDestinationTextController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final quarter = Provider.of<QuarterProvider>(context);
-    final cartProvider = Provider.of<CartProvider>(context);
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
@@ -837,57 +987,57 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Radio<contact>(
-                                  value: contact.moi,
-                                  groupValue: _contact,
-                                  onChanged: (contact? value) async {
+                                Radio(
+                                  value: 0,
+                                  groupValue: radioSelected,
+                                  onChanged: (int? value) async {
                                     SharedPreferences sharedPreferences =
-                                        await SharedPreferences.getInstance();
+                                    await SharedPreferences.getInstance();
                                     String? userString =
-                                        sharedPreferences.getString("userData");
+                                    sharedPreferences.getString("userData");
                                     final extractedUserData =
-                                        json.decode(userString!);
-                                    email = extractedUserData['email'];
-                                    fullName = extractedUserData['fullname'];
-                                    telephone = extractedUserData['telephone'];
-                                    telephone1 =
-                                        extractedUserData['telephone_alt'];
-                                    var id = extractedUserData['provider_id'];
+                                    json.decode(userString!);
+                                    AppUser1 user1=AppUser1.fromJson(extractedUserData);
+                                    AppUser1? appUser1 = UserHelper.currentUser1??user1;
+                                    email = appUser1.email!;
+                                    fullName = appUser1.fullname!;
+                                    telephone = appUser1.telephone!;
+                                    telephone1 =appUser1.telephoneAlt??'';
+                                    var id = appUser1.providerId;
                                     setState(() {
-                                      isMeDepart=false;
-                                      _contact = value;
+                                      radioSelected = value!;
                                       nomDepartTextController.text = fullName;
                                       phone2DepartTextController.text =
                                           telephone1;
                                       phoneDepartTextController.text =
                                           telephone;
                                       emailDepartTextController.text = email;
-                                      sender.id = id.toString();
-                                      // print(sender.id);
+                                      // sender.id = int.parse(id);
+                                      print("${id.runtimeType}");
                                       sender.providerName =
-                                          extractedUserData['provider_name'];
+                                      extractedUserData['provider_name'];
                                       senderAddress.providerName = "livraison-express";
                                     });
                                   },
                                 ),
                                 const Text('Moi'),
-                                Radio<contact>(
-                                  value: contact.autre,
-                                  groupValue: _contact,
-                                  onChanged: (contact? value) {
+                                Radio(
+                                  value: 1,
+                                  groupValue: radioSelected,
+                                  onChanged: (int? value) {
                                     fullName = '';
                                     email = '';
                                     telephone1 = '';
                                     telephone = '';
                                     setState(() {
-                                      _contact = value;
+                                      radioSelected = value!;
                                       nomDepartTextController.text = fullName;
                                       phone2DepartTextController.text =
                                           telephone1;
                                       phoneDepartTextController.text =
                                           telephone;
                                       emailDepartTextController.text = email;
-                                      sender.id = null;
+                                      // sender.id = null;
                                       sender.providerName = 'livraison-express';
                                     });
                                   },
@@ -895,10 +1045,10 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                 const Text('Autre'),
                               ],
                             ),
-                            TextFormField(
-                              enabled: isMeDepart,
+                            radioSelected==0? TextFormField(
                               autovalidateMode:
-                                  AutovalidateMode.onUserInteraction,
+                              AutovalidateMode.onUserInteraction,
+                              readOnly: radioSelected==0 && nomDepartTextController.text.isNotEmpty,
                               decoration: const InputDecoration(
                                   labelText: 'Nom et prenom *'),
                               controller: nomDepartTextController,
@@ -908,12 +1058,12 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                 }
                                 return null;
                               },
-                            ),
+                            ):
+                            autoComplete(),
                             TextFormField(
-                              enabled: isMeDepart,
                               keyboardType: TextInputType.phone,
                               autovalidateMode:
-                                  AutovalidateMode.onUserInteraction,
+                              AutovalidateMode.onUserInteraction,
                               decoration: const InputDecoration(
                                   labelText: 'Telephone 1 *'),
                               controller: phoneDepartTextController,
@@ -925,34 +1075,27 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                               },
                             ),
                             TextFormField(
-                              enabled: isMeDepart,
                               keyboardType: TextInputType.phone,
                               autovalidateMode:
-                                  AutovalidateMode.onUserInteraction,
+                              AutovalidateMode.onUserInteraction,
                               decoration: const InputDecoration(
                                   labelText: 'Telephone 2 *'),
                               controller: phone2DepartTextController,
-                              validator: (value) {
-                                if (value!.isEmpty) {
-                                  return "Veuillez remplir ce champ";
-                                }
-                                return null;
-                              },
                             ),
                             TextFormField(
-                              enabled: isMeDepart,
                               keyboardType: TextInputType.emailAddress,
+                              readOnly: radioSelected==0 && emailDepartTextController.text.isNotEmpty,
                               autovalidateMode:
-                                  AutovalidateMode.onUserInteraction,
-                              decoration:
-                                  const InputDecoration(labelText: 'Email *'),
+                              AutovalidateMode.onUserInteraction,
+                              decoration:radioSelected==0?
+                              const InputDecoration(labelText: 'Email *'):const InputDecoration(labelText: 'Email '),
                               controller: emailDepartTextController,
-                              validator: (value) {
+                              validator:radioSelected==0? (value) {
                                 if (value!.isEmpty) {
                                   return "Veuillez remplir ce champ";
                                 }
                                 return null;
-                              },
+                              }:null,
                             ),
                             Container(
                                 alignment: Alignment.centerLeft,
@@ -969,39 +1112,39 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                         child: AlertDialog(
                                           content: Column(
                                             mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
+                                            MainAxisAlignment.spaceBetween,
                                             children: [
                                               const Align(
                                                 child: Text(
                                                   ' Choisir votre adresse: ',
                                                   style: TextStyle(
                                                       fontWeight:
-                                                          FontWeight.bold,
+                                                      FontWeight.bold,
                                                       color: Colors.blue),
                                                 ),
                                                 alignment: Alignment.topCenter,
                                               ),
                                               addresses.isEmpty
                                                   ? const Text(
-                                                      ' Votre liste est vide ',
-                                                      style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold),
-                                                    )
+                                                ' Votre liste est vide ',
+                                                style: TextStyle(
+                                                    fontWeight:
+                                                    FontWeight.bold),
+                                              )
                                                   : ListView.builder(
-                                                      itemBuilder:
-                                                          (context, index) {
-                                                      return const Text('draw');
-                                                    }),
+                                                  itemBuilder:
+                                                      (context, index) {
+                                                    return const Text('draw');
+                                                  }),
                                               Align(
                                                 alignment:
-                                                    Alignment.bottomCenter,
+                                                Alignment.bottomCenter,
                                                 child: ElevatedButton(
                                                     style: ButtonStyle(
                                                         backgroundColor:
-                                                            MaterialStateProperty
-                                                                .all(Colors
-                                                                    .white)),
+                                                        MaterialStateProperty
+                                                            .all(Colors
+                                                            .white)),
                                                     onPressed: () {
                                                       Navigator.of(context)
                                                           .pop();
@@ -1010,9 +1153,9 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                                       'FERMER',
                                                       style: TextStyle(
                                                           fontWeight:
-                                                              FontWeight.bold,
+                                                          FontWeight.bold,
                                                           color:
-                                                              Colors.black38),
+                                                          Colors.black38),
                                                     )),
                                               )
                                             ],
@@ -1036,61 +1179,26 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                             ),
                             TextFormField(
                               autovalidateMode:
-                                  AutovalidateMode.onUserInteraction,
+                              AutovalidateMode.onUserInteraction,
                               decoration:
-                                  const InputDecoration(labelText: 'Ville '),
+                              const InputDecoration(labelText: 'Ville '),
                               controller: cityDepartTextController,
                               enabled: false,
                             ),
                             TextFormField(
                               autovalidateMode:
-                                  AutovalidateMode.onUserInteraction,
+                              AutovalidateMode.onUserInteraction,
                               decoration: const InputDecoration(
-                                  labelText: 'Description du lieu *'),
+                                  labelText: 'Description du lieu'),
                               controller: descDepartTextController,
-                              validator: (value) {
-                                if (value!.isEmpty) {
-                                  return "Veuillez remplir ce champ";
-                                }
-                                return null;
-                              },
                             ),
-                            Autocomplete<String>(
-                              optionsBuilder:
-                                  (TextEditingValue textEditingValue) {
-                                if (textEditingValue.text == '') {
-                                  return const Iterable<String>.empty();
-                                }
-                                return quarter.quarterDouala
-                                    .where((String quarter) => quarter
-                                        .toLowerCase()
-                                        .startsWith(textEditingValue.text
-                                            .toLowerCase()))
-                                    .toList();
-                              },
-                              onSelected: (String selection) {
-                                debugPrint('You just selected $selection');
-                                quartierDepart = selection;
-                              },
-                              fieldViewBuilder: (BuildContext context,
-                                  TextEditingController
-                                      fieldTextEditingController,
-                                  FocusNode fieldFocusNode,
-                                  VoidCallback onFieldSubmitted) {
-                                return TextFormField(
-                                  controller: fieldTextEditingController,
-                                  focusNode: fieldFocusNode,
-                                  decoration: const InputDecoration(
-                                      labelText: 'Quartier'),
-                                );
-                              },
-                            ),
-                            GestureDetector(
-                              onTap: () async {
+                            TextFormField(
+                              onTap: ()async{
+                                MainUtils.hideKeyBoard(context);
                                 var result = await Navigator.of(context).push(
                                     MaterialPageRoute(
                                         builder: (context) =>
-                                            const MapsView()));
+                                        const MapsView()));
                                 setState(() {
                                   placeLonDepart = result['Longitude'] ?? 0.0;
                                   placeLatDepart = result['Latitude'] ?? 0.0;
@@ -1101,24 +1209,23 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                   // senderAddress.nom!=location;
                                 });
                               },
-                              child: TextFormField(
-                                enabled: isMeDepart,
-                                decoration: const InputDecoration(
-                                    labelText: 'Adresse geolocalisee *'),
-                                controller: addressDepartTextController,
-                                validator: (value) {
-                                  if (value!.isEmpty) {
-                                    return "Veuillez remplir ce champ";
-                                  } else {
-                                    if (placeLonDepart == 0.0 ||
-                                        placeLatDepart == 0.0) {
-                                      location = "";
-                                      return "La valeur de ce champ est incorrecte";
-                                    }
-                                    return null;
+                              readOnly: true,
+                              decoration: const InputDecoration(
+                                  labelText: 'Adresse geolocalisee *'),
+                              controller: addressDepartTextController,
+                              validator: (value) {
+                                if (value!.isEmpty) {
+                                  return "Veuillez remplir ce champ\n"
+                                      "activer votre localisation et reesayer";
+                                } else {
+                                  if (placeLonDepart == 0.0 ||
+                                      placeLatDepart == 0.0) {
+                                    location = "";
+                                    return "La valeur de ce champ est incorrecte";
                                   }
-                                },
-                              ),
+                                  return null;
+                                }
+                              },
                             ),
                             Visibility(
                                 visible: isChecked,
@@ -1126,7 +1233,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                   children: [
                                     TextFormField(
                                       autovalidateMode:
-                                          AutovalidateMode.onUserInteraction,
+                                      AutovalidateMode.onUserInteraction,
                                       decoration: const InputDecoration(
                                           hintText: "Titre d'adresse *"),
                                       controller: titleDepartTextController,
@@ -1146,7 +1253,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                         child: const Text(
                                           'Ex: Maison, Bureau',
                                           style:
-                                              TextStyle(color: Colors.black26),
+                                          TextStyle(color: Colors.black26),
                                         )),
                                   ],
                                 )),
@@ -1184,14 +1291,14 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Text("contact de l'expediteur"),
+                            const Text("contact du destinataire"),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Radio<contact>(
-                                  value: contact.moi,
-                                  groupValue: _contactDest,
-                                  onChanged: (contact? value) async {
+                                Radio(
+                                  value: 0,
+                                  groupValue: radioSelected2,
+                                  onChanged: (int? value) async {
                                     SharedPreferences sharedPreferences =
                                         await SharedPreferences.getInstance();
                                     String? userString =
@@ -1206,7 +1313,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                     var id = extractedUserData['provider_id'];
                                     setState(() {
                                       isMeDest=false;
-                                      _contactDest = value;
+                                      radioSelected2 = value!;
                                       nomDestinationTextController.text =
                                           fullName;
                                       phone2DestinationTextController.text =
@@ -1215,7 +1322,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                           telephone;
                                       emailDestinationTextController.text =
                                           email;
-                                      receiver.id = id.toString();
+                                      receiver.id = id;
                                       // print(sender.id);
                                       receiver.providerName =
                                           extractedUserData['provider_name'];
@@ -1223,16 +1330,16 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                   },
                                 ),
                                 const Text('Moi'),
-                                Radio<contact>(
-                                  value: contact.autre,
-                                  groupValue: _contactDest,
-                                  onChanged: (contact? value) {
+                                Radio(
+                                  value: 1,
+                                  groupValue: radioSelected2,
+                                  onChanged: (int? value) {
                                     fullName = '';
                                     email = '';
                                     telephone1 = '';
                                     telephone = '';
                                     setState(() {
-                                      _contactDest = value;
+                                      radioSelected2 = value!;
                                       nomDestinationTextController.text =
                                           fullName;
                                       phone2DestinationTextController.text =
@@ -1294,18 +1401,18 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                               },
                             ),
                             TextFormField(
-                              enabled: isMeDest,
+                              readOnly: radioSelected==0 && emailDestinationTextController.text.isNotEmpty,
                               autovalidateMode:
                                   AutovalidateMode.onUserInteraction,
-                              decoration:
-                                  const InputDecoration(labelText: 'Email *'),
+                              decoration:radioSelected==0?
+                              const InputDecoration(labelText: 'Email *'):const InputDecoration(labelText: 'Email '),
                               controller: emailDestinationTextController,
-                              validator: (value) {
+                              validator:radioSelected==0? (value) {
                                 if (value!.isEmpty) {
                                   return "Veuillez remplir ce champ";
                                 }
                                 return null;
-                              },
+                              }:null,
                             ),
                             Container(
                                 alignment: Alignment.centerLeft,
@@ -1398,15 +1505,16 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                             TextFormField(
                               autovalidateMode:
                                   AutovalidateMode.onUserInteraction,
-                              decoration: const InputDecoration(
-                                  labelText: 'Description du lieu *'),
+                              decoration:radioSelected==0? const InputDecoration(
+                                  labelText: 'Description du lieu *'):const InputDecoration(
+                                  labelText: 'Description du lieu '),
                               controller: descDestinationTextController,
-                              validator: (value) {
+                              validator:radioSelected==0? (value) {
                                 if (value!.isEmpty) {
                                   return "Veuillez remplir ce champ";
                                 }
                                 return null;
-                              },
+                              }:null,
                             ),
                             Autocomplete<String>(
                               optionsBuilder:
@@ -1414,11 +1522,14 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                 if (textEditingValue.text == '') {
                                   return const Iterable<String>.empty();
                                 }
-                                return quarter.quarterDouala
+                                return city=='Douala'|| city == "DOUALA"? quarter.quarterDouala
                                     .where((String quarter) => quarter
                                         .toLowerCase()
                                         .startsWith(textEditingValue.text
                                             .toLowerCase()))
+                                    .toList():quarter.quarterYaounde
+                                    .where((item) =>
+                                    item.toLowerCase().startsWith(textEditingValue.text.toLowerCase()))
                                     .toList();
                               },
                               onSelected: (String selection) {
@@ -1547,44 +1658,39 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                             Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
+
                                 InkWell(
-                                  onTap: () {
-                                    setState(() {
-                                      _deliveryType = DeliveryType.express;
-                                      chooseTime = 'dans 20 minutes';
-                                    });
+                                  onTap: !isTodayOpened && isTomorrowOpened?null:() {
+                                    if(isTodayOpened) {
+                                      setState(() {
+                                        _deliveryType = DeliveryType.express;
+                                        chooseTime=durationText!;
+                                      });
+                                    }else{
+                                      Fluttertoast.showToast(msg: "Service Momentanement indisponible");
+                                    }
                                   },
-                                  child: isTodayOpened == true
-                                      ? Row(
-                                          children: [
-                                            Radio<DeliveryType>(
-                                              value: DeliveryType.express,
-                                              groupValue: _deliveryType,
-                                              onChanged: (DeliveryType? value) {
-                                                setState(() {
-                                                  _deliveryType = value;
-                                                });
-                                              },
-                                            ),
-                                            const Text('Livraison express'),
-                                          ],
-                                        )
-                                      : Row(
-                                          children: [
-                                            Radio<DeliveryType>(
-                                              value: DeliveryType.express,
-                                              groupValue: _deliveryType,
-                                              onChanged: null,
-                                            ),
-                                            const Text('Livraison express'),
-                                          ],
-                                        ),
+                                  child: Row(
+                                    children: [
+                                      Radio<DeliveryType>(
+                                        activeColor: widget.moduleColor.moduleColorDark,
+                                        value: DeliveryType.express,
+                                        groupValue: _deliveryType,
+                                        onChanged:!isTodayOpened && isTomorrowOpened?null: (DeliveryType? value) {
+                                          setState(() {
+                                            _deliveryType = value;
+                                            chooseTime=durationText!;
+                                          });
+                                        },
+                                      ),
+                                      const Text('Livraison express'),
+                                    ],
+                                  ),
                                 ),
                                 InkWell(
                                   onTap: () {
                                     setState(() {
-                                      _deliveryType =
-                                          DeliveryType.heure_livraison;
+                                      _deliveryType = DeliveryType.heure_livraison;
                                     });
                                     showDialog<void>(
                                         context: context,
@@ -1593,14 +1699,12 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                             child: Dialog(
                                               shape: RoundedRectangleBorder(
                                                   borderRadius:
-                                                  BorderRadius.circular(
-                                                      16.0)),
+                                                  BorderRadius.circular(16.0)),
                                               elevation: 0.0,
                                               child: Stack(
                                                 children: [
                                                   Column(
-                                                    mainAxisSize:
-                                                    MainAxisSize.min,
+                                                    mainAxisSize: MainAxisSize.min,
                                                     children: [
                                                       Container(
                                                         padding:
@@ -1609,38 +1713,43 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                                         height: 35,
                                                         width: double.infinity,
                                                         decoration:
-                                                        const BoxDecoration(
+                                                        BoxDecoration(
                                                           borderRadius:
-                                                          BorderRadius.only(
+                                                          const BorderRadius.only(
                                                               topLeft: Radius
-                                                                  .circular(
-                                                                  10),
+                                                                  .circular(10),
                                                               topRight: Radius
-                                                                  .circular(
-                                                                  5)),
-                                                          color:
-                                                          Color(0xff2A5CA8),
+                                                                  .circular(5)),
+                                                          color: widget.moduleColor.moduleColorDark,
                                                         ),
                                                         child: const Text(
                                                           'Quand souhaitez vous etre livre ?',
                                                           style: TextStyle(
-                                                              color:
-                                                              Colors.white),
+                                                              color: Colors.white),
                                                         ),
                                                       ),
                                                       /**
                                                        * Today
                                                        */
                                                       ElevatedButton(
+                                                        style: ButtonStyle(
+                                                            backgroundColor:
+                                                            MaterialStateProperty
+                                                                .all(widget.moduleColor.moduleColorDark)),
                                                         onPressed: () {
-                                                          showToday();
+                                                          if(!isTodayOpened && isTomorrowOpened) {
+                                                            Fluttertoast.showToast(msg: "Service Momentanement indisponible");
+
+                                                          }else{
+                                                            print("isTodayOpened/...$isTodayOpened...$isTomorrowOpened ");
+                                                            showToday();
+                                                          }
                                                         },
                                                         child: const Text(
                                                           "AUJOUD'HUI",
                                                           style: TextStyle(
                                                               fontWeight:
-                                                              FontWeight
-                                                                  .bold),
+                                                              FontWeight.bold),
                                                         ),
                                                       ),
                                                       Row(
@@ -1649,8 +1758,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                                               child: Divider()),
                                                           Padding(
                                                             padding:
-                                                            EdgeInsets.all(
-                                                                8.0),
+                                                            EdgeInsets.all(8.0),
                                                             child: Text('Ou'),
                                                           ),
                                                           Expanded(
@@ -1661,6 +1769,10 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                                        * tomorrow
                                                        */
                                                       ElevatedButton(
+                                                          style: ButtonStyle(
+                                                              backgroundColor:
+                                                              MaterialStateProperty
+                                                                  .all(widget.moduleColor.moduleColorDark)),
                                                           onPressed: () {
                                                             showTomorrow();
                                                           },
@@ -1677,18 +1789,17 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                                     right: 0.0,
                                                     child: GestureDetector(
                                                       onTap: () {
-                                                        Navigator.of(context)
-                                                            .pop();
+                                                        Navigator.of(context).pop();
                                                       },
-                                                      child: const Align(
+                                                      child:  Align(
                                                         alignment:
                                                         Alignment.topRight,
                                                         child: CircleAvatar(
                                                           radius: 14.0,
-                                                          backgroundColor: Color(0xff2A5CA8),
-                                                          child: Icon(Icons.close,
-                                                              color:
-                                                              Colors.white),
+                                                          backgroundColor:
+                                                          widget.moduleColor.moduleColorDark,
+                                                          child: const Icon(Icons.close,
+                                                              color: Colors.white),
                                                         ),
                                                       ),
                                                     ),
@@ -1702,6 +1813,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                   child: Row(
                                     children: [
                                       Radio<DeliveryType>(
+                                        activeColor: widget.moduleColor.moduleColorDark,
                                         value: DeliveryType.heure_livraison,
                                         groupValue: _deliveryType,
                                         onChanged: (DeliveryType? value) {
@@ -1710,8 +1822,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                           });
                                         },
                                       ),
-                                      const Text(
-                                          'Choisir mon heure de livraison'),
+                                      const Text('Choisir mon heure de livraison'),
                                     ],
                                   ),
                                 ),
@@ -1737,11 +1848,11 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                         children: [
                           Container(
                             margin:const EdgeInsets.only(bottom: 5),
-                            child:  Text("Résumé",style: TextStyle(color: Color(int.parse(ColorConstant.grey40))),),
+                            child:  const Text("Résumé",style: TextStyle(color: grey40),),
                             alignment: Alignment.centerLeft,
-                            decoration: BoxDecoration(
+                            decoration:const BoxDecoration(
                                 border: Border(
-                                    bottom: BorderSide(color: Color(int.parse(ColorConstant.grey40)))
+                                    bottom: BorderSide(color: grey40)
                                 )
                             ),
                           ),
@@ -1750,25 +1861,25 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text('Distance :  ',style: TextStyle(color: Color(int.parse(ColorConstant.grey90))),),
-                                Text(distance.toString() + ' km',style: TextStyle(color: Color(int.parse(ColorConstant.grey90))),)
+                                const Text('Distance :  ',style: TextStyle(color:grey90),),
+                                Text(distanceText! + ' km',style: const TextStyle(color: grey90),)
                               ],
                             ),
                           ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children:  [
-                              Text('Prix de livraison : ',style: TextStyle(color: Color(int.parse(ColorConstant.grey90))),),
-                              Text(deliveryPrice.toString() + ' FCFA',style: TextStyle(color: Color(int.parse(ColorConstant.grey90))),)
+                              const Text('Prix de livraison : ',style: TextStyle(color: grey90),),
+                              Text(deliveryPrice.toString() + ' FCFA',style: const TextStyle(color: grey90),)
                             ],
                           ),
                           Container(
                               alignment: Alignment.centerLeft,
                               margin: const EdgeInsets.only(top: 5,bottom: 5),
-                              child:  Text("Promotion",style: TextStyle(color: Color(int.parse(ColorConstant.grey40))),),
-                            decoration: BoxDecoration(
+                              child:  const Text("Promotion",style: TextStyle(color: grey40),),
+                            decoration: const BoxDecoration(
                               border: Border(
-                                bottom: BorderSide(color: Color(int.parse(ColorConstant.grey40)))
+                                bottom: BorderSide(color: grey40)
                               )
                             ),
                           ),
@@ -1838,18 +1949,18 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                               children:  [
                                 Container(
                                   margin:const EdgeInsets.only(right: 3),
-                                    child: SvgPicture.asset('img/icon/svg/ic_link_black.svg',color:Color(int.parse(ColorConstant.grey40)) ,)),
-                                 Text('Ajouter un code promo',style: TextStyle(color: Color(int.parse(ColorConstant.colorPrimary))),),
+                                    child: SvgPicture.asset('img/icon/svg/ic_link_black.svg',color:grey40 ,)),
+                                 Text('Ajouter un code promo',style: TextStyle(color: primaryColor),),
                               ],
                             ),
                           ),
                           Container(
                             alignment: Alignment.centerLeft,
                             margin: const EdgeInsets.only(top: 5,bottom: 5),
-                            child:  Text("Mode de paiement",style: TextStyle(color: Color(int.parse(ColorConstant.grey40))),),
-                            decoration: BoxDecoration(
+                            child:  const Text("Mode de paiement",style: TextStyle(color:grey40),),
+                            decoration: const BoxDecoration(
                                 border: Border(
-                                    bottom: BorderSide(color: Color(int.parse(ColorConstant.grey40)))
+                                    bottom: BorderSide(color: grey40)
                                 )
                             ),
                           ),
@@ -1867,7 +1978,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                   }
                               ),
                               const Text('Paiement à la livraison'),
-                              SvgPicture.asset('img/icon/svg/ic_link_black.svg',color:Color(int.parse(ColorConstant.grey40)) ,)
+                              SvgPicture.asset('img/icon/svg/ic_link_black.svg',color:grey40 ,)
                             ],
                           ),
                           Row(
@@ -1883,7 +1994,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                   });
                                 }
                               ),
-                              Text('Payer par carte bancaire',style: TextStyle(color: Color(int.parse(ColorConstant.grey90))),),
+                              const Text('Payer par carte bancaire',style: TextStyle(color: grey90),),
                               SvgPicture.asset('img/icon/svg/ic_credit_card_black.svg',)
                             ],
                           ),

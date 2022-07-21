@@ -1,13 +1,19 @@
 import 'package:badges/badges.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:livraison_express/data/user_helper.dart';
+import 'package:livraison_express/model/auto_gene.dart';
 import 'package:livraison_express/model/category.dart';
 import 'package:livraison_express/service/shopService.dart';
+import 'package:livraison_express/utils/size_config.dart';
 import 'package:livraison_express/views/main/product_page.dart';
 import 'package:livraison_express/views/main/sub_category.dart';
+import 'package:livraison_express/views/widgets/search_Text_field.dart';
 import 'package:provider/provider.dart';
 
+import '../../constant/color-constant.dart';
 import '../../model/module_color.dart';
 import '../custom-container.dart';
 import '../super-market/cart-provider.dart';
@@ -16,17 +22,15 @@ import '../super-market/cart.dart';
 class CategoryPage extends StatefulWidget {
   const CategoryPage(
       {Key? key,
-      required this.shopId,
-      required this.shopName,
       required this.module,
       required this.moduleColor,
-      required this.shopImage,})
+      required this.shops, required this.isOpenedToday, required this.isOpenedTomorrow,})
       : super(key: key);
   final String module;
-  final int shopId;
-  final String shopName;
-  final String shopImage;
+  final Shops shops;
   final ModuleColor moduleColor;
+  final bool isOpenedToday;
+  final bool isOpenedTomorrow;
 
   @override
   State<CategoryPage> createState() => _CategoryPageState();
@@ -40,10 +44,13 @@ class _CategoryPageState extends State<CategoryPage> {
   void initState() {
     super.initState();
     isVisible = true;
+    init();
   }
-
+init()async{
+  print("${UserHelper.isTodayOpen}//${UserHelper.isTomorrowOpen}//${await UserHelper.getCity()}");
+}
   getCategories() async {
-    await ShopServices.getCategoriesFromShop(shopId: widget.shopId);
+    await ShopServices.getCategoriesFromShop(shopId: widget.shops.id);
   }
 
   @override
@@ -62,24 +69,11 @@ class _CategoryPageState extends State<CategoryPage> {
                   margin: const EdgeInsets.only(
                     top: 10,
                   ),
-                  height: 40,
-                  child: TextFormField(
-                    controller: controller,
-                    decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.all(10),
-                        floatingLabelBehavior: FloatingLabelBehavior.auto,
-                        fillColor: Colors.white,
-                        filled: true,
-                        hintText: 'Recherche',
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(32),
-                            borderSide: BorderSide.none),
-                        prefixIcon: const Icon(Icons.search),
-                        suffixIcon: controller.text.isNotEmpty
-                            ? IconButton(
-                                onPressed: () => controller.clear(),
-                                icon: const Icon(Icons.clear))
-                            : null),
+                  height: getProportionateScreenHeight(40),
+                  child: Row(
+                    children: [
+                      Text(widget.shops.slug!)
+                    ],
                   ),
                 ),
               ),
@@ -119,7 +113,7 @@ class _CategoryPageState extends State<CategoryPage> {
                                 elevation: 10,
                                 child: ElevatedButton(
                                   child: Text(
-                                    widget.shopName,
+                                    widget.shops.nom!,
                                     style: const TextStyle(
                                         fontWeight: FontWeight.bold),
                                   ),
@@ -139,7 +133,7 @@ class _CategoryPageState extends State<CategoryPage> {
                 ];
               },
               body: FutureBuilder<List<Category>>(
-                future: ShopServices.getCategories(shopId: widget.shopId),
+                future: ShopServices.getCategories(shopId: widget.shops.id!),
                 builder: (context,snapshot){
                   if(snapshot.hasData){
                     List<Category>? categories =snapshot.data;
@@ -170,24 +164,24 @@ class _CategoryPageState extends State<CategoryPage> {
                                       debugPrint(
                                           'category id ${categories[index].id}');
                                       if (hasChildren == true) {
-                                        var shopId = widget.shopId;
+                                        var shopId = widget.shops.id;
                                         var title = categories[index].libelle;
                                         var catId = categories[index].id;
                                         debugPrint(
-                                            'shop id ${shopId}');
+                                            'shop id $shopId');
                                         Navigator.of(context).push(
                                             MaterialPageRoute(
                                                 builder: (context) =>
                                                     SubCategory(
-                                                      shopId: shopId,
+                                                      shopId: shopId!,
                                                       moduleColor:
                                                       widget.moduleColor,
                                                       categoryId: catId!,
                                                       title: title!,
                                                     )));
                                       } else {
-                                        var shopId = widget.shopId;
-                                        var title = categories[index].libelle;
+                                        var shopId = widget.shops.id;
+                                        var title = categories[index].slug;
                                         var catId = categories[index].id;
                                         debugPrint(
                                             'shop id ${shopId}');
@@ -196,39 +190,86 @@ class _CategoryPageState extends State<CategoryPage> {
                                             MaterialPageRoute(
                                                 builder: (context) =>
                                                     ProductPage(
-                                                      shopId: shopId,
+                                                      shopId: shopId!,
                                                       moduleColor:
                                                       widget.moduleColor,
-                                                      categoryId: catId!,
+                                                      category: categories[index],
                                                       title: title!,
                                                       fromCategory: true,
                                                     )));
                                       }
                                     },
                                     child: Card(
-                                      elevation: 8,
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        mainAxisAlignment:
-                                        MainAxisAlignment.center,
-                                        children: [
-                                          Image.network(
-                                            categories[index].image!,
-                                            height: 80,
-                                            errorBuilder:
-                                                (BuildContext context,
-                                                Object exception,
-                                                StackTrace?
-                                                stackTrace) {
-                                              return Image.asset(
-                                                'img/no_image.png',height: 80,);
-                                            },
-                                          ),
-                                          Text(
-                                            categories[index].libelle!,
-                                          )
-                                        ],
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10)
                                       ),
+                                      elevation: 8,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(10),
+                                          image: DecorationImage(
+                                            image: CachedNetworkImageProvider(
+                                                categories[index].image!
+                                            )
+                                          )
+                                        ),
+                                        child: Container(
+                                          width: double.infinity,
+                                          decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.circular(10),
+                                              gradient: kShopForegroundGradient1),
+                                          child: Padding(
+                                            padding: EdgeInsets.symmetric(
+                                                horizontal:
+                                                getProportionateScreenWidth(8)),
+                                            child: Column(
+                                              children: [
+                                                const Expanded(
+                                                  child: SizedBox(),
+                                                ),
+                                                Text(
+                                                  categories[index].libelle!,
+                                                  textAlign: TextAlign.center,
+                                                  style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize:
+                                                      getProportionateScreenWidth(
+                                                          20)),
+                                                ),
+                                                SizedBox(
+                                                  height:
+                                                  getProportionateScreenHeight(10),
+                                                )
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                      // Column(
+                                      //   mainAxisSize: MainAxisSize.min,
+                                      //   mainAxisAlignment:
+                                      //   MainAxisAlignment.center,
+                                      //   children: [
+                                      //     CachedNetworkImage(imageUrl: categories[index].image!,
+                                      //       height: getProportionateScreenHeight(80),
+                                      //     ),
+                                      //     // Image.network(
+                                      //     //   categories[index].image!,
+                                      //     //   height: 80,
+                                      //     //   errorBuilder:
+                                      //     //       (BuildContext context,
+                                      //     //       Object exception,
+                                      //     //       StackTrace?
+                                      //     //       stackTrace) {
+                                      //     //     return Image.asset(
+                                      //     //       'img/no_image.png',height: 80,);
+                                      //     //   },
+                                      //     // ),
+                                      //     Text(
+                                      //       categories[index].libelle!,
+                                      //     )
+                                      //   ],
+                                      // ),
                                     ),
                                   );
                                 },
@@ -354,6 +395,7 @@ class _CategoryPageState extends State<CategoryPage> {
                             builder: (BuildContext context) =>
                                 CartPage(
                                   moduleColor: widget.moduleColor,
+                                  slug: UserHelper.shops.slug!,
                                 )));
                   },
                   icon: Icon(

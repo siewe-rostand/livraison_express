@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:livraison_express/model/auto_gene.dart';
-import 'package:livraison_express/model/magasin.dart';
 import 'package:livraison_express/model/module_color.dart';
 import 'package:livraison_express/views/livraison/commande-coursier.dart';
 
@@ -21,7 +20,7 @@ class _LivraisonState extends State<Livraison> {
   void initState() {
     magasin =widget.shops;
     super.initState();
-    print(widget.city);
+    // print(widget.city);
   }
 
   @override
@@ -100,6 +99,7 @@ class _LivraisonState extends State<Livraison> {
                                             CommandeCoursier(
                                               city: widget.city,
                                               shops: magasin,
+                                              moduleColor: widget.moduleColor,
                                             )));
                                   },
                                   child: const Text(

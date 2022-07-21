@@ -1,6 +1,10 @@
+import 'dart:async';
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_google_places/flutter_google_places.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_api_headers/google_api_headers.dart';
@@ -29,12 +33,42 @@ class _MapsViewState extends State<MapsView> {
   late Marker marker;
   Position? _currentPosition;
   final startAddressController = TextEditingController();
-  String location = "Search Location";
+  String location='';
+  String location1 = "Search Location";
   double? latitude;
   double? longitude;
+  late FToast fToast;
+  late LocationSettings locationSettings;
 
   String _currentAddress = '';
   final sessionToken = const Uuid().v4();
+  _showToast() {
+    Widget toast = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(25.0),
+        color: Colors.purpleAccent,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: const [
+          Icon(Icons.close),
+          SizedBox(
+            width: 12.0,
+          ),
+          Flexible(child: Text("Nous n'avons pas pu récupérer votre position")),
+        ],
+      ),
+    );
+
+    fToast.showToast(
+      child: toast,
+      gravity: ToastGravity.BOTTOM,
+      toastDuration: const Duration(seconds: 3),
+    );
+
+  }
+
   // Method for retrieving the current location
   _getCurrentLocation() async {
     bool serviceEnabled;
@@ -44,8 +78,8 @@ class _MapsViewState extends State<MapsView> {
     // Test if location services are enabled.
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
         markers.add(
           Marker(
               draggable: true,
@@ -66,7 +100,63 @@ class _MapsViewState extends State<MapsView> {
             });
       }
     }
-    return await Geolocator.getCurrentPosition(
+
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      markers.add(
+        Marker(
+            draggable: true,
+            onDragEnd: (newPosition) {
+              debugPrint('new pos ${newPosition}');
+            },
+            markerId: MarkerId(startLocation.toString()),
+            position: startLocation,
+            icon: bitmapDescriptor),
+      );
+      if (permission != LocationPermission.whileInUse &&
+          permission != LocationPermission.always) {
+        return _showToast();
+      }
+    }
+    return
+      await Geolocator.getLastKnownPosition().then((position){
+      setState(() {
+        // Store the position in the variable
+        _currentPosition = position;
+        latitude = _currentPosition?.latitude;
+        longitude = _currentPosition?.longitude;
+        print('current location $_currentPosition');
+
+        print('CURRENT POS: $_currentPosition');
+
+        // For moving the camera to current location
+        mapController?.animateCamera(
+          CameraUpdate.newCameraPosition(
+            CameraPosition(
+              target: LatLng(position!.latitude, position.longitude),
+              zoom: 18.0,
+            ),
+          ),
+        );
+        markers.add(
+          Marker(
+              markerId: MarkerId(startLocation.toString()),
+              position: LatLng(latitude!, longitude!),
+              icon: bitmapDescriptor,
+              draggable: true,
+              onDragEnd: (newPosition) {
+                setState(() {
+                  longitude = newPosition.longitude;
+                  latitude = newPosition.latitude;
+                  _getAddress();
+                });
+                debugPrint('new pos ${newPosition}');
+              }),
+        );
+
+      });
+      _getAddress();
+    })?? await Geolocator.getCurrentPosition(
             desiredAccuracy: LocationAccuracy.high,
             forceAndroidLocationManager: true)
         .then((Position position) {
@@ -210,73 +300,137 @@ class _MapsViewState extends State<MapsView> {
       );
     }
   }
-
-  getPos(GoogleMapController _cntlr) async {
-    mapController = _cntlr;
-    bool serviceEnabled;
-    LocationPermission permission = await Geolocator
-        .checkPermission(); // Test if location services are enabled.
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        markers.add(
-          Marker(
-              draggable: true,
-              onDragEnd: (newPosition) {
-                debugPrint('new pos ${newPosition}');
-              },
-              markerId: MarkerId(startLocation.toString()),
-              position: startLocation,
-              icon: BitmapDescriptor.defaultMarker),
-        );
-        showDialog(
-            context: context,
-            builder: (context) {
-              return const AlertDialog(
-                title: Text('ERROR'),
-                content: Text('Veuillez activer la localisation svp'),
-              );
-            });
-      }
+  Future<StreamSubscription<Position>?> getLocation(BuildContext context) async {
+    bool _serviceEnabled;
+    LocationPermission _permissionGranted;
+    BitmapDescriptor bitmapDescriptor = await _bitmapDescriptorFromSvgAsset(
+        context, 'img/icon/svg/ic_location_on_black.svg');
+    _serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!_serviceEnabled) {
+      return null; // Use France's GPS coordinates by default
     }
-    return await Geolocator.getCurrentPosition(
-            desiredAccuracy: LocationAccuracy.best,
-            forceAndroidLocationManager: true)
-        .then((Position position) {
-      debugPrint('position');
-      setState(() {
-        // Store the position in the variable
-        _currentPosition = position;
-        print('current location $_currentPosition');
 
-        print('CURRENT POS: $_currentPosition');
+    _permissionGranted = await Geolocator.checkPermission();
+    if (_permissionGranted == LocationPermission.denied) {
+      _permissionGranted = await Geolocator.requestPermission();
+      if (_permissionGranted == LocationPermission.denied ||
+          _permissionGranted == LocationPermission.deniedForever) {
+        return null; // Use France's GPS coordinates by default
+      } else {
+        return  await Geolocator.getLastKnownPosition().then((position){
+          setState(() {
+            // Store the position in the variable
+            _currentPosition = position;
+            latitude = _currentPosition?.latitude;
+            longitude = _currentPosition?.longitude;
+            print('current location $_currentPosition');
 
-        // For moving the camera to current location
-        mapController?.animateCamera(
-          CameraUpdate.newCameraPosition(
-            CameraPosition(
-              target: LatLng(position.latitude, position.longitude),
-              zoom: 18.0,
+            print('CURRENT POS: $_currentPosition');
+
+            // For moving the camera to current location
+            mapController?.animateCamera(
+              CameraUpdate.newCameraPosition(
+                CameraPosition(
+                  target: LatLng(position!.latitude, position.longitude),
+                  zoom: 18.0,
+                ),
+              ),
+            );
+            markers.add(
+              Marker(
+                  markerId: MarkerId(startLocation.toString()),
+                  position: LatLng(latitude!, longitude!),
+                  icon: bitmapDescriptor,
+                  draggable: true,
+                  onDragEnd: (newPosition) {
+                    setState(() {
+                      longitude = newPosition.longitude;
+                      latitude = newPosition.latitude;
+                      _getAddress();
+                    });
+                    debugPrint('new pos ${newPosition}');
+                  }),
+            );
+          });
+          _getAddress();
+          return null;
+        })?? Geolocator.getPositionStream(locationSettings: locationSettings).listen((Position position) {
+          setState(() {
+            // Store the position in the variable
+            _currentPosition = position;
+            latitude = _currentPosition?.latitude;
+            longitude = _currentPosition?.longitude;
+            print('current location $_currentPosition');
+
+            print('CURRENT POS: $_currentPosition');
+
+            // For moving the camera to current location
+            mapController?.animateCamera(
+              CameraUpdate.newCameraPosition(
+                CameraPosition(
+                  target: LatLng(position.latitude, position.longitude),
+                  zoom: 18.0,
+                ),
+              ),
+            );
+            markers.add(
+              Marker(
+                  markerId: MarkerId(startLocation.toString()),
+                  position: LatLng(latitude!, longitude!),
+                  icon: bitmapDescriptor,
+                  draggable: true,
+                  onDragEnd: (newPosition) {
+                    setState(() {
+                      longitude = newPosition.longitude;
+                      latitude = newPosition.latitude;
+                      _getAddress();
+                    });
+                    debugPrint('new pos ${newPosition}');
+                  }),
+            );
+          });
+          _getAddress();
+        });
+      }
+    } else {
+      return Geolocator.getPositionStream(locationSettings: locationSettings).listen((Position position) {
+        setState(() {
+          // Store the position in the variable
+          _currentPosition = position;
+          latitude = _currentPosition?.latitude;
+          longitude = _currentPosition?.longitude;
+          print('current location $_currentPosition');
+
+          print('CURRENT POS: $_currentPosition');
+
+          // For moving the camera to current location
+          mapController?.animateCamera(
+            CameraUpdate.newCameraPosition(
+              CameraPosition(
+                target: LatLng(position.latitude, position.longitude),
+                zoom: 18.0,
+              ),
             ),
-          ),
-        );
-        markers.add(
-          Marker(
-              draggable: true,
-              onDragEnd: (newPosition) {
-                debugPrint('new pos ${newPosition}');
-              },
-              markerId: MarkerId(startLocation.toString()),
-              position: LatLng(
-                  _currentPosition!.latitude, _currentPosition!.longitude),
-              icon: BitmapDescriptor.defaultMarker),
-        );
+          );
+          markers.add(
+            Marker(
+                markerId: MarkerId(startLocation.toString()),
+                position: LatLng(latitude!, longitude!),
+                icon: bitmapDescriptor,
+                draggable: true,
+                onDragEnd: (newPosition) {
+                  setState(() {
+                    longitude = newPosition.longitude;
+                    latitude = newPosition.latitude;
+                    _getAddress();
+                  });
+                  debugPrint('new pos ${newPosition}');
+                }),
+          );
+        });
+        _getAddress();
       });
-      _getAddress();
-    }).catchError((e) {
-      print(e);
-    });
+    }
   }
 
   initPos() async {
@@ -297,7 +451,9 @@ class _MapsViewState extends State<MapsView> {
   @override
   void initState() {
     super.initState();
-      _getCurrentLocation();
+    fToast = FToast();
+    fToast.init(context);
+    _getCurrentLocation();
       initPos();
   }
 
@@ -337,8 +493,30 @@ class _MapsViewState extends State<MapsView> {
                 mapController = controller;
               });
             },
+            onCameraMove: (position)async{
+              BitmapDescriptor bitmapDescriptor = await _bitmapDescriptorFromSvgAsset(
+                  context, 'img/icon/svg/ic_location_on_black.svg');
+              setState(() {
+                latitude=position.target.latitude;
+                longitude=position.target.longitude;
+                markers.add(
+                  Marker(
+                      markerId: MarkerId(startLocation.toString()),
+                      position: position.target,
+                      draggable: true,
+                      onDragEnd: (newPos){
+                        log('message',error: newPos);
+                        print('///$newPos');
+                      },
+                      icon: bitmapDescriptor,),
+                );
+              });
+            },
             myLocationEnabled: true,
             myLocationButtonEnabled: false,
+            onCameraIdle: (){
+              _getAddress();
+            },
           ),
 
           //search autocomplete input
@@ -355,7 +533,7 @@ class _MapsViewState extends State<MapsView> {
                         width: MediaQuery.of(context).size.width - 40,
                         child: ListTile(
                           title: Text(
-                            location,
+                            location==''?location1:location,
                             style: const TextStyle(fontSize: 18),
                           ),
                           trailing: const Icon(Icons.search),
@@ -381,7 +559,7 @@ class _MapsViewState extends State<MapsView> {
                         height: 56,
                         child: Icon(Icons.my_location),
                       ),
-                      onTap: _getCurrentLocation,
+                      onTap:_getCurrentLocation,
                     ),
                   ),
                 ),
@@ -389,168 +567,6 @@ class _MapsViewState extends State<MapsView> {
             ),
           ),
         ]),
-        // Stack(
-        //   children: [
-        //     GoogleMap(
-        //       markers: Set<Marker>.from(markers),
-        //         initialCameraPosition: CameraPosition(
-        //           zoom: 14,
-        //           target: startLocation
-        //         ),
-        //       myLocationEnabled: true,
-        //       mapToolbarEnabled: false,
-        //       mapType: MapType.normal,
-        //       zoomControlsEnabled: true,
-        //       zoomGesturesEnabled: true,
-        //       onMapCreated: ( controller){
-        //         setState(() {
-        //           mapController = controller;
-        //         });
-        //
-        //       },
-        //       onCameraMove: (CameraPosition position){
-        //         cameraPosition = position;
-        //       },
-        //       onCameraIdle: ()async{
-        //         List<Placemark> placemarks =await placemarkFromCoordinates(cameraPosition!.target.latitude, cameraPosition!.target.longitude);
-        //         setState(() {
-        //           location =placemarks.first.administrativeArea.toString() + ' , ' + placemarks.first.street.toString();
-        //         });
-        //       },
-        //     ),
-        //
-        //     Positioned(
-        //       child: InkWell(
-        //         onTap: () async{
-        //           var place = await PlacesAutocomplete.show(
-        //               context: context,
-        //               apiKey: googleApikey,
-        //               mode: Mode.overlay,
-        //               types: [],
-        //               strictbounds: false,
-        //               components: [Component(Component.country, 'np')],
-        //               //google_map_webservice package
-        //               onError: (err){
-        //                 print(err);
-        //               }
-        //           );
-        //           if(place != null){
-        //             setState(() {
-        //               location = place.description.toString();
-        //             });
-        //             //form google_maps_webservice package
-        //             final plist = GoogleMapsPlaces(apiKey:googleApikey,
-        //               apiHeaders: await GoogleApiHeaders().getHeaders(),
-        //               //from google_api_headers package
-        //             );
-        //             String placeid = place.placeId ?? "0";
-        //             final detail = await plist.getDetailsByPlaceId(placeid);
-        //             final geometry = detail.result.geometry!;
-        //             final lat = geometry.location.lat;
-        //             final lang = geometry.location.lng;
-        //             var newlatlang = LatLng(lat, lang);
-        //             //move map camera to selected place with animation
-        //             mapController?.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(target: newlatlang, zoom: 17)));
-        //           }
-        //         },
-        //         child: Padding(
-        //           padding: EdgeInsets.all(15),
-        //           child: Card(
-        //             child: ListTile(
-        //               title: Text(location, style: TextStyle(fontSize: 16),),
-        //               trailing: Icon(Icons.search),
-        //               dense: true,
-        //             ),
-        //           ),
-        //         ),
-        //       ),
-        //     ),
-        //
-        //     // Show zoom buttons
-        //     // SafeArea(
-        //     //   child: Padding(
-        //     //     padding: const EdgeInsets.only(left: 10.0),
-        //     //     child: Column(
-        //     //       mainAxisAlignment: MainAxisAlignment.center,
-        //     //       children: <Widget>[
-        //     //         ClipOval(
-        //     //           child: Material(
-        //     //             color: Colors.blue.shade100, // button color
-        //     //             child: InkWell(
-        //     //               splashColor: Colors.blue, // inkwell color
-        //     //               child: const SizedBox(
-        //     //                 width: 50,
-        //     //                 height: 50,
-        //     //                 child: Icon(Icons.add),
-        //     //               ),
-        //     //               onTap: () {
-        //     //                 mapController?.animateCamera(
-        //     //                   CameraUpdate.zoomIn(),
-        //     //                 );
-        //     //               },
-        //     //             ),
-        //     //           ),
-        //     //         ),
-        //     //         const SizedBox(height: 20),
-        //     //         ClipOval(
-        //     //           child: Material(
-        //     //             color: Colors.blue.shade100, // button color
-        //     //             child: InkWell(
-        //     //               splashColor: Colors.blue, // inkwell color
-        //     //               child: const SizedBox(
-        //     //                 width: 50,
-        //     //                 height: 50,
-        //     //                 child: Icon(Icons.remove),
-        //     //               ),
-        //     //               onTap: () {
-        //     //                 mapController?.animateCamera(
-        //     //                   CameraUpdate.zoomOut(),
-        //     //                 );
-        //     //               },
-        //     //             ),
-        //     //           ),
-        //     //         )
-        //     //       ],
-        //     //     ),
-        //     //   ),
-        //     // ),
-        //     // Show current location button
-        //     SafeArea(
-        //       child: Align(
-        //         alignment: Alignment.bottomRight,
-        //         child: Padding(
-        //           padding: const EdgeInsets.only(right: 10.0, bottom: 10.0),
-        //           child: ClipOval(
-        //             child: Material(
-        //               color: Colors.orange.shade100, // button color
-        //               child: InkWell(
-        //                 splashColor: Colors.orange, // inkwell color
-        //                 child: SizedBox(
-        //                   width: 56,
-        //                   height: 56,
-        //                   child: Icon(Icons.my_location),
-        //                 ),
-        //                 onTap: () {
-        //                   mapController?.animateCamera(
-        //                     CameraUpdate.newCameraPosition(
-        //                       CameraPosition(
-        //                         target: LatLng(
-        //                           _currentPosition.latitude,
-        //                           _currentPosition.longitude,
-        //                         ),
-        //                         zoom: 18.0,
-        //                       ),
-        //                     ),
-        //                   );
-        //                 },
-        //               ),
-        //             ),
-        //           ),
-        //         ),
-        //       ),
-        //     ),
-        //   ],
-        // ),
       ),
     );
   }

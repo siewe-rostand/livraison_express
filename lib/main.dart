@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:livraison_express/model/quartier.dart';
 import 'package:livraison_express/views/splash-screen.dart';
 import 'package:livraison_express/views/super-market/cart-provider.dart';
+import 'package:livraison_express/views/widgets/progress_bar.dart';
 import 'package:provider/provider.dart';
 
 void main() async{
@@ -42,7 +43,9 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSwatch().copyWith(
           primary: const Color(0xff2a5ca8),
         ),
-        textTheme: GoogleFonts.robotoTextTheme( Theme.of(context).textTheme)
+        pageTransitionsTheme: const PageTransitionsTheme(builders: {
+          TargetPlatform.android:ZoomPageTransitionsBuilder()
+        })
       ),
       home: const SplashScreen(),
     ),);

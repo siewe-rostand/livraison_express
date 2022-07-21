@@ -1,48 +1,34 @@
 {
   "project_info": {
-    "project_number": "1037926031065",
-    "firebase_url": "https://livraison-express-dev.firebaseio.com",
-    "project_id": "livraison-express-dev",
-    "storage_bucket": "livraison-express-dev.appspot.com"
+    "project_number": "733611067265",
+    "firebase_url": "https://livraison-express-staging.firebaseio.com",
+    "project_id": "livraison-express-staging",
+    "storage_bucket": "livraison-express-staging.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1037926031065:android:76b60d667b99685a3ae8c8",
+        "mobilesdk_app_id": "1:733611067265:android:95c4be02dacb6b52d2ca80",
         "android_client_info": {
           "package_name": "com.example.livraison_express"
         }
       },
       "oauth_client": [
         {
-          "client_id": "1037926031065-dus11h99bvrlj8j0vqde2nltrkldr8e0.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.livraison_express",
-            "certificate_hash": "04ca28112bdca7fe7fcb2a93f8618d2c7ca8c610"
-          }
-        },
-        {
-          "client_id": "1037926031065-22q6pvhr2nb2p9t6sh7l74rratn95kd5.apps.googleusercontent.com",
+          "client_id": "733611067265-8fr03oqhdiftm7tf53gqudelotfbutcg.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyAE54j3s2LIflI5g9zNqVQC7Zmlz6JpqQk"
-        },
-        {
-          "current_key": "AIzaSyCzD-aaPMOgXlXixDGulOwHpprD89qW9S8"
-        },
-        {
-          "current_key": "AIzaSyA09ACWVKr31ZrllFIYS2Tkm50roEA5ZG0"
+          "current_key": "AIzaSyD0VuAH44sYXAEoXv5kg5aMwfyouPx2rFs"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "1037926031065-22q6pvhr2nb2p9t6sh7l74rratn95kd5.apps.googleusercontent.com",
+              "client_id": "733611067265-8fr03oqhdiftm7tf53gqudelotfbutcg.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
@@ -51,38 +37,27 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1037926031065:android:21847b44e109ada53ae8c8",
+        "mobilesdk_app_id": "1:733611067265:android:676b605ef518a668d2ca80",
         "android_client_info": {
           "package_name": "com.israel.livraisonexpresspos"
         }
       },
       "oauth_client": [
         {
-          "client_id": "1037926031065-hbeghq8igoienntfma1i6iiuemoq5a2r.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.israel.livraisonexpresspos",
-            "certificate_hash": "75711e0cd974f559731840a0e834a6833ba013ff"
-          }
-        },
-        {
-          "client_id": "1037926031065-22q6pvhr2nb2p9t6sh7l74rratn95kd5.apps.googleusercontent.com",
+          "client_id": "733611067265-8fr03oqhdiftm7tf53gqudelotfbutcg.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyAE54j3s2LIflI5g9zNqVQC7Zmlz6JpqQk"
-        },
-        {
-          "current_key": "AIzaSyCzD-aaPMOgXlXixDGulOwHpprD89qW9S8"
+          "current_key": "AIzaSyD0VuAH44sYXAEoXv5kg5aMwfyouPx2rFs"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "1037926031065-22q6pvhr2nb2p9t6sh7l74rratn95kd5.apps.googleusercontent.com",
+              "client_id": "733611067265-8fr03oqhdiftm7tf53gqudelotfbutcg.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
@@ -91,30 +66,27 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1037926031065:android:3ff6ac2bae3085723ae8c8",
+        "mobilesdk_app_id": "1:733611067265:android:4009689888bb0ac8d2ca80",
         "android_client_info": {
           "package_name": "com.mcs.livraison_express"
         }
       },
       "oauth_client": [
         {
-          "client_id": "1037926031065-22q6pvhr2nb2p9t6sh7l74rratn95kd5.apps.googleusercontent.com",
+          "client_id": "733611067265-8fr03oqhdiftm7tf53gqudelotfbutcg.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyAE54j3s2LIflI5g9zNqVQC7Zmlz6JpqQk"
-        },
-        {
-          "current_key": "AIzaSyCzD-aaPMOgXlXixDGulOwHpprD89qW9S8"
+          "current_key": "AIzaSyD0VuAH44sYXAEoXv5kg5aMwfyouPx2rFs"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "1037926031065-22q6pvhr2nb2p9t6sh7l74rratn95kd5.apps.googleusercontent.com",
+              "client_id": "733611067265-8fr03oqhdiftm7tf53gqudelotfbutcg.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
@@ -123,102 +95,35 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1037926031065:android:219d064bd292d157",
+        "mobilesdk_app_id": "1:733611067265:android:a63321eed92fc9e7d2ca80",
         "android_client_info": {
-          "package_name": "com.multicanalservices.livraisonexpress"
+          "package_name": "com.rostand.livraison_express"
         }
       },
       "oauth_client": [
         {
-          "client_id": "1037926031065-22q6pvhr2nb2p9t6sh7l74rratn95kd5.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyAE54j3s2LIflI5g9zNqVQC7Zmlz6JpqQk"
-        },
-        {
-          "current_key": "AIzaSyCzD-aaPMOgXlXixDGulOwHpprD89qW9S8"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "1037926031065-22q6pvhr2nb2p9t6sh7l74rratn95kd5.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:1037926031065:android:bdbeb6140b83b05f",
-        "android_client_info": {
-          "package_name": "com.multicanalservices.restaurantexpressapp"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "1037926031065-22q6pvhr2nb2p9t6sh7l74rratn95kd5.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyAE54j3s2LIflI5g9zNqVQC7Zmlz6JpqQk"
-        },
-        {
-          "current_key": "AIzaSyCzD-aaPMOgXlXixDGulOwHpprD89qW9S8"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "1037926031065-22q6pvhr2nb2p9t6sh7l74rratn95kd5.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:1037926031065:android:5e6812e2df4ef57c3ae8c8",
-        "android_client_info": {
-          "package_name": "com.rostand.siewe.livrex_flutter"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "1037926031065-5jfq4nvndaknbot4gekbl547dh1l6n9f.apps.googleusercontent.com",
+          "client_id": "733611067265-9sfprn09lvt51h3ljv51n93q2cqcd8ma.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.rostand.siewe.livrex_flutter",
-            "certificate_hash": "04ca28112bdca7fe7fcb2a93f8618d2c7ca8c610"
+            "package_name": "com.rostand.livraison_express",
+            "certificate_hash": "a896bce4a63da8b856343892e725b84d00be9f2a"
           }
         },
         {
-          "client_id": "1037926031065-22q6pvhr2nb2p9t6sh7l74rratn95kd5.apps.googleusercontent.com",
+          "client_id": "733611067265-8fr03oqhdiftm7tf53gqudelotfbutcg.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyAE54j3s2LIflI5g9zNqVQC7Zmlz6JpqQk"
-        },
-        {
-          "current_key": "AIzaSyCzD-aaPMOgXlXixDGulOwHpprD89qW9S8"
+          "current_key": "AIzaSyD0VuAH44sYXAEoXv5kg5aMwfyouPx2rFs"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "1037926031065-22q6pvhr2nb2p9t6sh7l74rratn95kd5.apps.googleusercontent.com",
+              "client_id": "733611067265-8fr03oqhdiftm7tf53gqudelotfbutcg.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

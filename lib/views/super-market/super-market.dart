@@ -631,12 +631,12 @@ class _SuperMarketState extends State<SuperMarket> {
               child: IconButton(
                 onPressed: (){
                   ModuleColor moduleColor=ModuleColor();
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (BuildContext context) => CartPage(
-                            moduleColor: moduleColor,
-                          )));
+                  // Navigator.push(
+                  //     context,
+                  //     MaterialPageRoute(
+                  //         builder: (BuildContext context) => CartPage(
+                  //           moduleColor: moduleColor,
+                  //         )));
 
                 },
                 icon: const Icon(Icons.shopping_cart,color: Colors.green,),

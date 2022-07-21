@@ -8,10 +8,11 @@ import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'api_auth_service.dart';
 
 class ProductService {
-  final RefreshController refreshController =
-  RefreshController(initialRefresh: true);
-  static Future<List<Products>> getProducts(
-      {required int categoryId, required int shopId, required int page,bool? isLoading }) async {
+  static Future<Map<String, dynamic>> getProducts(
+      {required int categoryId, required int shopId, required int page}) async {
+    List<Products> products = [];
+    String error;
+    int lastPage;
     String url = "$baseUrl/produits?page=$page";
 
     Response response = await post(
@@ -21,20 +22,20 @@ class ProductService {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
+      encoding: Encoding.getByName('utf-8')
     );
     if (response.statusCode == 200) {
-      var body = json.decode(response.body);
-      var rest = body['data'] as List;
-      List<Products> categories;
-
-      categories =
-          rest.map<Products>((json) => Products.fromJson(json)).toList();
-      print("rest only  ");
+      List productList = jsonDecode(response.body)['data'] as List;
+      lastPage = jsonDecode(response.body)['last_page'];
+      products=productList.map<Products>((json) => Products.fromJson(json)).toList();
       // print('main ${stores[0]}');
-      return categories;
+      return {
+        'products': products,
+        'last_page': lastPage,
+      };
     } else {
       print('errr ${response.body}');
-      throw Exception('unable post to obtain products');
+      throw ('Une erreur est survenu.');
     }
   }
   static Future<Payload> getProducts1(
@@ -60,6 +61,8 @@ class ProductService {
       Payload payload =Payload.fromJson(body);
       if(page<=rest1){
         page++;
+      }else{
+        page=1;
       }
       print('last page $rest1');
       List<Products> categories=[];
@@ -76,7 +79,7 @@ class ProductService {
     }
   }
 
-  static Future<List<Products>> getProductsWithSubCat(
+  static Future<Response> getProductsWithSubCat(
       {required int categoryId,
       required int subCategoryId,
       required int shopId,
@@ -96,22 +99,15 @@ class ProductService {
       },
     );
     if (response.statusCode == 200) {
-      var body = json.decode(response.body);
-      var rest = body['data'] as List;
-      List<Products> categories;
 
-      categories =
-          rest.map<Products>((json) => Products.fromJson(json)).toList();
-      print("rest only  ");
-      // print('main ${stores[0]}');
-      return categories;
+      return response;
     } else {
       print('errr ${response.body}');
       throw Exception('unable post to obtain products');
     }
   }
 
-  static Future<List<Products>> getProductsWithSubSubCat(
+  static Future<Response> getProductsWithSubSubCat(
       {required int categoryId,
       required int subSubCategoryId,
       required int subCategoryId,
@@ -133,14 +129,8 @@ class ProductService {
       },
     );
     if (response.statusCode == 200) {
-      var body = json.decode(response.body);
-      var rest = body['data'] as List;
-      List<Products> products;
-
-      products = rest.map<Products>((json) => Products.fromJson(json)).toList();
-      print("rest only  ");
       // print('main ${stores[0]}');
-      return products;
+      return response;
     } else {
       print('errr ${response.body}');
       throw Exception('unable post to obtain products');

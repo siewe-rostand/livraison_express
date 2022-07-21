@@ -36,9 +36,16 @@ class CartProvider extends ChangeNotifier{
     _totalPrice = prefs.getDouble('total_price') ?? 0.0;
     notifyListeners();
   }
-  void _clearPrefItems()async{
+  void _clearPrefAllItems()async{
     SharedPreferences prefs = await SharedPreferences.getInstance() ;
     prefs.clear();
+    notifyListeners();
+  }
+  void _clearPrefItems()async{
+    SharedPreferences prefs = await SharedPreferences.getInstance() ;
+    prefs.remove('cart_item');
+    prefs.remove('total_price');
+    db.deleteAlls();
     notifyListeners();
   }
   void addTotalPrice (double productPrice){
@@ -63,7 +70,7 @@ class CartProvider extends ChangeNotifier{
     notifyListeners();
   }
 
-  showCartDialog(BuildContext context,String title,String message,String non,String oui){
+  showCartDialog(BuildContext context,String title,String message,String non,String oui,String slug){
     showDialog(
         context: context,
         builder: (BuildContext builderContext){
@@ -88,7 +95,7 @@ class CartProvider extends ChangeNotifier{
               TextButton(
                 child:  Text(oui),
                 onPressed: (){
-                  clear();
+                  clear(slug);
                   Navigator.of(builderContext).pop();
                 },
               )
@@ -115,8 +122,13 @@ class CartProvider extends ChangeNotifier{
     _active = product;
   }
 
-  void clear(){
+  void clear(String slug){
     db.deleteAll();
+    _clearPrefItems();
+  }
+
+  void clears(){
+    db.deleteAlls();
     _clearPrefItems();
   }
 

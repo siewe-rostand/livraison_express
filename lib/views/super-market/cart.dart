@@ -1,22 +1,30 @@
 
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:livraison_express/model/module_color.dart';
 import 'package:livraison_express/service/api_auth_service.dart';
-import 'package:livraison_express/views/home-page.dart';
+import 'package:livraison_express/utils/size_config.dart';
+import 'package:livraison_express/views/home/home-page.dart';
 import 'package:livraison_express/views/super-market/cart-provider.dart';
 import 'package:livraison_express/data/local_db/db-helper.dart';
 import 'package:livraison_express/views/super-market/valider-panier.dart';
 import 'package:livraison_express/views/widgets/cart-item-view.dart';
 import 'package:livraison_express/views/widgets/show-dialog.dart';
+import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 
+import '../../data/user_helper.dart';
 import '../../model/cart-model.dart';
+import '../widgets/custom_dialog.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({
-    Key? key, required this.moduleColor,
+    Key? key, required this.moduleColor, required this.slug,
   }) : super(key: key);
   final ModuleColor moduleColor;
+  final String slug;
 
   @override
   State<CartPage> createState() => _CartPageState();
@@ -24,11 +32,15 @@ class CartPage extends StatefulWidget {
 
 class _CartPageState extends State<CartPage> {
   TextEditingController controller = TextEditingController();
+  final logger = Logger();
   bool isClick = false;
   bool isButtonActive=false;
   Map<String, dynamic> info = {};
   Map<String, dynamic> info1 = {};
+  List<CartItem> cart=[];
   DBHelper? dbHelper = DBHelper();
+  double amount = 0.0;
+  bool listen = false;
   @override
   void initState() {
     isClick = false;
@@ -36,8 +48,12 @@ class _CartPageState extends State<CartPage> {
     super.initState();
   }
   @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+  }
+  @override
   Widget build(BuildContext context) {
-    final cart = Provider.of<Cart>(context);
     final cartProvider = Provider.of<CartProvider>(context);
     return Scaffold(
       appBar: AppBar(
@@ -46,7 +62,7 @@ class _CartPageState extends State<CartPage> {
         actions: [
           IconButton(
               onPressed: (){
-                Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context)=>HomePage()));
+                Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (BuildContext context)=>const HomePage()));
               },
               icon: const Icon(
                 Icons.home,
@@ -54,12 +70,65 @@ class _CartPageState extends State<CartPage> {
               )),
           IconButton(
               onPressed: () {
+                logger.d("/// ${UserHelper.shops.slug!}");
                 String title ='Attention';
                 String message ='Votre panier sera vidé';
                 String non='ANNULER';
                 String oui='VALIDER';
-                ShowDialog.showCartDialog(context, title, message,non,oui);
-
+                // UserHelper.userExitDialog(
+                //     context,
+                //     false,
+                //     CustomAlertDialog(
+                //       svgIcon: "img/icon/svg/smiley_sad.svg",
+                //       title: title,
+                //       message: message ,
+                //       positiveText: 'Fermer',
+                //       negativeText: oui,
+                //       onContinue: () {
+                //         Navigator.pop(context);
+                //       },
+                //       onCancel: () async {
+                //         Navigator.pop(context);
+                //         cartProvider.clears();
+                //         Navigator.of(context).pop();
+                //         setState(() {
+                //           listen = true;
+                //         });
+                //       },
+                //       moduleColor: widget.moduleColor,));
+                showDialog(
+                    context: context,
+                    builder: (BuildContext builderContext){
+                  final cartProvider = Provider.of<CartProvider>(context,listen: false);
+                  return AlertDialog(
+                    content: Text(message),
+                    title: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const FaIcon(FontAwesomeIcons.triangleExclamation,color: Color(0xffFFAE42),),
+                        const SizedBox(
+                          width: 5,
+                        ),
+                        Text(title),
+                      ],
+                    ),
+                    actions: [
+                      TextButton(
+                        child:  Text(non),
+                        onPressed: (){
+                          Navigator.of(builderContext).pop();
+                        },
+                      ),
+                      TextButton(
+                        child:  Text(oui),
+                        onPressed: (){
+                          cartProvider.clears();
+                          Navigator.of(builderContext).pop();
+                        },
+                      )
+                    ],
+                  );
+                });
               },
               icon: const Icon(
                 Icons.delete_forever_outlined,
@@ -139,12 +208,14 @@ class _CartPageState extends State<CartPage> {
                                 ],
                               );
                             }
-                            return CartItemView(
-                                id: snapshot.data![index].id,
-                                title: snapshot.data![index].title,
+                            return
+                              CartItemView(
+                                id: snapshot.data![index].id!,
+                                title: snapshot.data![index].title!,
                                 image: snapshot.data![index].image,
-                                quantity: snapshot.data![index].quantity,
-                                price: snapshot.data![index].price);
+                                quantity: snapshot.data![index].quantity!,
+                                price: snapshot.data![index].price!,
+                              listen: true,);
                           }),
                     ),
                   ],
@@ -164,11 +235,12 @@ class _CartPageState extends State<CartPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Prix total:'),
+                 Text('Prix total:',style: TextStyle(color: Colors.grey.withOpacity(0.86),fontSize: 20),),
                 Consumer<CartProvider>(builder: (context,cartProvide,child){
-                  return Text(cartProvider.getTotalPrice().toString(),
+                  amount =cartProvide.getTotalPrice();
+                  return Text(cartProvider.getTotalPrice().toStringAsFixed(0)+' FCFA',
                     style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 12),
+                        fontWeight: FontWeight.bold, fontSize: 18),
                   );
                 },)
                 ,
@@ -176,18 +248,24 @@ class _CartPageState extends State<CartPage> {
             ),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
-                  style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all(widget.moduleColor.moduleColorDark)),
+              child:
+              MaterialButton(
+                height: getProportionateScreenHeight(45),
+                  color: widget.moduleColor.moduleColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)
+                ),
                   onPressed: () async{
                     List cartList=await cartProvider.getData();
                     // await ApiAuthService.getUser();
-                    print(cartList.isEmpty);
                     String text ='Veuillez remplir votre panier avant de le valider';
                     bool cartLength=cartList.isEmpty;
                     !cartLength?Navigator.of(context).push(MaterialPageRoute(
                         builder: (BuildContext context) =>
-                        const ValiderPanier())):ScaffoldMessenger.of(context).showSnackBar(
+                         ValiderPanier(
+                           moduleColor: widget.moduleColor,
+                           totalAmount: amount,
+                         ))):ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         backgroundColor: Colors.red,
                         content:
@@ -197,12 +275,18 @@ class _CartPageState extends State<CartPage> {
 
 
                   },
-                  child: const Text('VALIDER LE PANIER')),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: const [
+                      Text('VALIDER LE PANIER',style: TextStyle(color: Colors.white,fontSize: 18),),
+                      Icon(Icons.shopping_cart_checkout,color: Colors.white,size: 23,)
+                    ],
+                  )),
             )
           ],
         ),
       ),
     ) ;
-      ;
+
   }
 }

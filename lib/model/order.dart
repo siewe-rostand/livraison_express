@@ -32,6 +32,7 @@ class Order{
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['module'] = module;
+    data['magasin_id'] = magasinId;
     data['description'] = description;
     data['montant_livraison'] = montantLivraison;
     data['montant_total'] = montantTotal;
