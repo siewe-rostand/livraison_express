@@ -4,12 +4,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
-import 'package:livraison_express/constant/app-constant.dart';
 import 'package:livraison_express/service/api_auth_service.dart';
-import 'package:livraison_express/views/main/login.dart';
 import 'package:livraison_express/views/main/verification_code.dart';
+import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../constant/app-constant.dart';
 import '../../data/user_helper.dart';
 
 class RegistrationPage extends StatefulWidget {
@@ -20,11 +20,14 @@ class RegistrationPage extends StatefulWidget {
 }
 
 class _RegistrationPageState extends State<RegistrationPage> {
-  ConstantUtil constantUtil = ConstantUtil();
   int _currentStep = 0;
+  late ProgressDialog progressDialog;
+  final List<GlobalKey<FormState>> _formKeys = [
+    GlobalKey<FormState>(),
+    GlobalKey<FormState>()
+  ];
   final _phoneTextController = TextEditingController();
   final _phone2TextController = TextEditingController();
-  final _phone1TextController = TextEditingController();
   final nameTextController = TextEditingController();
   final surnameTextController = TextEditingController();
   final emailTextController = TextEditingController();
@@ -36,7 +39,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
   late String verificationId;
   String errorMessage = '';
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool isLoading = false;
   bool isClicked = false;
   String? _verificationId;
@@ -48,6 +50,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
   }
   @override
   void initState() {
+    progressDialog=ProgressDialog(context);
     getPhone();
     super.initState();
   }
@@ -69,14 +72,14 @@ class _RegistrationPageState extends State<RegistrationPage> {
                 ),
                 !isLoading
                     ? Form(
-                        key: _formKey,
+                        key: _formKeys[0],
                         child: Stepper(
                             controlsBuilder:
                                 (BuildContext bContext, ControlsDetails detail) {
                               return _currentStep == 1
                                   ? ElevatedButton(
                                       onPressed: () async {
-                                        if (_formKey.currentState!.validate()) {
+                                        if (_formKeys[0].currentState!.validate()) {
                                           setState(() {
                                             isLoading = true;
                                           });
@@ -93,29 +96,32 @@ class _RegistrationPageState extends State<RegistrationPage> {
                                              pwdConfirm: confirmPasswordTextController.text, telephone: _phoneTextController.text,
                                              countryCode: countryCode, licence: true.toString()).then((response)async{
                                                var body = json.decode(response.body);
-                                               print('on value $body');
                                                String accessToken =body['access_token'];
                                                // debugPrint('access_token $accessToken');
-                                               showMessage("Vos informations ont été enregistrées. Vous allez recevoir un code au numéro ${_phoneTextController.text} et à l'adresse ${emailTextController.text}.");
+                                               showMessage(context: bContext,title: "Félicitation",
+                                                   errorMessage: "Vos informations ont été enregistrées. Vous allez recevoir un code au numéro ${_phoneTextController.text} et à l'adresse ${emailTextController.text}."
+                                               );
                                                await Future.delayed(const Duration(
-                                                 seconds: 2),()=>
-                                                   Navigator.of(bContext).pushReplacement(MaterialPageRoute(builder: (bContext)=> VerificationCode(
-                                                     email: emailTextController.text,
-                                                     phone: _phoneTextController.text,
-                                                     token: accessToken,
-                                                     resetPassword: false,
-                                                     code: countryCode,
-                                                   ))));
+                                                 seconds: 2),(){
+                                                 Navigator.of(bContext).pushReplacement(MaterialPageRoute(builder: (bContext)=> VerificationCode(
+                                                   email: emailTextController.text,
+                                                   phone: _phoneTextController.text,
+                                                   token: accessToken,
+                                                   resetPassword: false,
+                                                   code: countryCode,
+                                                 )));
+                                               });
 
                                            // debugPrint('access_token \n${emailTextController.text}\n${_phoneTextController.text}\n$countryCode\n');
                                          }).catchError((onError){
+                                           progressDialog.hide();
                                            print('errpp// $onError');
-                                           showMessage(onError.toString());
+                                           showMessage(context: bContext,negativeText: "OK");
 
                                          });
-                                         setState(() {
-                                           isLoading=false;
-                                         });
+                                         // setState(() {
+                                         //   isLoading=false;
+                                         // });
                                           // await phoneSignIn(
                                           //         phoneNumber:
                                           //             _phone2TextController
@@ -160,9 +166,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
                                   content: Column(
                                     children: [
                                       TextFormField(
+                                        keyboardType: TextInputType.name,
                                         decoration:  InputDecoration(
                                             hintText: 'Nom ',
-                                          errorText: isClicked?'veuillez remplir ce champs':null,
                                           suffixIcon:isEmpty==false ?IconButton(onPressed:(){
                                             print('veuillez remplir ce champs');
                                               setState(() {
@@ -171,11 +177,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
                                           }, icon: const Icon(Icons.error,color: Colors.red,)):null
                                         ),
                                         controller: nameTextController,
-                                        inputFormatters: [
-                                          FilteringTextInputFormatter.allow(
-                                            RegExp(r"[a-zA-Z]+|\s"),
-                                          )
-                                        ],
                                         validator: (value){
                                           if(value!.isEmpty){
                                             return'veuillez remplir ce champs';
@@ -202,6 +203,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                                         },
                                       ),
                                       TextFormField(
+                                        keyboardType: TextInputType.emailAddress,
                                         decoration: const InputDecoration(
                                             hintText: 'Email '),
                                         controller: emailTextController,
@@ -213,6 +215,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                                         },
                                       ),
                                       IntlPhoneField(
+                                        keyboardType: TextInputType.phone,
                                         controller: _phoneTextController,
                                         showCountryFlag: false,
                                         dropdownIconPosition:
@@ -227,7 +230,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                                         },
                                         initialCountryCode: 'CM',
                                         invalidNumberMessage:
-                                            constantUtil.invalid_phone,
+                                            invalid_phone,
                                       ),
                                       IntlPhoneField(
                                         showCountryFlag: false,
@@ -242,7 +245,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                                         },
                                         initialCountryCode: 'CM',
                                         invalidNumberMessage:
-                                            constantUtil.invalid_phone,
+                                          invalid_phone,
                                       ),
                                     ],
                                   )),
@@ -261,9 +264,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
                                         controller: TextEditingController(text: _phoneTextController.text),
                                       ),
                                       TextFormField(
+                                        keyboardType: TextInputType.visiblePassword,
                                         decoration: const InputDecoration(
                                             hintText: 'Mot de passe '),
                                         controller: passwordTextController,
+                                        autovalidateMode: AutovalidateMode.onUserInteraction,
                                         validator: (val){
                                           if(val!.isEmpty){
                                             return "Veuillez remplir ce champ";
@@ -274,11 +279,13 @@ class _RegistrationPageState extends State<RegistrationPage> {
                                         },
                                       ),
                                       TextFormField(
+                                        keyboardType: TextInputType.visiblePassword,
                                         decoration: const InputDecoration(
                                             hintText:
                                                 'Confirmer le mot de passe'),
                                         controller:
                                             confirmPasswordTextController,
+                                        autovalidateMode: AutovalidateMode.onUserInteraction,
                                         validator: (val){
                                           if(val!.isEmpty){
                                             return "Veuillez remplir ce champ";
@@ -307,45 +314,17 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
   continued() async {
     _currentStep < 3 ? setState(() => _currentStep += 1) : null;
-    if(_formKey.currentState!.validate()){
+    if(_formKeys[_currentStep].currentState!.validate()){
+      switch(_currentStep){
+        case 0:
+          _formKeys[0].currentState!.save();
+          _currentStep++;
+          break;
+      }
     }
-    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    Map data = {
-      'nom': nameTextController.text,
-      'prenom': surnameTextController.text,
-      'phone1': _phoneTextController.text,
-      'phone2': _phone2TextController.text,
-      'email': emailTextController.text
-    };
-    sharedPreferences.setString('nom', nameTextController.text);
-    sharedPreferences.setString('prenom', surnameTextController.text);
-    sharedPreferences.setString('phone1', _phoneTextController.text);
-    sharedPreferences.setString('phone2', _phone2TextController.text);
-    sharedPreferences.setString('email', emailTextController.text);
   }
 
-  void showMessage(String errorMessage) {
-    showDialog(
-        context: context,
-        builder: (BuildContext builderContext) {
-          return AlertDialog(
-            title: const Text("Error"),
-            content: Text(errorMessage),
-            actions: [
-              TextButton(
-                child: const Text("Ok"),
-                onPressed: () async {
-                  Navigator.of(builderContext).pop();
-                },
-              )
-            ],
-          );
-        }).then((value) {
-      setState(() {
-        isLoading = false;
-      });
-    });
-  }
+
 
   cancel() {
     _currentStep > 0 ? setState(() => _currentStep -= 1) : null;

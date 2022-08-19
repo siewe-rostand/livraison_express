@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -12,6 +13,7 @@ import 'package:livraison_express/data/user_helper.dart';
 import 'package:livraison_express/service/api_auth_service.dart';
 import 'package:livraison_express/utils/size_config.dart';
 import 'package:livraison_express/views/main/register.dart';
+import 'package:livraison_express/views/main/verification_code.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../model/auto_gene.dart';
@@ -36,7 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final passwordTextController = TextEditingController();
   final emailTextController = TextEditingController();
   String countryCode = '';
-  List<City> cities=[];
+  List<City> cities = [];
 
   Future<FirebaseApp> _initializeFirebase() async {
     FirebaseApp firebaseApp = await Firebase.initializeApp();
@@ -130,7 +132,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     _isPhone
                         ? IntlPhoneField(
                             controller: _phoneTextController,
-                            autovalidateMode: AutovalidateMode.onUserInteraction,
+                            autovalidateMode:
+                                AutovalidateMode.onUserInteraction,
                             decoration: InputDecoration(
                               labelText: 'Telephone',
                               border: OutlineInputBorder(
@@ -198,13 +201,19 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: ElevatedButton(
                           style: ButtonStyle(
                               shape: MaterialStateProperty.all<
-                                  RoundedRectangleBorder>(RoundedRectangleBorder(
+                                      RoundedRectangleBorder>(
+                                  RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(25.0),
                           ))),
                           onPressed: () async {
                             if (_phoneTextController.text.isNotEmpty) {
                               print(countryCode);
-                              await ApiAuthService(context: context,fromLogin: true,progressDialog: getProgressDialog(context: context)).signInWithPhone(
+                              await ApiAuthService(
+                                      context: context,
+                                      fromLogin: true,
+                                      progressDialog:
+                                          getProgressDialog(context: context))
+                                  .signInWithPhone(
                                       telephone: _phoneTextController.text,
                                       countryCode: countryCode,
                                       password: passwordTextController.text);
@@ -226,7 +235,13 @@ class _LoginScreenState extends State<LoginScreen> {
                               // });
                             }
                             if (emailTextController.text.isNotEmpty) {
-                              ApiAuthService(context: context,fromLogin: true,progressDialog: getProgressDialog(context: context)).signInWithEmail(emailTextController.text, passwordTextController.text);
+                              ApiAuthService(
+                                      context: context,
+                                      fromLogin: true,
+                                      progressDialog:
+                                          getProgressDialog(context: context))
+                                  .signInWithEmail(emailTextController.text,
+                                      passwordTextController.text);
                               // FirebaseAuth auth = FirebaseAuth.instance;
                               // UserCredential userCredential = await auth.signInWithEmailAndPassword(
                               //   email: emailTextController.text,
@@ -256,7 +271,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 Row(children: const [
                   Expanded(
                     child: Divider(
-                      thickness: 1.5,),
+                      thickness: 1.5,
+                    ),
                   ),
                   Padding(
                     padding: EdgeInsets.all(8.0),
@@ -275,7 +291,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       InkWell(
                         onTap: () async {
-                              await FireAuth(progressDialog: getProgressDialog(context: context)).signInWithGoogle(context: context);
+                          await FireAuth(
+                                  progressDialog:
+                                      getProgressDialog(context: context))
+                              .signInWithGoogle(context: context);
                           // GoogleSignIn googleSignIn = GoogleSignIn();
                           // GoogleSignInAccount? account = await googleSignIn.signIn();
                           // // User? user= userCredential.user;
@@ -299,15 +318,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       InkWell(
                         onTap: () async {
-
-                              await FireAuth(progressDialog: getProgressDialog(context: context)).signInWithFacebook(context: context).then((value){
-                                // setState(() {
-                                //   _isProcessing = true;
-                                // });
-                              }).catchError((onError){
-
-                              });
-
+                          await FireAuth(
+                                  progressDialog:
+                                      getProgressDialog(context: context))
+                              .signInWithFacebook(context: context)
+                              .then((value) {
+                            // setState(() {
+                            //   _isProcessing = true;
+                            // });
+                          }).catchError((onError) {});
 
                           // if (user != null) {
                           //   Navigator.of(context)
@@ -329,8 +348,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       InkWell(
                         onTap: () async {
-                          await FireAuth.performLogin(
-                              'yahoo.com', ['openid mail-r'], {'language': 'fr'});
+                          await FireAuth.performLogin('yahoo.com',
+                              ['openid mail-r'], {'language': 'fr'});
                         },
                         child: CircleAvatar(
                             backgroundColor: Colors.black54,
@@ -363,8 +382,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     TextButton(
                         onPressed: () {
-                          Navigator.of(context).pushReplacement(MaterialPageRoute(
-                              builder: (context) => const RegistrationPage()));
+                          Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      const RegistrationPage()));
                         },
                         child: const Text("creer un compte"))
                   ],
@@ -679,8 +700,7 @@ class _MotDePasseState extends State<MotDePasse> {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion(
-      value: const SystemUiOverlayStyle(
-          statusBarColor:primaryColor),
+      value: const SystemUiOverlayStyle(statusBarColor: primaryColor),
       child: Scaffold(
         body: Container(
           margin: const EdgeInsets.only(top: 100, left: 20, right: 20),
@@ -690,9 +710,7 @@ class _MotDePasseState extends State<MotDePasse> {
               children: [
                 const Text(
                   'Mot de Passe oublie.',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: grey80),
+                  style: TextStyle(fontWeight: FontWeight.bold, color: grey80),
                 ),
                 SvgPicture.asset(
                   'img/icon/svg/ic_forgot_password.svg',
@@ -711,8 +729,7 @@ class _MotDePasseState extends State<MotDePasse> {
                           },
                           child: const Text(
                             "Utiliser l'adresse email ?",
-                            style: TextStyle(
-                                color: primaryColor),
+                            style: TextStyle(color: primaryColor),
                           ))
                       : TextButton(
                           onPressed: () {
@@ -722,8 +739,7 @@ class _MotDePasseState extends State<MotDePasse> {
                           },
                           child: const Text(
                               "Se connecter avec le numero de telephone ?",
-                              style: TextStyle(
-                                  color: primaryColor))),
+                              style: TextStyle(color: primaryColor))),
                 ),
                 _isPhone
                     ? IntlPhoneField(
@@ -739,7 +755,7 @@ class _MotDePasseState extends State<MotDePasse> {
                         onChanged: (phone) {
                           countryCode = phone.countryCode;
                         },
-                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
                         initialCountryCode: 'CM',
                         validator: (val) {
                           if (val!.toString().isEmpty) {
@@ -750,6 +766,7 @@ class _MotDePasseState extends State<MotDePasse> {
                       )
                     : TextFormField(
                         controller: emailController,
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
                         keyboardType: TextInputType.emailAddress,
                         decoration: const InputDecoration(
                           floatingLabelBehavior: FloatingLabelBehavior.auto,
@@ -763,13 +780,12 @@ class _MotDePasseState extends State<MotDePasse> {
                           }
                           return null;
                         },
-                  autovalidateMode: AutovalidateMode.onUserInteraction,
                       ),
-                const SizedBox(
-                  height: 20,
+                SizedBox(
+                  height: getProportionateScreenHeight(20),
                 ),
                 SizedBox(
-                  height: 45,
+                  height: getProportionateScreenHeight(45),
                   width: double.infinity,
                   child: ElevatedButton(
                       style: ButtonStyle(
@@ -778,24 +794,36 @@ class _MotDePasseState extends State<MotDePasse> {
                                   RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(5.0),
                           )),
-                          backgroundColor: MaterialStateProperty.all(
-                              primaryColor)),
+                          backgroundColor:
+                              MaterialStateProperty.all(primaryColor)),
                       onPressed: () async {
                         if (_isPhone) {
                           try {
-                            await ApiAuthService(context: context,fromLogin: true,progressDialog: getProgressDialog(context: context)).forgotPasswordCode(
+                            await ApiAuthService(
+                                    context: context,
+                                    fromLogin: true,
+                                    progressDialog:
+                                        getProgressDialog(context: context))
+                                .forgotPasswordCode(
                                     telephone: phoneController.text,
                                     countryCode: countryCode)
                                 .then((response) {
                               var body = json.decode(response.body);
-                              var phone = body['phone'];
+                              var data = body['data'];
+                              var phone = data['phone'];
+                              var email = data['email'];
+                              debugPrint('true/// $phone');
+                              debugPrint('true $email');
                               Navigator.of(context).pushReplacement(
                                   MaterialPageRoute(
                                       builder: (BuildContext context) =>
-                                          ConfirmCode(
+                                          VerificationCode(
                                             phone: phone,
+                                            resetPassword: true,
+                                            email: email,
                                           )));
                             }).catchError((onError) {
+                              print(onError);
                               // showMessage(message: onError.toString(), title: "Alerte");
                               showMessage(
                                   message:
@@ -811,7 +839,8 @@ class _MotDePasseState extends State<MotDePasse> {
                           }
                         } else {
                           try {
-                            await ApiAuthService.forgotPasswordCodeEmail(
+                            await ApiAuthService(context: context)
+                                .forgotPasswordCodeEmail(
                                     email: emailController.text)
                                 .then((response) {
                               var body = json.decode(response.body);
@@ -821,7 +850,6 @@ class _MotDePasseState extends State<MotDePasse> {
                                       builder: (BuildContext context) =>
                                           ConfirmCode(
                                             email: email,
-
                                           )));
                             }).catchError((onError) {
                               // showMessage(message: onError.toString(), title: "Alerte");
@@ -854,7 +882,9 @@ class _MotDePasseState extends State<MotDePasse> {
 }
 
 class ConfirmCode extends StatelessWidget {
-  const ConfirmCode({Key? key, this.phone, this.email, this.token, this.resetPassword}) : super(key: key);
+  const ConfirmCode(
+      {Key? key, this.phone, this.email, this.token, this.resetPassword})
+      : super(key: key);
   final String? phone;
   final String? email;
   final String? token;
