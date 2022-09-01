@@ -1,10 +1,8 @@
 import 'dart:convert';
 import 'dart:developer';
 
-import 'package:autocomplete_textfield/autocomplete_textfield.dart';
 import 'package:contacts_service/contacts_service.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_stripe/flutter_stripe.dart'as stripe;
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -15,18 +13,19 @@ import 'package:livraison_express/model/articles.dart';
 import 'package:livraison_express/model/auto_gene.dart';
 import 'package:livraison_express/model/cart-model.dart';
 import 'package:livraison_express/model/client.dart';
-import 'package:livraison_express/model/day.dart';
 import 'package:livraison_express/model/day_item.dart';
 import 'package:livraison_express/model/infos.dart';
 import 'package:livraison_express/model/payment.dart';
 import 'package:livraison_express/model/user.dart';
+import 'package:livraison_express/service/paymentApi.dart';
 import 'package:livraison_express/utils/main_utils.dart';
 import 'package:livraison_express/utils/size_config.dart';
+import 'package:livraison_express/views/order_confirmation/order_confirmation.dart';
 import 'package:livraison_express/views/super-market/widget/step1.dart';
 import 'package:livraison_express/views/super-market/widget/step2.dart';
-import 'package:livraison_express/views/widgets/custom_button.dart';
+import 'package:livraison_express/views/widgets/custom_alert_dialog.dart';
 import 'package:livraison_express/views/widgets/custom_dialog.dart';
-import 'package:livraison_express/views/widgets/stripe_checkout.dart';
+import 'package:livraison_express/views/widgets/select_time.dart';
 import 'package:logger/logger.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
@@ -39,10 +38,7 @@ import '../../model/distance_matrix.dart';
 import '../../model/horaire.dart';
 import '../../model/module_color.dart';
 import '../../model/order.dart';
-import '../../model/quartier.dart';
 import '../../service/course_service.dart';
-import '../../service/main_api_call.dart';
-import '../MapView.dart';
 import 'cart-provider.dart';
 
 enum DeliveryType { express, heure_livraison }
@@ -83,7 +79,6 @@ class _ValiderPanierState extends State<ValiderPanier> {
     GlobalKey<FormState>(),
     GlobalKey<FormState>()
   ];
-  GlobalKey<AutoCompleteTextFieldState<Contact>> key = GlobalKey();
   DBHelper dbHelper =DBHelper();
 
   //some variables
@@ -135,8 +130,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
   int? idChargement;
   List<Article> productList =[];
   List<Contact> contacts=[];
-  late AutoCompleteTextField searchTextField;
-  late bool isTodayOpened,isTomorrowOpened,_saveCard;
+  bool isTodayOpened=false,isTomorrowOpened=false;
 
   TextEditingController controller = TextEditingController();
   final TextEditingController _typeAheadController = TextEditingController();
@@ -156,417 +150,11 @@ class _ValiderPanierState extends State<ValiderPanier> {
     city =await UserHelper.getCity();
     cityDepartTextController = TextEditingController(text: city);
     isOpened(UserHelper.shops.horaires!);
-    print("city $city");
-  }
-  showToday() {
-    Navigator.of(context).pop();
-    Days today =UserHelper.shops.horaires!.today!;
-    if(today.toString().isNotEmpty){
-      List<DayItem>? item = today.items;
-      if(item!.isNotEmpty){
-        item.forEach((i) {
-          String? openTime=i.openedAt;
-          String? closeTime = i.closedAt;
-          var nw = openTime?.substring(0, 2);
-          var a = openTime?.substring(3, 5);
-          var cnm = closeTime?.substring(0, 2);
-          var cla = closeTime?.substring(3, 5);
-          DateTime openTimeStamp = DateTime(now.year, now.month,
-              now.day, int.parse(nw!), int.parse(a!), 0);
-          DateTime closeTimeStamp = DateTime(now.year, now.month,
-              now.day, int.parse(cnm!), int.parse(cla!), 0);
-          if (openTime!.isNotEmpty && closeTime!.isNotEmpty){
-            if ((now.isAtSameMomentAs(openTimeStamp) ||
-                now.isAfter(openTimeStamp)) && now.isBefore(closeTimeStamp)){
-              while (now1.isBefore(closeTimeStamp)) {
-                now1;
-                DateTime incr = now1.add(step);
-                todayTime.add(DateFormat.Hm().format(incr));
-                now1 = incr;
-              }
-            }
-            }
-        });
-      }
-    }
-    showDialog<void>(
-        context: context,
-        builder: (context) {
-          dateFormat = DateFormat.Hm();
-          selectTodayTime = dateFormat.format(t);
-          var selectTime;
-          return StatefulBuilder(builder: (context, setStateSB) {
-            return Dialog(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16.0)),
-              elevation: 0.0,
-              child: Stack(
-                children: [
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.only(top: 10, left: 6),
-                        height: 35,
-                        width: double.infinity,
-                        decoration: const BoxDecoration(
-                          borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(10),
-                              topRight: Radius.circular(5)),
-                          color: Color(0xff00a117),
-                        ),
-                        child: const Text(
-                          'A quel heure svp ?',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                /**
-                                   * today's today time
-                                   */
-                                ElevatedButton(
-                                  style: ButtonStyle(
-                                      backgroundColor:
-                                          MaterialStateProperty.all(
-                                              const Color(0xff00a117))),
-                                  onPressed: () {
-                                    print("Today's today");
-                                    isToday = true;
-                                    showToday();
-                                  },
-                                  child: const Text(
-                                    "AUJOUD'HUI",
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                                Row(
-                                  children: const [
-                                    Expanded(child: Divider()),
-                                    Padding(
-                                      padding: EdgeInsets.all(8.0),
-                                      child: Text('Ou'),
-                                    ),
-                                    Expanded(child: Divider()),
-                                  ],
-                                ),
-                                /**
-                                   * today's tomorrow time
-                                   */
-                                ElevatedButton(
-                                    style: ButtonStyle(
-                                        backgroundColor:
-                                            MaterialStateProperty.all(
-                                                const Color(0xff00a117))),
-                                    onPressed: () {
-                                      print("today's tomorrow");
-                                      isToday == false;
-                                      showTomorrow();
-                                    },
-                                    child: const Text(
-                                      "DEMAIN",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold),
-                                    )),
-                              ],
-                            ),
-                          ),
-                          Expanded(
-                            child: DropdownButton<String>(
-                              value: selectTodayTime,
-                              icon: const Icon(Icons.arrow_drop_down_outlined),
-                              elevation: 16,
-                              style: const TextStyle(color: Color(0xA31236BD)),
-                              onChanged: (String? newValue) {
-                                print(selectTodayTime);
-                                setStateSB(() {
-                                  selectTodayTime = newValue!;
-                                });
-                                var nw = selectTodayTime.substring(0, 2);
-                                var a = selectTodayTime.substring(3, 5);
-                                DateTime startTime2 = DateTime(
-                                    now.year,
-                                    now.month,
-                                    now.day,
-                                    int.parse(nw),
-                                    int.parse(a),
-                                    0);
-                                selectTime = DateFormat('dd-MM-yyyy  k:mm')
-                                    .format(startTime2);
-                              },
-                              items: todayTime.map<DropdownMenuItem<String>>(
-                                  (String value) {
-                                return DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text(
-                                    value,
-                                    style: const TextStyle(color: Colors.black),
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                          )
-                        ],
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      ),
-                    ],
-                  ),
-                  Positioned(
-                    right: 0.0,
-                    bottom: 0.0,
-                    child: Align(
-                      alignment: Alignment.bottomRight,
-                      child: TextButton(
-                        onPressed: () {
-                          var nw = selectTodayTime.substring(0, 2);
-                          var a = selectTodayTime.substring(3, 5);
-                          DateTime startTime2 = DateTime(now.year, now.month,
-                              now.day, int.parse(nw), int.parse(a), 0);
-                          var selectTime1 =
-                              DateFormat('dd-MM-yyyy  k:mm').format(startTime2);
-                          Navigator.of(context).pop();
-                          setState(() {
-                            chooseTime = selectTime ?? selectTime1;
-                          });
-                          print(chooseTime);
-                        },
-                        child: const Text('VALIDER'),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                      right: 0.0,
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: const Align(
-                          alignment: Alignment.topRight,
-                          child: CircleAvatar(
-                            radius: 14.0,
-                            backgroundColor: Color(0xff00a117),
-                            child: Icon(Icons.close, color: Colors.white),
-                          ),
-                        ),
-                      ))
-                ],
-              ),
-            );
-          });
-        });
-  }
-
-  showTomorrow() {
-    Navigator.of(context).pop();
-    Days tomorrow =UserHelper.shops.horaires!.tomorrow!;
-    if(tomorrow.toString().isNotEmpty){
-      List<DayItem>? item=tomorrow.items;
-      if(item!.isNotEmpty){
-        for (var i in item) {
-          String? openTime=i.openedAt;
-          String? closeTime = i.closedAt;
-          var nw = openTime?.substring(0, 2);
-          var a = openTime?.substring(3, 5);
-          var cnm = closeTime?.substring(0, 2);
-          var cla = closeTime?.substring(3, 5);
-          DateTime openTimeStamp = DateTime(now.year, now.month,
-              now.day, int.parse(nw!), int.parse(a!), 0);
-          DateTime closeTimeStamp = DateTime(now.year, now.month,
-              now.day, int.parse(cnm!), int.parse(cla!), 0);
-          if (openTime!.isNotEmpty && closeTime!.isNotEmpty){
-            dateFormat = DateFormat.Hm();
-            String currentTime=dateFormat.format(now);
-            while (openTimeStamp.isBefore(closeTimeStamp)) {
-              DateTime timeIncrement = openTimeStamp.add(step);
-              openTimeStamp = timeIncrement;
-              timeSlots.add(DateFormat.Hm().format(timeIncrement));
-            }
-            showDialog<void>(
-                context: context,
-                builder: (context) {
-                  dateFormat = DateFormat.Hm();
-                  DateTime startTime1 =
-                  DateTime(now.year, now.month, now.day, 8, 30, 0);
-                  String nextStart = dateFormat.format(startTime1);
-                  var selectTime;
-                  return StatefulBuilder(builder: (context, setStateSB) {
-                    return Dialog(
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16.0)),
-                      elevation: 0.0,
-                      child: Stack(
-                        children: [
-                          Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.only(top: 10, left: 6),
-                                height: 35,
-                                width: double.infinity,
-                                decoration: const BoxDecoration(
-                                  borderRadius: BorderRadius.only(
-                                      topLeft: Radius.circular(10),
-                                      topRight: Radius.circular(5)),
-                                  color: Color(0xff00a117),
-                                ),
-                                child: const Text(
-                                  'A quel heure svp ?',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              ),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        /**
-                                         * tomorrow's today time
-                                         */
-                                        ElevatedButton(
-                                          style: ButtonStyle(
-                                              backgroundColor:
-                                              MaterialStateProperty.all(
-                                                  const Color(0xff00a117))),
-                                          onPressed: () {
-                                            print("Tomorrow's today");
-                                            isToday = true;
-                                            showToday();
-                                          },
-                                          child: const Text(
-                                            "AUJOUD'HUI",
-                                            style:
-                                            TextStyle(fontWeight: FontWeight.bold),
-                                          ),
-                                        ),
-                                        Row(
-                                          children: const [
-                                            Expanded(child: Divider()),
-                                            Padding(
-                                              padding: EdgeInsets.all(8.0),
-                                              child: Text('Ou'),
-                                            ),
-                                            Expanded(child: Divider()),
-                                          ],
-                                        ),
-                                        /**
-                                         * tomorrow's tomorrow time
-                                         */
-                                        ElevatedButton(
-                                            style: ButtonStyle(
-                                                backgroundColor:
-                                                MaterialStateProperty.all(
-                                                    const Color(0xff00a117))),
-                                            onPressed: () {
-                                              print("tomorrow's tomorrow");
-                                              showTomorrow();
-                                            },
-                                            child: const Text(
-                                              "DEMAIN",
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold),
-                                            )),
-                                      ],
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: DropdownButton<String>(
-                                      value: nextStart,
-                                      icon: const Icon(Icons.arrow_drop_down_outlined),
-                                      elevation: 16,
-                                      style: const TextStyle(color: Color(0xA31236BD)),
-                                      onChanged: (String? newValue) {
-                                        setStateSB(() {
-                                          nextStart = newValue!;
-                                        });
-                                        var nw = nextStart.substring(0, 2);
-                                        var a = nextStart.substring(3, 5);
-                                        DateTime startTime2 = DateTime(
-                                            now.year,
-                                            now.month,
-                                            now.day + 1,
-                                            int.parse(nw),
-                                            int.parse(a),
-                                            0);
-                                        selectTime = DateFormat('dd-MM-yyyy  k:mm')
-                                            .format(startTime2);
-                                        // print(selectTime);
-                                      },
-                                      items: timeSlots.map<DropdownMenuItem<String>>(
-                                              (String value) {
-                                            return DropdownMenuItem<String>(
-                                              value: value,
-                                              child: Text(
-                                                value,
-                                                style: const TextStyle(color: Colors.black),
-                                              ),
-                                            );
-                                          }).toList(),
-                                    ),
-                                  )
-                                ],
-                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              ),
-                            ],
-                          ),
-                          Positioned(
-                            right: 0.0,
-                            bottom: 0.0,
-                            child: Align(
-                              alignment: Alignment.bottomRight,
-                              child: TextButton(
-                                onPressed: () {
-                                  var nw = nextStart.substring(0, 2);
-                                  var a = nextStart.substring(3, 5);
-                                  DateTime startTime2 = DateTime(now.year, now.month,
-                                      now.day, int.parse(nw), int.parse(a), 0);
-                                  var selectTime1 =
-                                  DateFormat('dd-MM-yyyy k:mm').format(startTime2);
-                                  Navigator.of(context).pop();
-                                  setState(() {
-                                    chooseTime = selectTime ?? selectTime1;
-                                  });
-                                },
-                                child: const Text('VALIDER'),
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                              right: 0.0,
-                              child: GestureDetector(
-                                onTap: () {
-                                  Navigator.of(context).pop();
-                                },
-                                child: const Align(
-                                  alignment: Alignment.topRight,
-                                  child: CircleAvatar(
-                                    radius: 14.0,
-                                    backgroundColor: Color(0xff00a117),
-                                    child: Icon(Icons.close, color: Colors.white),
-                                  ),
-                                ),
-                              ))
-                        ],
-                      ),
-                    );
-                  });
-                });
-          }
-        }
-      }
-    }
   }
 
 
   setSenderAndReceiverInfo() async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    String? mags = sharedPreferences.getString("magasin");
-    debugPrint('//${UserHelper.shops.slug}');
     Shops shops=UserHelper.shops;
     var cityId = sharedPreferences.getInt('city_id');
     var providerName = "livraison-express";
@@ -590,36 +178,35 @@ class _ValiderPanierState extends State<ValiderPanier> {
     senderAddress.longitude = shops.adresse?.longitude;
     senderAddress.providerId = shops.adresse?.providerId;
     senderAddress.providerName = shops.adresse?.providerName;
+    senderAddress.nom=shops.slug;
 
-    receiverClient.fullName = nameTextController.text;
-    receiverClient.telephone = phoneTextController.text;
-    receiverClient.email = emailTextController.text;
-    addressReceiver.address = addressTextController.text;
-    setState(() {
-      _currentStep++;
-    });
+    // receiverClient.fullName = nameTextController.text;
+    // receiverClient.telephone = phoneTextController.text;
+    // receiverClient.email = emailTextController.text;
+    // addressReceiver.address = addressTextController.text;
+    logger.d('4${receiverClient.toJson()}');
+    if (mounted) {
+      setState(() {
+        _currentStep++;
+      });
+    }
   }
 
-  setDeliveryAddress()async {
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    var villeId = pref.getInt('city_id');
-    addressReceiver.address = addressTextController.text;
-    addressReceiver.villeId = villeId;
-    addressReceiver.description = descTextController.text;
-    addressReceiver.quarter = quarterTextController.text;
-    addressReceiver.titre = titleTextController.text;
-    addressReceiver.latitude = placeLat.toString();
-    addressReceiver.longitude = placeLon.toString();
+  setDeliveryAddress() {
+
+    // addressReceiver.address = addressTextController.text;
+    // addressReceiver.villeId = villeId;
+    // addressReceiver.description = descTextController.text;
+    // addressReceiver.quarter = quarterTextController.text;
+    // addressReceiver.titre = titleTextController.text;
+    // addressReceiver.latitude = placeLat.toString();
+    // addressReceiver.longitude = placeLon.toString();
     addressReceiver.providerName = "livraison-express";
     addressReceiver.id = null;
     addressReceiver.providerId = null;
-    if (selectedFavoriteAddress.toString().isNotEmpty) {
-      if (isFavoriteAddress(selectedFavoriteAddress, addressReceiver)) {
-        addressReceiver.id = selectedFavoriteAddress.id;
-        addressReceiver.providerId = selectedFavoriteAddress.providerId;
-        addressReceiver.providerName = selectedFavoriteAddress.providerName;
-      }
-    }
+    // print(';;;${isFavoriteAddress(selectedFavoriteAddress, addressReceiver) }${selectedFavoriteAddress.toString().length}');
+    log("message ${addressReceiver.toJson()}");
+    // log("message ${UserHelper.chooseTime}");
     calculateDistance();
   }
 
@@ -658,29 +245,27 @@ class _ValiderPanierState extends State<ValiderPanier> {
           var message = body['message'];
           var data = body['data'];
           DistanceMatrix distanceMatrix =DistanceMatrix.fromJson(data);
-          logger.i('distance matrix ${distanceMatrix.toJson()}');
-          setState(() {
-            duration = distanceMatrix.duration!;
-            distance = distanceMatrix.distance!;
-            durationText = distanceMatrix.durationText!;
-            distanceText = distanceMatrix.distanceText!;
-            deliveryPrice = distanceMatrix.prix!;
-            initialDeliveryPrice = distanceMatrix.prix!;
-            express =distanceMatrix.durationText!;
-            _currentStep++;
-          });
+          // logger.i('distance matrix ${addressReceiver.toJson()}');
+          if (mounted) {
+            setState(() {
+              duration = distanceMatrix.duration!;
+              distance = distanceMatrix.distance!;
+              durationText = distanceMatrix.durationText!;
+              distanceText = distanceMatrix.distanceText!;
+              deliveryPrice = distanceMatrix.prix!;
+              initialDeliveryPrice = distanceMatrix.prix!;
+              express =distanceMatrix.durationText!;
+
+              UserHelper.chooseTime='';
+              _currentStep++;
+            });
+          }
     }).catchError((onError) {
       logger.e(onError);
-      _currentStep++;
-      // UserHelper.userExitDialog(context, true,  CustomAlertDialog(
-      //     svgIcon: "img/icon/svg/smiley_cry.svg", title: "Desole",
-      //     message: onError,
-      //     width: SizeConfig.screenWidth! *0.4,
-      //     height: SizeConfig.screenHeight! * 0.3,
-      //     positiveText: "OK",
-      //     onContinue:(){
-      //       Navigator.of(context).pop();
-      //     }, moduleColor: widget.moduleColor));
+      var message ="Une erreur est survenue lors du calcul de la distance. Veuillez vérifier vos informations puis réessayez.";
+      showGenDialog(context,true,CustomDialog(title: "Alert", content: message, positiveBtnText: "OK", positiveBtnPressed: (){
+        Navigator.pop(context);
+      }));
     });
   }
   setDeliveryTime(bool isExpress){
@@ -718,6 +303,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
     }
   }
   saveOrder(String modePaiement, String pi, String status, String paimentMessage)async{
+    Shops shops =UserHelper.shops;
     SharedPreferences sharedPreferences =
     await SharedPreferences.getInstance();
     String? userString =
@@ -732,20 +318,22 @@ class _ValiderPanierState extends State<ValiderPanier> {
     for(int i=0; i<cartList.length;i++){
       CartItem cartItem = cartList[i];
       Article article =Article();
-      article.id=cartItem.id;
+      article.id=cartItem.productId;
       article.libelle=cartItem.title;
       article.unitPrice=cartItem.price;
       article.totalPrice=cartItem.totalPrice;
-      article.categoryId=cartItem.categoryId;
-      article.subCategoryId=cartItem.categoryId;
+      // article.categoryId=cartItem.categoryId;
+      // article.subCategoryId=cartItem.categoryId;
       article.totalPrice = widget.totalAmount.toInt();
       article.quantity =cartItem.quantity;
       article.subTotalAmount =cartItem.quantity!*cartItem.price!;
       article.description ="";
+      article.magasinId=shops.id;
       // var list =json.decode(cartItem.complement!)as List;
       // List<Attributes> attributes = list.map((json) => Attributes.fromJson(json)).toList();
       // article.attributes =attributes;
       productList.add(article);
+      // logger.wtf(cartItem.id);
     }
 
     List<Address> addressSender = [];
@@ -755,14 +343,12 @@ class _ValiderPanierState extends State<ValiderPanier> {
     senderClient.addresses =addressSender;
     receiverClient.addresses=receiverAddress;
     receiverClient.providerName=appUser1.providerName;
-    receiverClient.fullName=fullName;
 
     // originalClient.id=appUser1.providerId;
     originalClient.providerName =appUser1.providerName;
     originalClient.fullName =appUser1.fullname;
     originalClient.telephone =appUser1.telephone;
     originalClient.email =appUser1.email;
-    Shops shops =UserHelper.shops;
 
 
     Order order =Order();
@@ -774,11 +360,9 @@ class _ValiderPanierState extends State<ValiderPanier> {
     order.commentaire ='';
     order.montantLivraison =initialDeliveryPrice;
     order.magasinId=shops.id;
-    order.articles=productList;
-    logger.wtf(productList);
-
+    var total=Provider.of<CartProvider>(context,listen: false).getTotalPrice() +deliveryPrice;
     Payment payment =Payment();
-    payment.totalAmount = total;
+    payment.totalAmount = total.toInt();
     payment.message = paimentMessage;
     payment.paymentMode = modePaiement;
     payment.status = status;
@@ -808,10 +392,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
 
     await CourseApi().commnander2( data: data).then((response) {
       var body = json.decode(response.body);
-      var res = body['data'];
-      var infos = body['infos'];
-      logger.i('data $res /// info $infos');
-      // AppUser appUsers=AppUser.fromJson(res);
+      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context)=>const OrderConfirmation()));
     }).catchError((onError){
       logger.e(onError);
       UserHelper.userExitDialog(context, true,  CustomAlertDialog(
@@ -839,40 +420,6 @@ class _ValiderPanierState extends State<ValiderPanier> {
       });
       throw Exception('error');
     }
-  }
-  handlePayment() async {
-    AppUser1? appUser1=UserHelper.currentUser1;
-    String clientSecret;
-// 1. fetch Intent Client Secret from backend
-    await MainApi().getPaymentIntentClientSecret(token: appUser1!.token!, amount:totalPrice).then((response){
-
-      var body = json.decode(response.body);
-      var data = body['data'];
-      logger.w(data);
-      paymentIntentClientSecret=data['client_secret'];
-    });
-
-// 2. Gather customer billing information (ex. email)
-    final billingDetails = stripe.BillingDetails(
-      email: appUser1.email,
-      phone: appUser1.telephone,
-    ); // mo mocked data for tests
-
-// 3. Confirm payment with card details
-// The rest will be done automatically using webhooks
-// ignore: unused_local_variable
-    final paymentIntent = await stripe.Stripe.instance.confirmPayment(
-      paymentIntentClientSecret!,
-      stripe.PaymentMethodParams.card(
-          paymentMethodData: stripe.PaymentMethodData(
-              billingDetails:billingDetails
-          ),
-          options: stripe.PaymentMethodOptions(
-            setupFutureUsage:
-            _saveCard == true ? stripe.PaymentIntentsFutureUsage.OffSession : null,
-          )
-      ),
-    );
   }
   autoComplete(){
     return
@@ -997,10 +544,33 @@ class _ValiderPanierState extends State<ValiderPanier> {
     }
     return juge;
   }
+  getUserData(int? value)async{
+    SharedPreferences sharedPreferences =
+    await SharedPreferences.getInstance();
+    String? userString =
+    sharedPreferences.getString("userData");
+    final extractedUserData =
+    json.decode(userString!);
+    AppUser1 appUser = AppUser1.fromJson(extractedUserData);
+    AppUser1? user=UserHelper.currentUser1??appUser;
+    email =(user.email??appUser.email)!;
+    fullName =(user.fullname??appUser.fullname)!;
+    telephone =(user.telephone??appUser.telephone)!;
+    telephone1 =(user.telephoneAlt??appUser.telephoneAlt)??'';
+    setState(() {
+      radioSelected = value!;
+      nameTextController.text = fullName;
+      phone2DepartTextController.text = telephone1;
+      phoneTextController.text = telephone;
+      emailTextController.text = email;
+      senderClient.providerName=user.providerName;
+      senderAddress.providerName =
+      "livraison-express";
+    });
+  }
   @override
   Widget build(BuildContext context) {
     final cartProvider = Provider.of<CartProvider>(context);
-    final quarter = Provider.of<QuarterProvider>(context);
 
     // print(' times ${selectTodayTime}');
 
@@ -1031,7 +601,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
                               debugPrint('////');
                               saveOrder("cash", '', '', '');
                             }else if(payMode == "card"){
-                                Navigator.of(context).push(MaterialPageRoute(builder: (context)=>PaymentSheetScreenWithCustomFlow(amount: totalPrice,)));
+                              saveOrder('card', '', '', '');
                             }else{
                               Fluttertoast.showToast(msg: "Veuillez choisir un moyen de paiement");
                             }
@@ -1070,344 +640,15 @@ class _ValiderPanierState extends State<ValiderPanier> {
                   Step(
                     title: const Text('Information du client'),
                     subtitle: const Text('A QUI LIVRE'),
-                    content: Form(
-                      key: _formKeys[0],
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Text('CHEZ MOI',style: TextStyle(fontWeight: FontWeight.bold),),
-                                  Radio(
-                                    activeColor:UserHelper.getColor(),
-                                    value: 0,
-                                    groupValue: radioSelected,
-                                    onChanged: (int? value) async {
-                                      SharedPreferences sharedPreferences =
-                                      await SharedPreferences.getInstance();
-                                      String? userString =
-                                      sharedPreferences.getString("userData");
-                                      final extractedUserData =
-                                      json.decode(userString!);
-                                      AppUser1 appUser = AppUser1.fromJson(extractedUserData);
-                                      AppUser1? user=UserHelper.currentUser1??appUser;
-                                      email =(user.email??appUser.email)!;
-                                      fullName =(user.fullname??appUser.fullname)!;
-                                      telephone =(user.telephone??appUser.telephone)!;
-                                      telephone1 =(user.telephoneAlt??appUser.telephoneAlt)??'';
-                                      setState(() {
-                                        radioSelected = value!;
-                                        nameTextController.text = fullName;
-                                        phone2DepartTextController.text = telephone1;
-                                        phoneTextController.text = telephone;
-                                        emailTextController.text = email;
-                                        senderClient.providerName=user.providerName;
-                                        senderAddress.providerName =
-                                        "livraison-express";
-                                      });
-                                    },
-                                  ),
-                                ],
-                              ),
-                              Column(
-                                children: [
-                                  const Text('AUTRE',style: TextStyle(fontWeight: FontWeight.bold),),
-                                  Radio(
-                                    activeColor: UserHelper.getColor(),
-                                    value:1,
-                                    groupValue: radioSelected,
-                                    onChanged: (int? value) {
-                                      fullName = '';
-                                      email = '';
-                                      telephone1 = '';
-                                      telephone = '';
-                                      setState(() {
-                                        radioSelected = value!;
-                                        nameTextController.text = fullName;
-                                        phone2DepartTextController.text = telephone1;
-                                        phoneTextController.text = telephone;
-                                        emailTextController.text = email;
-                                        // sender.id = null;
-                                        senderClient.providerName =
-                                        'livraison-express';
-                                      });
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                          radioSelected == 0?TextFormField(
-                            controller: nameTextController,
-                            readOnly: radioSelected==0 && nameTextController.text.isNotEmpty,
-                            decoration: const InputDecoration(
-                                labelText: 'Nom et prenom *'),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return "Veuillez entrer le nom et prénom";
-                              }
-                              return null;
-                            },
-                          ):
-                          autoComplete(),
-                          TextFormField(
-                            controller: phoneTextController,
-                            readOnly: radioSelected==0 && phoneTextController.text.isNotEmpty,
-                            decoration:
-                            const InputDecoration(labelText: 'Telephone 1 *'),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Veuillez entrer le numéro de téléphone';
-                              }
-                              return null;
-                            },
-                          ),
-                          TextFormField(
-                            controller: phone2DepartTextController,
-                            readOnly: radioSelected==0 && phone2DepartTextController.text.isNotEmpty,
-                            decoration:
-                            const InputDecoration(labelText: 'Telephone 2 '),
-                          ),
-                          TextFormField(
-                            controller: emailTextController,
-                            readOnly: radioSelected==0 && emailTextController.text.isNotEmpty,
-                            decoration:radioSelected==0?
-                            const InputDecoration(labelText: 'Email *'):const InputDecoration(labelText: 'Email '),
-                            validator:radioSelected==0? (value) {
-                              if (value!.isEmpty) {
-                                return "Veuillez remplir ce champ";
-                              }
-                              return null;
-                            }:null,
-                          ),
-                        ],
-                      ),
-                    ),
+                    content: Step1(step1FormKey:  _formKeys[0],sender: receiverClient,),
                     isActive: _currentStep >= 0,
                     state: _currentStep >= 0
                         ? StepState.complete
                         : StepState.disabled,
                   ),
                   Step(
-                    title: const Text("Informationd'adresse "),
-                    content: Form(
-                      key: _formKeys[1],
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Text("Consulter ma liste d'adresses: "),
-                              IconButton(
-                                  onPressed: () {
-                                    showDialog<void>(
-                                        context: context,
-                                        builder: (context) {
-                                          return Center(
-                                            child: AlertDialog(
-                                              content: Column(
-                                                mainAxisAlignment:
-                                                MainAxisAlignment
-                                                    .spaceBetween,
-                                                children: [
-                                                  const Align(
-                                                    child: Text(
-                                                      ' Choisir votre adresse: ',
-                                                      style: TextStyle(
-                                                          fontWeight:
-                                                          FontWeight.bold,
-                                                          color:
-                                                          Color(0xff00a117)),
-                                                    ),
-                                                    alignment:
-                                                    Alignment.topCenter,
-                                                  ),
-                                                  addresses.isEmpty
-                                                      ? const Text(
-                                                    ' Votre liste est vide ',
-                                                    style: TextStyle(
-                                                        fontWeight:
-                                                        FontWeight
-                                                            .bold),
-                                                  )
-                                                      : ListView.builder(
-                                                      itemBuilder:
-                                                          (context, index) {
-                                                        return const Text(
-                                                            'draw');
-                                                      }),
-                                                  Align(
-                                                    alignment:
-                                                    Alignment.bottomCenter,
-                                                    child: ElevatedButton(
-                                                        style: ButtonStyle(
-                                                            backgroundColor:
-                                                            MaterialStateProperty
-                                                                .all(Colors
-                                                                .white)),
-                                                        onPressed: () {
-                                                          Navigator.of(context)
-                                                              .pop();
-                                                        },
-                                                        child: const Text(
-                                                          'FERMER',
-                                                          style: TextStyle(
-                                                              fontWeight:
-                                                              FontWeight.bold,
-                                                              color:
-                                                              Colors.black38),
-                                                        )),
-                                                  )
-                                                ],
-                                              ),
-                                            ),
-                                          );
-                                        });
-                                  },
-                                  icon: SvgPicture.asset('img/icon/svg/ic_address.svg'))
-                            ],
-                          ),
-
-                          TextFormField(
-                            autovalidateMode:
-                            AutovalidateMode.onUserInteraction,
-                            decoration:
-                            const InputDecoration(labelText: 'Ville '),
-                            controller: cityDepartTextController,
-                            enabled: false,
-                          ),
-                          TypeAheadField<String>(
-                            textFieldConfiguration:  TextFieldConfiguration(
-                              controller: quarterTextController,
-                              decoration: const InputDecoration(
-                                  labelText: 'Quartier'),
-                            ),
-                            suggestionsCallback: (String pattern) async {
-                              return city=='Douala'|| city == "DOUALA"?quarter.quarterDouala
-                                  .where((item) =>
-                                  item.toLowerCase().startsWith(pattern.toLowerCase()))
-                                  .toList():quarter.quarterYaounde
-                                  .where((item) =>
-                                  item.toLowerCase().startsWith(pattern.toLowerCase()))
-                                  .toList();
-                            },
-                            itemBuilder: (context, String suggestion) {
-                              return ListTile(
-                                title: Text(suggestion),
-                              );
-                            },
-                            onSuggestionSelected: (String suggestion) {
-                              quarterTextController.text = suggestion;
-                            },
-                            autoFlipDirection: true,
-                            hideOnEmpty: true,
-                          ),
-                          TextFormField(
-                            autovalidateMode:
-                            AutovalidateMode.onUserInteraction,
-                            decoration: const InputDecoration(
-                                labelText: 'Description du lieu '),
-                            controller: descTextController,
-                            validator: (value) {
-                              if (value!.isEmpty) {
-                                return "Veuillez remplir ce champ";
-                              }
-                              return null;
-                            },
-                          ),
-                          TextFormField(
-                            autovalidateMode: AutovalidateMode.onUserInteraction,
-                            onTap: ()async{
-                              MainUtils.hideKeyBoard(context);
-                              var result = await Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                      const MapsView()));
-                              setState(() {
-                                placeLon = result['Longitude'] ?? 0.0;
-                                placeLat = result['Latitude'] ?? 0.0;
-                                location = result['location'];
-                                print(
-                                    '//received from map $placeLon / $placeLat');
-                                addressTextController.text = location!;
-                                // senderAddress.nom!=location;
-                              });
-                            },
-                            readOnly: true,
-                            decoration: const InputDecoration(
-                                labelText: 'Adresse geolocalisee *'),
-                            controller: addressTextController,
-                            validator: (value) {
-                              if (value!.isEmpty) {
-                                return "Veuillez remplir ce champ\n"
-                                    "activer votre localisation et reesayer";
-                              } else {
-                                if (placeLon == 0.0 ||
-                                    placeLat == 0.0) {
-                                  location = "";
-                                  return "La valeur de ce champ est incorrecte";
-                                }
-                                return null;
-                              }
-                            },
-                          ),
-                          Visibility(
-                              visible: isChecked,
-                              child: Column(
-                                children: [
-                                  TextFormField(
-                                    autovalidateMode:
-                                    AutovalidateMode.onUserInteraction,
-                                    decoration: const InputDecoration(
-                                        hintText: "Titre d'adresse *"),
-                                    controller: titleTextController,
-                                    validator: (value) {
-                                      if (isChecked == true) {
-                                        if (value!.isEmpty) {
-                                          return "Veuillez remplir ce champ";
-                                        } else {
-                                          return null;
-                                        }
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  Container(
-                                      alignment: Alignment.centerLeft,
-                                      child: const Text(
-                                        'Ex: Maison, Bureau',
-                                        style:
-                                        TextStyle(color: Colors.black26),
-                                      )),
-                                ],
-                              )),
-                          CheckboxListTile(
-                            contentPadding: EdgeInsets.zero,
-                            checkColor: Colors.white,
-                            activeColor: Colors.black,
-                            title: const Text('Enregistrer cette adresse'),
-                            value: isChecked,
-                            onChanged: (value) {
-                              setState(() {
-                                isChecked = value!;
-                                if (isChecked==true) {
-                                  senderAddress.isFavorite = true;
-                                  senderAddress.titre =
-                                      titleTextController.text;
-                                }
-                              });
-                              print(isFavoriteAddress(selectedAddressDepart, senderAddress));
-                            },
-                            controlAffinity: ListTileControlAffinity.leading,
-                          )
-                        ],
-                      ),
-                    ),
+                    title: const Text("Information 'adresse "),
+                    content: Step2(step2FormKey: _formKeys[1],addressReceiver: addressReceiver,),
                     isActive: _currentStep >= 0,
                     state: _currentStep >= 1
                         ? StepState.complete
@@ -1428,6 +669,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                     setState(() {
                                     _deliveryType = DeliveryType.express;
                                     chooseTime=express;
+                                    UserHelper.chooseTime=chooseTime;
                                   });
                                   }else{
                                     Fluttertoast.showToast(msg: "Service Momentanement indisponible");
@@ -1443,6 +685,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                         setState(() {
                                           _deliveryType = value;
                                           chooseTime=express;
+                                          UserHelper.chooseTime=chooseTime;
                                         });
                                       },
                                     ),
@@ -1458,118 +701,8 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                   showDialog<void>(
                                       context: context,
                                       builder: (context) {
-                                        return Center(
-                                          child: Dialog(
-                                            shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(16.0)),
-                                            elevation: 0.0,
-                                            child: Stack(
-                                              children: [
-                                                Column(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    Container(
-                                                      padding:
-                                                          const EdgeInsets.only(
-                                                              top: 10, left: 6),
-                                                      height: 35,
-                                                      width: double.infinity,
-                                                      decoration:
-                                                           BoxDecoration(
-                                                        borderRadius:
-                                                            const BorderRadius.only(
-                                                                topLeft: Radius
-                                                                    .circular(10),
-                                                                topRight: Radius
-                                                                    .circular(5)),
-                                                        color: widget.moduleColor.moduleColorDark,
-                                                      ),
-                                                      child: const Text(
-                                                        'Quand souhaitez vous etre livre ?',
-                                                        style: TextStyle(
-                                                            color: Colors.white),
-                                                      ),
-                                                    ),
-                                                    /**
-                                                     * Today
-                                                     */
-                                                    ElevatedButton(
-                                                      style: ButtonStyle(
-                                                          backgroundColor:
-                                                              MaterialStateProperty
-                                                                  .all(widget.moduleColor.moduleColorDark)),
-                                                      onPressed: () {
-                                                        if(!isTodayOpened && isTomorrowOpened) {
-                                                          Fluttertoast.showToast(msg: "Service Momentanement indisponible");
-
-                                                        }else{
-                                                          print("isTodayOpened/...$isTodayOpened...$isTomorrowOpened ");
-                                                          showToday();
-                                                        }
-                                                        },
-                                                      child: const Text(
-                                                        "AUJOUD'HUI",
-                                                        style: TextStyle(
-                                                            fontWeight:
-                                                                FontWeight.bold),
-                                                      ),
-                                                    ),
-                                                    Row(
-                                                      children: const [
-                                                        Expanded(
-                                                            child: Divider()),
-                                                        Padding(
-                                                          padding:
-                                                              EdgeInsets.all(8.0),
-                                                          child: Text('Ou'),
-                                                        ),
-                                                        Expanded(
-                                                            child: Divider()),
-                                                      ],
-                                                    ),
-                                                    /**
-                                                     * tomorrow
-                                                     */
-                                                    ElevatedButton(
-                                                        style: ButtonStyle(
-                                                            backgroundColor:
-                                                                MaterialStateProperty
-                                                                    .all(widget.moduleColor.moduleColorDark)),
-                                                        onPressed: () {
-                                                          showTomorrow();
-                                                        },
-                                                        child: const Text(
-                                                          "DEMAIN",
-                                                          style: TextStyle(
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold),
-                                                        )),
-                                                  ],
-                                                ),
-                                                Positioned(
-                                                  right: 0.0,
-                                                  child: GestureDetector(
-                                                    onTap: () {
-                                                      Navigator.of(context).pop();
-                                                    },
-                                                    child:  Align(
-                                                      alignment:
-                                                          Alignment.topRight,
-                                                      child: CircleAvatar(
-                                                        radius: 14.0,
-                                                        backgroundColor:
-                                                        widget.moduleColor.moduleColorDark,
-                                                        child: const Icon(Icons.close,
-                                                            color: Colors.white),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                )
-                                              ],
-                                            ),
-                                          ),
+                                        return const Center(
+                                          child: SelectTime(),
                                         );
                                       });
                                 },
@@ -1589,7 +722,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                   ],
                                 ),
                               ),
-                              Text(chooseTime),
+                              Text(UserHelper.chooseTime),
                             ],
                           ),
                         ],
@@ -1749,10 +882,12 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                 value: 0,
                                 groupValue: payOption,
                                 onChanged: (int? value) {
-                                  setState(() {
-                                    payOption =value;
-                                    payMode = 'cash';
-                                  });
+                                  if (mounted) {
+                                    setState(() {
+                                      payOption =value;
+                                      payMode = 'cash';
+                                    });
+                                  }
                                 }
                             ),
                             const Text('Paiement à la livraison'),
@@ -1766,10 +901,15 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                 value: 1,
                                 groupValue: payOption,
                                 onChanged: (int? value) {
-                                  setState(() {
-                                    payOption =value;
-                                    payMode = 'card';
-                                  });
+                                  if (mounted) {
+                                    setState(() {
+                                      payOption =value;
+                                      payMode = 'card';
+                                    });
+                                  }
+                                  var amt=cartProvider.totalPrice +deliveryPrice;
+                                  var amount= amt.toString();
+                                  PaymentApi(context: context).makePayment(amount: amount);
                                 }
                             ),
                             const Text('Payer par carte bancaire',style: TextStyle(color: grey90),),
@@ -1807,22 +947,26 @@ class _ValiderPanierState extends State<ValiderPanier> {
     if (_formKeys[_currentStep].currentState!.validate()) {
       switch (_currentStep) {
         case 0:
+          _formKeys[_currentStep].currentState!.save();
           setSenderAndReceiverInfo();
           break;
         case 1:
+          _formKeys[_currentStep].currentState!.save();
           setDeliveryAddress();
           break;
         case 2:
-          setState(() {
+          if(mounted) {
+            setState(() {
             dateFormat=DateFormat.Hms();
             currentTime=dateFormat.format(now);
             currentDate =DateFormat("yyyy-MM-dd").format(now);
-            if(chooseTime.isEmpty) {
+            if(UserHelper.chooseTime.isEmpty) {
               Fluttertoast.showToast(msg: "Veuillez choisir une heure de livraison");
             }else {
               _currentStep++;
             }
           });
+          }
           break;
       }
     }

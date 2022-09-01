@@ -52,22 +52,22 @@ class AddressFavorite {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data["id"] = this.id;
-    data["client_id"] = this.clientId;
-    data["ville_id"] = this.villeId;
-    data["latitude"] = this.latitude;
-    data["longitude"] = this.longitude;
-    data["nom"] = this.nom;
-    data["surnom"] = this.surnom;
-    data["description"] = this.description;
-    data["quartier"] = this.quartier;
-    data["est_favorite"] = this.estFavorite;
-    data["created_at"] = this.createdAt;
-    data["updated_at"] = this.updatedAt;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data["id"] = id;
+    data["client_id"] = clientId;
+    data["ville_id"] = villeId;
+    data["latitude"] = latitude;
+    data["longitude"] = longitude;
+    data["nom"] = nom;
+    data["surnom"] = surnom;
+    data["description"] = description;
+    data["quartier"] = quartier;
+    data["est_favorite"] = estFavorite;
+    data["created_at"] = createdAt;
+    data["updated_at"] = updatedAt;
     data["deleted_at"] = deletedAt;
-    data["provider_id"] = this.providerId;
-    data["provider_name"] = this.providerName;
+    data["provider_id"] = providerId;
+    data["provider_name"] = providerName;
     return data;
   }
 }

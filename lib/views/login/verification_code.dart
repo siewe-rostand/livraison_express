@@ -1,10 +1,14 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:livraison_express/data/user_helper.dart';
 import 'package:livraison_express/service/api_auth_service.dart';
 import 'package:livraison_express/utils/size_config.dart';
 import 'package:livraison_express/views/home/home-page.dart';
+import 'package:livraison_express/views/login/login.dart';
+import 'package:livraison_express/views/login/reset_password.dart';
+import 'package:livraison_express/views/widgets/custom_alert_dialog.dart';
 import 'package:livraison_express/views/widgets/custom_dialog.dart';
 
 import '../../constant/color-constant.dart';
@@ -48,7 +52,6 @@ class _VerificationCodeState extends State<VerificationCode> {
 
   @override
   void initState() {
-    initView();
     super.initState();
   }
 
@@ -64,8 +67,8 @@ class _VerificationCodeState extends State<VerificationCode> {
         child: Column(
           children: [
             Image.asset('img/logo.png'),
-            const SizedBox(
-              height: 15,
+            SizedBox(
+              height: getProportionateScreenHeight(15),
             ),
             isLoading
                 ? const CircularProgressIndicator()
@@ -99,51 +102,71 @@ class _VerificationCodeState extends State<VerificationCode> {
                           RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(5.0),
                   ))),
-                  onPressed: () async {
+                  onPressed: () {
                     print('$resetPassword ${widget.resetPassword}');
-                    if (widget.resetPassword == false) {
+                    if (widget.resetPassword == false &&
+                        codeTextController.text.isNotEmpty) {
                       token = widget.token!;
-                      await ApiAuthService(context: context)
-                          .verifyCode(
+                      ApiAuthService(context: context)
+                          .verifyPhoneActivationCode(
                               tokens: token, code: codeTextController.text)
                           .then((response) async {
-                        showMessage(
-                            context: context,
-                            title: "Félicitation",
-                            errorMessage:
-                                "Votre compte a été activé. Vous pouvez désormais profiter pleinement de Livraison express");
+                        showGenDialog(
+                            context,
+                            true,
+                            CustomDialog(
+                              title: 'Félicitation',
+                              content:
+                                  'Votre compte a été activé. Vous pouvez désormais profiter pleinement de Livraison express',
+                              positiveBtnText: "OK",
+                              positiveBtnPressed: () {
+                                Navigator.of(context).pop();
+                                Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => const LoginScreen()));
+                              },
+                            ));
                         await Future.delayed(
                             const Duration(seconds: 2),
                             () => Navigator.of(context).pushReplacement(
                                 MaterialPageRoute(
-                                    builder: (context) => const HomePage())));
+                                    builder: (context) => const LoginScreen())));
                       }).catchError((onError) {
-                        UserHelper.userExitDialog(
+                        showGenDialog(
                             context,
                             false,
-                            CustomAlertDialog(
-                                svgIcon: "img/icon/svg/smiley_cry.svg",
-                                title: "Erreur",
-                                message:
+                            CustomDialog(
+                                title: "Oooops",
+                                content:
                                     "Ce code est incorrecte ou n'est plus valide",
-                                onContinue: () => Navigator.pop(context),
-                                moduleColor: moduleColor));
-                        print(onError);
+                                positiveBtnText: "OK",
+                                positiveBtnPressed: () =>
+                                    Navigator.of(context).pop()));
+                        // log(onError);
                       });
                     } else {
                       email = widget.email!;
                       phone = widget.phone!;
                       debugPrint(
                           '$email,,,$phone,,,${codeTextController.text}');
-                      await ApiAuthService(context: context,progressDialog: getProgressDialog(context: context))
+                      ApiAuthService(
+                              context: context,
+                              progressDialog:
+                                  getProgressDialog(context: context))
                           .verifyResetCode(
                               telephone: phone,
                               countryCode: codeTextController.text,
                               email: email)
                           .then((response) {
-                            print('////');
                         var body = json.decode(response.body);
                         print(body);
+                        Navigator.of(context).pushReplacement(MaterialPageRoute(
+                            builder: (BuildContext context) => ResetPassword(
+                                  email: email,
+                                  code: codeTextController.text,
+                                  telephone: phone,
+                                )));
                       }).catchError((onError) {
                         print(onError);
                       });
@@ -167,7 +190,13 @@ class _VerificationCodeState extends State<VerificationCode> {
                           .then((response) {
                         var body = json.decode(response.body);
                         print(body);
+                        setState(() {
+                          isLoading = false;
+                        });
                       }).catchError((onError) {
+                        setState(() {
+                          isLoading = false;
+                        });
                         print(onError);
                       });
                     } else {

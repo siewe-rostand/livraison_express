@@ -16,23 +16,16 @@ import 'package:livraison_express/model/user.dart';
 import 'package:livraison_express/service/api_auth_service.dart';
 import 'package:livraison_express/utils/main_utils.dart';
 import 'package:livraison_express/utils/size_config.dart';
-import 'package:livraison_express/views/home-drawer.dart';
-import 'package:livraison_express/views/home/custom_progress.dart';
-import 'package:livraison_express/views/livraison/livraison.dart';
+import 'package:livraison_express/views/drawer/home-drawer.dart';
 import 'package:livraison_express/views/main/categoryPage.dart';
 import 'package:livraison_express/views/main/magasin_page.dart';
 import 'package:livraison_express/views/restaurant/restaurant.dart';
-import 'package:livraison_express/views/home/module_card.dart';
-import 'package:livraison_express/views/widgets/progress_bar.dart';
 import 'package:livraison_express/views/home/select_city.dart';
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:simple_fontellico_progress_dialog/simple_fontico_loading.dart';
 
-import '../../model/category.dart';
 import '../../model/city.dart';
 import '../../model/day_item.dart';
-import '../expand-fab.dart';
 import '../livraison/commande-coursier.dart';
 import 'carousel_with_indicator.dart';
 import 'custom_bottom_nav.dart';
@@ -53,14 +46,11 @@ class _HomePageState extends State<HomePage> {
   String currentTime = '';
   String saveCity = '';
   final logger = Logger();
-  bool _loading = false;
-  bool _scrolling = false;
   double heightBottom = getProportionateScreenHeight(110);
   int _currentIndex = 0;
 
   final _inactiveColor = Colors.grey;
 
-  bool _view = true;
   City city = City();
   int cityId = 0;
   List<City> cities = [];
@@ -75,15 +65,10 @@ class _HomePageState extends State<HomePage> {
   bool isTomorrowOpened = false;
   final ScrollController _controller = ScrollController();
   List<String> ville = [];
-  String _city = "DOUALA";
 
   @override
   void initState() {
-    _view = true;
     initView();
-    // getModule();
-    // initCardView();
-    // print(token);
     super.initState();
   }
 
@@ -96,7 +81,7 @@ class _HomePageState extends State<HomePage> {
     for (Modules modul in modules) {
       List<Shops>? shopsList = modul.shops;
       isAvailableInCity = modul.isActiveInCity == true;
-      if (modul.isActiveInCity == false) {
+      if (modul.isActiveInCity == false && mounted) {
         setState(() {
           isActive = false;
         });
@@ -180,7 +165,6 @@ class _HomePageState extends State<HomePage> {
     SharedPreferences pref = await SharedPreferences
         .getInstance();
     DBHelper dbHelper=DBHelper();
-    _loading = true;
     Future.delayed(Duration.zero,()=>_showDialog(context));
     cities.clear();
     modules.clear();
@@ -197,6 +181,7 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         for (var element in moduleList) {
           Modules module = Modules.fromJson(element);
+          UserHelper.module=module;
           modules.add(module);
         }
         for (var element in cityList) {
@@ -210,11 +195,9 @@ class _HomePageState extends State<HomePage> {
       });
     }
     Navigator.pop(context);
-    _loading = false;
   }
 
   initView() async {
-    _city =await UserHelper.getCity();
     SharedPreferences pref = await SharedPreferences.getInstance();
     List moduleList =
         List<dynamic>.from(jsonDecode(pref.getString('modules')!));
@@ -228,6 +211,7 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         cities.add(City.fromJson(element));
         city = cities.first;
+        UserHelper.city=city;
         ville.add(city.name!);
       });
     }
@@ -392,7 +376,7 @@ class _HomePageState extends State<HomePage> {
                   Container(
                     width: double.infinity,
                     margin:  EdgeInsets.fromLTRB(getProportionateScreenWidth(20), getProportionateScreenHeight(20), getProportionateScreenWidth(20), getProportionateScreenHeight(10)),
-                    padding: const EdgeInsets.only(bottom: 10),
+                    padding:  EdgeInsets.only(bottom: getProportionateScreenHeight(10)),
                     height: getProportionateScreenHeight(65),
                     decoration: BoxDecoration(
                       border: Border.all(
@@ -416,7 +400,7 @@ class _HomePageState extends State<HomePage> {
                     left: getProportionateScreenHeight(50),
                     top: getProportionateScreenHeight(12),
                     child: Container(
-                      padding: const EdgeInsets.only(left: 10,bottom: 10,right: 10),
+                      padding:  EdgeInsets.only(left: getProportionateScreenWidth(10),bottom: getProportionateScreenHeight(10),right: getProportionateScreenWidth(10)),
                       color: Theme.of(context).scaffoldBackgroundColor,
                       child: const Text("Votre Localisation"),
                     ),

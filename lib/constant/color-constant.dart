@@ -22,7 +22,7 @@ const grey90 = Color(0XFF263238);
 const grey40 = Color(0XFF999999);
 const kOverlay40 = Color(0x66000000);
 const libModCol = Color(0xff036d6b);
-ModuleColor moduleColor = ModuleColor();
+const kOverlay10 = Color(0x1A000000);
 
 const kShopBackgroundGradient = LinearGradient(
     begin: Alignment.topCenter,
@@ -55,7 +55,7 @@ const catForeGradient = LinearGradient(
     Color.fromRGBO(161, 196, 253, 1),
   ],
 );
-final kAppBarGradient = LinearGradient(
+ LinearGradient kAppBarGradient = LinearGradient(
   begin: Alignment.centerLeft,
   end: Alignment.centerRight,
   colors: [

@@ -1,22 +1,25 @@
 import 'dart:convert';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:livraison_express/service/course_service.dart';
 import 'package:livraison_express/service/fire-auth.dart';
 import 'package:livraison_express/utils/size_config.dart';
+import 'package:livraison_express/views/order_confirmation/command_history.dart';
 import 'package:livraison_express/views/home/home-page.dart';
 import 'package:livraison_express/views/main/about.dart';
-import 'package:livraison_express/views/main/login.dart';
+import 'package:livraison_express/views/login/login.dart';
 import 'package:livraison_express/views/main/profil.dart';
-import 'package:livraison_express/views/widgets/custom_dialog.dart';
+import 'package:livraison_express/views/super-market/cart-provider.dart';
+import 'package:livraison_express/views/widgets/custom_alert_dialog.dart';
+import 'package:livraison_express/views/address_detail/selected_fav_address.dart';
+import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../data/user_helper.dart';
-import '../model/module_color.dart';
-import '../model/user.dart';
+import '../../data/user_helper.dart';
+import '../../model/module_color.dart';
+import '../../model/user.dart';
 
 class MyHomeDrawer extends StatefulWidget {
   const MyHomeDrawer({Key? key}) : super(key: key);
@@ -28,7 +31,6 @@ class MyHomeDrawer extends StatefulWidget {
 class _MyHomeDrawerState extends State<MyHomeDrawer> {
 
   ModuleColor moduleColor=ModuleColor();
-  bool _isProcessing = false;
   late SharedPreferences sharedPreferences;
   String name= '', tel1= '',email='';
 
@@ -70,9 +72,6 @@ class _MyHomeDrawerState extends State<MyHomeDrawer> {
 
   getOrders() async {
     await CourseApi.getOrders().then((value) {
-      var body = json.decode(value.body);
-      var res = body['data'];
-      debugPrint('commends // $res');
     }).catchError((onError) {
       showMessage(message: onError.toString(), title: 'Alerte');
     });
@@ -132,8 +131,7 @@ class _MyHomeDrawerState extends State<MyHomeDrawer> {
                   ),
                   ListTile(
                     onTap: () {
-                      Navigator.of(context).push(MaterialPageRoute(
-                          builder: (BuildContext context) => const HomePage()));
+                      Navigator.of(context).pop();
                     },
                     title: const Text('Accueil'),
                     leading: const Icon(Icons.home),
@@ -142,8 +140,8 @@ class _MyHomeDrawerState extends State<MyHomeDrawer> {
                     title: const Text('Mes Commandes'),
                     leading:
                         SvgPicture.asset('img/icon/svg/ic_view_list_black.svg'),
-                    onTap: () async {
-                      getOrders();
+                    onTap: ()  {
+                      Navigator.of(context).push(MaterialPageRoute(builder: (context)=>const CommandLists()));
                     },
                   ),
                   ListTile(
@@ -152,6 +150,9 @@ class _MyHomeDrawerState extends State<MyHomeDrawer> {
                       'img/icon/svg/ic_address.svg',
                       height: 24,
                     ),
+                    onTap: (){
+                      Navigator.of(context).push(MaterialPageRoute(builder: (context)=>const SelectedFavAddress(isDialog: false)));
+                    },
                   ),
                   ListTile(
                     title: const Text('Mon Profil'),
@@ -192,6 +193,7 @@ class _MyHomeDrawerState extends State<MyHomeDrawer> {
                               SharedPreferences pref = await SharedPreferences
                                   .getInstance();
                               pref.clear();
+                              Provider.of<CartProvider>(context,listen: false).clears();
                               FireAuth.signOutFromGoogle();
                               Navigator.of(context).pushReplacement(
                                   MaterialPageRoute(

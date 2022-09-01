@@ -15,6 +15,7 @@ import 'package:provider/provider.dart';
 
 import '../../constant/color-constant.dart';
 import '../../model/module_color.dart';
+import '../../utils/main_utils.dart';
 import '../custom-container.dart';
 import '../super-market/cart-provider.dart';
 import '../super-market/cart.dart';
@@ -38,21 +39,46 @@ class CategoryPage extends StatefulWidget {
 
 class _CategoryPageState extends State<CategoryPage> {
   TextEditingController controller = TextEditingController();
+  List<Category> categories=[];
+  final List<Category> _searchResult=[];
+  FocusNode focusNode=FocusNode();
   bool isVisible = true;
   String name = '';
   @override
   void initState() {
     super.initState();
     isVisible = true;
-    init();
+    controller.addListener(() {
+      setState(() {});
+    });
+    focusNode.addListener(() {
+      setState(() {
+
+      });
+    });
   }
-init()async{
-  print("${UserHelper.isTodayOpen}//${UserHelper.isTomorrowOpen}//${await UserHelper.getCity()}");
-}
   getCategories() async {
     await ShopServices.getCategoriesFromShop(shopId: widget.shops.id);
   }
+  onSearchTextChanged(String text){
+    _searchResult.clear();
+    if (text.isEmpty) {
+      setState(() {});
+      return;
+    }
 
+    for (var productDetail in categories) {
+      if (productDetail.libelle!.contains(text)) _searchResult.add(productDetail);
+    }
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    controller.dispose();
+    focusNode.dispose();
+  }
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion(
@@ -70,10 +96,36 @@ init()async{
                     top: 10,
                   ),
                   height: getProportionateScreenHeight(40),
-                  child: Row(
-                    children: [
-                      Text(widget.shops.slug!)
-                    ],
+                  child: TextFormField(
+                    focusNode: focusNode,
+                    controller: controller,
+                    decoration: InputDecoration(
+                        floatingLabelBehavior: FloatingLabelBehavior.auto,
+                        fillColor: Colors.white,
+                        filled: true,
+                        hintText: 'Rechercher',
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(32),
+                            borderSide: BorderSide.none),
+                        prefixIcon: IconButton(
+                          icon: Icon(
+                            Icons.search,
+                            color: focusNode.hasFocus?UserHelper.getColor():null,
+                          ),
+                          onPressed: () {
+                            onSearchTextChanged('');
+                          },
+                        ),
+                        suffixIcon: controller.text.isNotEmpty
+                            ? IconButton(
+                            color: UserHelper.getColor(),
+                            onPressed: (){
+                              controller.clear();
+                              MainUtils.hideKeyBoard(context);
+                            },
+                            icon: const Icon(Icons.clear))
+                            : null),
+                    onChanged: onSearchTextChanged,
                   ),
                 ),
               ),
@@ -136,7 +188,7 @@ init()async{
                 future: ShopServices.getCategories(shopId: widget.shops.id!),
                 builder: (context,snapshot){
                   if(snapshot.hasData){
-                    List<Category>? categories =snapshot.data;
+                     categories =snapshot.data!;
                     return Container(
                       color: Colors.white,
                       child: SingleChildScrollView(
@@ -147,8 +199,135 @@ init()async{
                             Container(
                               margin: const EdgeInsets.symmetric(
                                   horizontal: 10, vertical: 5),
-                              color: categories!.isNotEmpty?const Color(0xffF2F2F2):Colors.white,
-                              child: GridView.builder(
+                              color: categories.isNotEmpty?const Color(0xffF2F2F2):Colors.white,
+                              child:  _searchResult.isNotEmpty || controller.text.isNotEmpty?
+                              GridView.builder(
+                                shrinkWrap: true,
+                                gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2),
+                                itemCount:_searchResult.length,
+                                physics: const ScrollPhysics(),
+                                itemBuilder: (context, index) {
+                                  return InkWell(
+                                    splashColor: Colors.grey,
+                                    onTap: () {
+                                      bool? hasChildren =
+                                          categories[index].hasChildren;
+                                      debugPrint(
+                                          'category id ${categories[index].id}');
+                                      if (hasChildren == true) {
+                                        var shopId = widget.shops.id;
+                                        var title = categories[index].libelle;
+                                        var catId = categories[index].id;
+                                        debugPrint(
+                                            'shop id $shopId');
+                                        Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    SubCategory(
+                                                      shopId: shopId!,
+                                                      moduleColor:
+                                                      widget.moduleColor,
+                                                      categoryId: catId!,
+                                                      title: title!,
+                                                    )));
+                                      } else {
+                                        var shopId = widget.shops.id;
+                                        var title = categories[index].slug;
+                                        var catId = categories[index].id;
+                                        debugPrint(
+                                            'shop id ${shopId}');
+                                        var parent = 'fromCategory';
+                                        Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    ProductPage(
+                                                      shopId: shopId!,
+                                                      moduleColor:
+                                                      widget.moduleColor,
+                                                      category: categories[index],
+                                                      title: title!,
+                                                      fromCategory: true,
+                                                    )));
+                                      }
+                                    },
+                                    child: Card(
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(10)
+                                        ),
+                                        elevation: 8,
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.circular(10),
+                                              image: DecorationImage(
+                                                  image: CachedNetworkImageProvider(
+                                                      _searchResult[index].image!
+                                                  )
+                                              )
+                                          ),
+                                          child: Container(
+                                            width: double.infinity,
+                                            decoration: BoxDecoration(
+                                                borderRadius: BorderRadius.circular(10),
+                                                gradient: kShopForegroundGradient1),
+                                            child: Padding(
+                                              padding: EdgeInsets.symmetric(
+                                                  horizontal:
+                                                  getProportionateScreenWidth(8)),
+                                              child: Column(
+                                                children: [
+                                                  const Expanded(
+                                                    child: SizedBox(),
+                                                  ),
+                                                  Text(
+                                                    _searchResult[index].libelle!,
+                                                    textAlign: TextAlign.center,
+                                                    style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize:
+                                                        getProportionateScreenWidth(
+                                                            20)),
+                                                  ),
+                                                  SizedBox(
+                                                    height:
+                                                    getProportionateScreenHeight(10),
+                                                  )
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                      // Column(
+                                      //   mainAxisSize: MainAxisSize.min,
+                                      //   mainAxisAlignment:
+                                      //   MainAxisAlignment.center,
+                                      //   children: [
+                                      //     CachedNetworkImage(imageUrl: categories[index].image!,
+                                      //       height: getProportionateScreenHeight(80),
+                                      //     ),
+                                      //     // Image.network(
+                                      //     //   categories[index].image!,
+                                      //     //   height: 80,
+                                      //     //   errorBuilder:
+                                      //     //       (BuildContext context,
+                                      //     //       Object exception,
+                                      //     //       StackTrace?
+                                      //     //       stackTrace) {
+                                      //     //     return Image.asset(
+                                      //     //       'img/no_image.png',height: 80,);
+                                      //     //   },
+                                      //     // ),
+                                      //     Text(
+                                      //       categories[index].libelle!,
+                                      //     )
+                                      //   ],
+                                      // ),
+                                    ),
+                                  );
+                                },
+                              ):
+                              GridView.builder(
                                 shrinkWrap: true,
                                 gridDelegate:
                                 const SliverGridDelegateWithFixedCrossAxisCount(
@@ -182,7 +361,6 @@ init()async{
                                       } else {
                                         var shopId = widget.shops.id;
                                         var title = categories[index].slug;
-                                        var catId = categories[index].id;
                                         debugPrint(
                                             'shop id ${shopId}');
                                         var parent = 'fromCategory';
@@ -376,7 +554,7 @@ init()async{
               radius: 32,
               child: Badge(
                 padding: const EdgeInsets.all(10),
-                badgeColor: Colors.grey.shade400,
+                badgeColor: widget.moduleColor.moduleColorDark!,
                 animationType: BadgeAnimationType.scale,
                 badgeContent: Consumer<CartProvider>(
                   builder: (_, cart, child) {

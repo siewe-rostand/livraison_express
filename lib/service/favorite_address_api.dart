@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart';
 import 'package:logger/logger.dart';
 
+import '../data/user_helper.dart';
 import '../model/address.dart';
 import 'api_auth_service.dart';
 
@@ -32,7 +33,7 @@ class FavoriteAddressApi{
   static Future<Response> getAddressList() async {
     String url = '$baseUrl/user/adresses';
     Response response = await get(Uri.parse(url), headers: {
-      "Authorization": 'Bearer $token',
+      "Authorization": 'Bearer ${UserHelper.token}',
       "Accept": "application/json",
       "Content-Type": "application/json",
     });
@@ -63,7 +64,7 @@ class FavoriteAddressApi{
     Response response = await post(
       Uri.parse(url),
       headers: <String, String>{
-        "Authorization": 'Bearer $token',
+        "Authorization": 'Bearer ${UserHelper.token}',
         "Accept": "application/json",
         'Content-Type': 'application/json',
       },

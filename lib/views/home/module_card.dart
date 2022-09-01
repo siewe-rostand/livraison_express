@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:http/http.dart';
@@ -23,7 +22,6 @@ import '../../utils/size_config.dart';
 import '../expand-fab.dart';
 import '../livraison/commande-coursier.dart';
 import 'home-page.dart';
-import '../livraison/livraison.dart';
 import '../main/categoryPage.dart';
 import '../main/magasin_page.dart';
 import '../restaurant/restaurant.dart';
@@ -35,7 +33,6 @@ class ChoiceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final TextStyle? textStyle = Theme.of(context).textTheme.displayMedium;
     return Container(
       height: 80,
       width: 80,

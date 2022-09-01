@@ -23,25 +23,28 @@ class _SelectCityState extends State<SelectCity> {
     super.initState();
   }
   init()async{
-    if(widget.cities.isNotEmpty)city = widget.cities[0].name!;
+    if(widget.cities.isNotEmpty) {
+      city = widget.cities[0].name!;
+      UserHelper.city=widget.cities[0];
+    }
     city =await UserHelper.getCity();
   }
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: (){
+    return TextButton(
+      onPressed: (){
         if(widget.cities.isNotEmpty)_showMenu();
       },
       child: Padding(
-        padding: const EdgeInsets.only(left: 5,right: 5),
+        padding:  EdgeInsets.symmetric(horizontal: getProportionateScreenWidth(5)),
         child: Row(
           children: [
             Row(
               children: [
                 Container(
-                  margin: const EdgeInsets.only(top: 6),
-                  child: const Icon(Icons.location_on_rounded,size: 40,color: Colors.black45,),
+                  margin:  EdgeInsets.only(top: getProportionateScreenHeight(6)),
+                  child:  Icon(Icons.location_on_rounded,size: getProportionateScreenHeight(40),color: Colors.black45,),
                 ),
                 Text(
                   city.toUpperCase(),
@@ -65,6 +68,7 @@ class _SelectCityState extends State<SelectCity> {
     List<PopupMenuItem<String>> popupMenu = [];
     for (int i = 0; i < widget.cities.length; i++) {
       String item = widget.cities[i].name!;
+      UserHelper.city=widget.cities[i];
       popupMenu.add(PopupMenuItem<String>(
         value: item,
         child: Container(

@@ -1,6 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:livraison_express/service/course_service.dart';
+import 'package:livraison_express/views/address_detail/map_text_field.dart';
+import 'package:livraison_express/views/address_detail/selected_fav_address.dart';
 import 'package:provider/provider.dart';
 
 import '../../../data/user_helper.dart';
@@ -8,10 +13,13 @@ import '../../../model/address-favorite.dart';
 import '../../../model/address.dart';
 import '../../../model/quartier.dart';
 import '../../../utils/main_utils.dart';
+import '../../../utils/size_config.dart';
 import '../../MapView.dart';
 
 class Step2 extends StatefulWidget {
-  const Step2({Key? key}) : super(key: key);
+  final GlobalKey<FormState> step2FormKey;
+  final Address addressReceiver;
+  const Step2({Key? key, required this.step2FormKey, required this.addressReceiver}) : super(key: key);
 
   @override
   State<Step2> createState() => _Step2State();
@@ -24,17 +32,19 @@ class _Step2State extends State<Step2> {
   TextEditingController titleTextController = TextEditingController();
   TextEditingController quarterTextController = TextEditingController();
   Address senderAddress = Address();
-  AddressFavorite selectedAddressDepart = AddressFavorite();
+  AddressFavorite selectedFavouriteAddress = AddressFavorite();
   String? city;
   List addresses = [];
+  List<AddressFavorite> fav=[];
   double? placeLat;
   double? placeLon;
   String? location;
+  String quartier="";
   bool isChecked = false;
 
   initView()async{
     city =await UserHelper.getCity();
-    cityDepartTextController = TextEditingController(text: city);;
+    cityDepartTextController = TextEditingController(text: city);
   }
   bool isFavoriteAddress(AddressFavorite addressFavorite, Address address) {
     if (addressFavorite.toString().isEmpty) {
@@ -54,216 +64,150 @@ class _Step2State extends State<Step2> {
   @override
   Widget build(BuildContext context) {
     final quarter = Provider.of<QuarterProvider>(context);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text("Consulter ma liste d'adresses: "),
-            IconButton(
-                onPressed: () {
-                  showDialog<void>(
-                      context: context,
-                      builder: (context) {
-                        return Center(
-                          child: AlertDialog(
-                            content: Column(
-                              mainAxisAlignment:
-                              MainAxisAlignment
-                                  .spaceBetween,
-                              children: [
-                                const Align(
-                                  child: Text(
-                                    ' Choisir votre adresse: ',
-                                    style: TextStyle(
-                                        fontWeight:
-                                        FontWeight.bold,
-                                        color:
-                                        Color(0xff00a117)),
-                                  ),
-                                  alignment:
-                                  Alignment.topCenter,
-                                ),
-                                addresses.isEmpty
-                                    ? const Text(
-                                  ' Votre liste est vide ',
-                                  style: TextStyle(
-                                      fontWeight:
-                                      FontWeight
-                                          .bold),
-                                )
-                                    : ListView.builder(
-                                    itemBuilder:
-                                        (context, index) {
-                                      return const Text(
-                                          'draw');
-                                    }),
-                                Align(
-                                  alignment:
-                                  Alignment.bottomCenter,
-                                  child: ElevatedButton(
-                                      style: ButtonStyle(
-                                          backgroundColor:
-                                          MaterialStateProperty
-                                              .all(Colors
-                                              .white)),
-                                      onPressed: () {
-                                        Navigator.of(context)
-                                            .pop();
-                                      },
-                                      child: const Text(
-                                        'FERMER',
-                                        style: TextStyle(
-                                            fontWeight:
-                                            FontWeight.bold,
-                                            color:
-                                            Colors.black38),
-                                      )),
-                                )
-                              ],
-                            ),
-                          ),
-                        );
-                      });
-                },
-                icon: SvgPicture.asset('img/icon/svg/ic_address.svg'))
-          ],
-        ),
-
-        TextFormField(
-          autovalidateMode:
-          AutovalidateMode.onUserInteraction,
-          decoration:
-          const InputDecoration(labelText: 'Ville '),
-          controller: cityDepartTextController,
-          enabled: false,
-        ),
-        TypeAheadField<String>(
-          textFieldConfiguration:  TextFieldConfiguration(
-            controller: quarterTextController,
-            decoration: const InputDecoration(
-                labelText: 'Quartier'),
+    return Form(
+      key: widget.step2FormKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text("Consulter ma liste d'adresses: "),
+              IconButton(
+                  onPressed: () async{
+                    showDialog<void>(
+                        context: context,
+                        builder: (context) {
+                          return  AlertDialog(
+                            contentPadding: EdgeInsets.zero,
+                            content: SelectedFavAddress(isDialog: true,onTap: (s){
+                              quartier=s.quarter ?? quartier;
+                              quarterTextController.text=quartier;
+                              addressTextController.text=s.nom??'';
+                              descTextController.text=s.description??'';
+                              setState(() {
+                                widget.addressReceiver.latitude=s.latitude;
+                                widget.addressReceiver.longitude=s.longitude;
+                                widget.addressReceiver.latLng=s.latLng;
+                              });
+                              print(s.toJson());
+                              },),
+                          );
+                        });
+                  },
+                  icon: SvgPicture.asset('img/icon/svg/ic_address.svg'))
+            ],
           ),
-          suggestionsCallback: (String pattern) async {
-            return city=='Douala'|| city == "DOUALA"?quarter.quarterDouala
-                .where((item) =>
-                item.toLowerCase().startsWith(pattern.toLowerCase()))
-                .toList():quarter.quarterYaounde
-                .where((item) =>
-                item.toLowerCase().startsWith(pattern.toLowerCase()))
-                .toList();
-          },
-          itemBuilder: (context, String suggestion) {
-            return ListTile(
-              title: Text(suggestion),
-            );
-          },
-          onSuggestionSelected: (String suggestion) {
-            quarterTextController.text = suggestion;
-          },
-          autoFlipDirection: true,
-          hideOnEmpty: true,
-        ),
-        TextFormField(
-          autovalidateMode:
-          AutovalidateMode.onUserInteraction,
-          decoration: const InputDecoration(
-              labelText: 'Description du lieu '),
-          controller: descTextController,
-          validator: (value) {
-            if (value!.isEmpty) {
-              return "Veuillez remplir ce champ";
-            }
-            return null;
-          },
-        ),
-        TextFormField(
-          autovalidateMode: AutovalidateMode.onUserInteraction,
-          onTap: ()async{
-            MainUtils.hideKeyBoard(context);
-            var result = await Navigator.of(context).push(
-                MaterialPageRoute(
-                    builder: (context) =>
-                    const MapsView()));
-            setState(() {
-              placeLon = result['Longitude'] ?? 0.0;
-              placeLat = result['Latitude'] ?? 0.0;
-              location = result['location'];
-              print(
-                  '//received from map $placeLon / $placeLat');
-              addressTextController.text = location!;
-              // senderAddress.nom!=location;
-            });
-          },
-          readOnly: true,
-          decoration: const InputDecoration(
-              labelText: 'Adresse geolocalisee *'),
-          controller: addressTextController,
-          validator: (value) {
-            if (value!.isEmpty) {
-              return "Veuillez remplir ce champ\n"
-                  "activer votre localisation et reesayer";
-            } else {
-              if (placeLon == 0.0 ||
-                  placeLat == 0.0) {
-                location = "";
-                return "La valeur de ce champ est incorrecte";
+
+          TextFormField(
+            autovalidateMode:
+            AutovalidateMode.onUserInteraction,
+            decoration:
+            const InputDecoration(labelText: 'Ville '),
+            controller: cityDepartTextController,
+            enabled: false,
+            onSaved: (value)=>widget.addressReceiver.nom=value,
+          ),
+          TypeAheadFormField<String>(
+            textFieldConfiguration:  TextFieldConfiguration(
+              controller: quarterTextController,
+              decoration: const InputDecoration(
+                  labelText: 'Quartier'),
+            ),
+            suggestionsCallback: (String pattern) async {
+              if(pattern.isEmpty){
+                return const Iterable<String>.empty();
+              }
+              return city=='Douala'|| city == "DOUALA"? quarter.quarterDouala
+                  .where((String quarter) => quarter
+                  .toLowerCase().split(' ').any((word) =>word.startsWith(pattern
+                  .toLowerCase()) )
+              )
+                  .toList():quarter.quarterYaounde
+                  .where((item) =>
+                  item.toLowerCase().startsWith(pattern.toLowerCase()))
+                  .toList();
+            },
+            itemBuilder: (context, String suggestion) {
+              return ListTile(
+                title: Text(suggestion),
+              );
+            },
+            onSuggestionSelected: (String suggestion) {
+              quarterTextController.text = suggestion;
+            },
+            onSaved: (value)=>widget.addressReceiver.quarter=value,
+            autoFlipDirection: true,
+            hideOnEmpty: true,
+          ),
+          TextFormField(
+            autovalidateMode:
+            AutovalidateMode.onUserInteraction,
+            decoration: const InputDecoration(
+                labelText: 'Description du lieu '),
+            controller: descTextController,
+            onSaved: (value)=>widget.addressReceiver.description=value,
+            validator: (value) {
+              if (value!.isEmpty) {
+                return "Veuillez remplir ce champ";
               }
               return null;
-            }
-          },
-        ),
-        Visibility(
-            visible: isChecked,
-            child: Column(
-              children: [
-                TextFormField(
-                  autovalidateMode:
-                  AutovalidateMode.onUserInteraction,
-                  decoration: const InputDecoration(
-                      hintText: "Titre d'adresse *"),
-                  controller: titleTextController,
-                  validator: (value) {
-                    if (isChecked == true) {
-                      if (value!.isEmpty) {
-                        return "Veuillez remplir ce champ";
-                      } else {
-                        return null;
+            },
+          ),
+          MapTextField(address: widget.addressReceiver,textController: addressTextController,),
+          Visibility(
+              visible: isChecked,
+              child: Column(
+                children: [
+                  TextFormField(
+                    autovalidateMode:
+                    AutovalidateMode.onUserInteraction,
+                    decoration: const InputDecoration(
+                        hintText: "Titre d'adresse *"),
+                    controller: titleTextController,
+                    onSaved: (value)=>widget.addressReceiver.titre=value,
+                    validator: (value) {
+                      if (isChecked == true) {
+                        if (value!.isEmpty) {
+                          return "Veuillez remplir ce champ";
+                        } else {
+                          return null;
+                        }
                       }
-                    }
-                    return null;
-                  },
-                ),
-                Container(
-                    alignment: Alignment.centerLeft,
-                    child: const Text(
-                      'Ex: Maison, Bureau',
-                      style:
-                      TextStyle(color: Colors.black26),
-                    )),
-              ],
-            )),
-        CheckboxListTile(
-          contentPadding: EdgeInsets.zero,
-          checkColor: Colors.white,
-          activeColor: Colors.black,
-          title: const Text('Enregistrer cette adresse'),
-          value: isChecked,
-          onChanged: (value) {
-            setState(() {
-              isChecked = value!;
-              if (isChecked==true) {
-                senderAddress.isFavorite = true;
-                senderAddress.titre =
-                    titleTextController.text;
-              }
-            });
-            print(isFavoriteAddress(selectedAddressDepart, senderAddress));
-          },
-          controlAffinity: ListTileControlAffinity.leading,
-        )
-      ],
+                      return null;
+                    },
+                  ),
+                  Container(
+                      alignment: Alignment.centerLeft,
+                      child: const Text(
+                        'Ex: Maison, Bureau',
+                        style:
+                        TextStyle(color: Colors.black26),
+                      )),
+                ],
+              )),
+          CheckboxListTile(
+            contentPadding: EdgeInsets.zero,
+            checkColor: Colors.white,
+            activeColor: Colors.black,
+            title: const Text('Enregistrer cette adresse'),
+            value: isChecked,
+            onChanged: (value) {
+              setState(() {
+                isChecked = value!;
+                if (isChecked==true) {
+                  widget.addressReceiver.isFavorite = true;
+                  widget.addressReceiver.titre =
+                      titleTextController.text;
+                }
+              });
+              print(isFavoriteAddress(selectedFavouriteAddress, senderAddress));
+              print('///');
+            },
+            controlAffinity: ListTileControlAffinity.leading,
+          )
+        ],
+      ),
     );
   }
 }

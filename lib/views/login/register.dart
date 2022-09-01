@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:livraison_express/service/api_auth_service.dart';
-import 'package:livraison_express/views/main/verification_code.dart';
+import 'package:livraison_express/views/login/verification_code.dart';
 import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -21,7 +21,6 @@ class RegistrationPage extends StatefulWidget {
 
 class _RegistrationPageState extends State<RegistrationPage> {
   int _currentStep = 0;
-  late ProgressDialog progressDialog;
   final List<GlobalKey<FormState>> _formKeys = [
     GlobalKey<FormState>(),
     GlobalKey<FormState>()
@@ -41,16 +40,15 @@ class _RegistrationPageState extends State<RegistrationPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   bool isLoading = false;
   bool isClicked = false;
-  String? _verificationId;
   String countryCode='';
   bool isEmpty =true;
   getPhone()async{
     SharedPreferences preferences = await SharedPreferences.getInstance();
     phoneNo =preferences.getString('phone1')??'';
   }
+
   @override
   void initState() {
-    progressDialog=ProgressDialog(context);
     getPhone();
     super.initState();
   }
@@ -71,234 +69,228 @@ class _RegistrationPageState extends State<RegistrationPage> {
                   child: Image.asset('img/logo.png'),
                 ),
                 !isLoading
-                    ? Form(
-                        key: _formKeys[0],
-                        child: Stepper(
-                            controlsBuilder:
-                                (BuildContext bContext, ControlsDetails detail) {
-                              return _currentStep == 1
-                                  ? ElevatedButton(
-                                      onPressed: () async {
-                                        if (_formKeys[0].currentState!.validate()) {
-                                          setState(() {
-                                            isLoading = true;
-                                          });
-                                        }
-                                        print('contry code $countryCode');
-                                        if (passwordTextController.text ==
-                                            confirmPasswordTextController
-                                                .text) {
-                                         await ApiAuthService(context: bContext,fromLogin: true,progressDialog: getProgressDialog(context: context)).register(
-                                             username: "+"+countryCode+_phoneTextController.text,
-                                             firstName: nameTextController.text,
-                                             lastName: surnameTextController.text, email: emailTextController.text,
-                                             password: passwordTextController.text, telephoneAlt: _phone2TextController.text,
-                                             pwdConfirm: confirmPasswordTextController.text, telephone: _phoneTextController.text,
-                                             countryCode: countryCode, licence: true.toString()).then((response)async{
-                                               var body = json.decode(response.body);
-                                               String accessToken =body['access_token'];
-                                               // debugPrint('access_token $accessToken');
-                                               showMessage(context: bContext,title: "Félicitation",
-                                                   errorMessage: "Vos informations ont été enregistrées. Vous allez recevoir un code au numéro ${_phoneTextController.text} et à l'adresse ${emailTextController.text}."
-                                               );
-                                               await Future.delayed(const Duration(
-                                                 seconds: 2),(){
-                                                 Navigator.of(bContext).pushReplacement(MaterialPageRoute(builder: (bContext)=> VerificationCode(
-                                                   email: emailTextController.text,
-                                                   phone: _phoneTextController.text,
-                                                   token: accessToken,
-                                                   resetPassword: false,
-                                                   code: countryCode,
-                                                 )));
-                                               });
+                    ? Stepper(
+                        controlsBuilder:
+                            (BuildContext bContext, ControlsDetails detail) {
+                          return _currentStep == 1
+                              ? ElevatedButton(
+                                  onPressed: () async {
+                                    print('contry code $countryCode');
+                                    if (passwordTextController.text ==
+                                        confirmPasswordTextController
+                                            .text) {
+                                     await ApiAuthService(context: bContext,fromLogin: true,progressDialog: getProgressDialog(context: context)).register(
+                                         username: "+"+countryCode+_phoneTextController.text,
+                                         firstName: nameTextController.text,
+                                         lastName: surnameTextController.text, email: emailTextController.text,
+                                         password: passwordTextController.text, telephoneAlt: _phone2TextController.text,
+                                         pwdConfirm: confirmPasswordTextController.text, telephone: _phoneTextController.text,
+                                         countryCode: countryCode, licence: true.toString()).then((response)async{
+                                           var body = json.decode(response.body);
+                                           String accessToken =body['access_token'];
+                                               UserHelper.token = accessToken;
+                                               UserHelper.currentUser1?.token=accessToken;
+                                           // ApiAuthService(context: context).getUserProfile(accessToken);
+                                           showMessage(context: bContext,title: "Félicitation",
+                                               errorMessage: "Vos informations ont été enregistrées. Vous allez recevoir un code au numéro ${_phoneTextController.text} et à l'adresse ${emailTextController.text}."
+                                           );
+                                           await Future.delayed(const Duration(
+                                             seconds: 2),(){
+                                             Navigator.of(bContext).pushReplacement(MaterialPageRoute(builder: (bContext)=> VerificationCode(
+                                               email: emailTextController.text,
+                                               phone: _phoneTextController.text,
+                                               token: accessToken,
+                                               resetPassword: false,
+                                               code: countryCode,
+                                             )));
+                                           });
 
-                                           // debugPrint('access_token \n${emailTextController.text}\n${_phoneTextController.text}\n$countryCode\n');
-                                         }).catchError((onError){
-                                           progressDialog.hide();
-                                           print('errpp// $onError');
-                                           showMessage(context: bContext,negativeText: "OK");
+                                       // debugPrint('access_token \n${emailTextController.text}\n${_phoneTextController.text}\n$countryCode\n');
+                                     }).catchError((onError){
+                                       print('errpp// $onError');
+                                       showMessage(title: "ERROR",
+                                           errorMessage: "Le donner existe deja", context: bContext,negativeText: "OK");
 
-                                         });
-                                         // setState(() {
-                                         //   isLoading=false;
-                                         // });
-                                          // await phoneSignIn(
-                                          //         phoneNumber:
-                                          //             _phone2TextController
-                                          //                 .text)
-                                          //     .then((value) =>
-                                          //         debugPrint('success'));
-                                        } else {
-                                          debugPrint('error');
-                                        }
-                                      },
-                                      child: const Text(
-                                        "ENREGISTRER",
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold),
-                                      ))
-                                  : SizedBox(
-                                width: MediaQuery.of(bContext).size.width*0.7,
-                                    height: 40,
-                                    child: ElevatedButton(
-                                        onPressed: detail.onStepContinue,
-                                        child: const Text(
-                                          "CONTINUER",
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                            color: Color(0xffF3F3F3)
-                                          ),
-                                        )),
-                                  );
-                            },
-                            type: StepperType.vertical,
-                            physics: const ScrollPhysics(),
-                            onStepContinue: continued,
-                            currentStep: _currentStep,
-                            onStepTapped: (step) => tapped(step),
-                            steps: [
-                              Step(
-                                  title: const Text('Information Personnelles'),
-                                  isActive: _currentStep >= 0,
-                                  state: _currentStep > 0
-                                      ? StepState.complete
-                                      : StepState.indexed,
-                                  content: Column(
-                                    children: [
-                                      TextFormField(
-                                        keyboardType: TextInputType.name,
-                                        decoration:  InputDecoration(
-                                            hintText: 'Nom ',
-                                          suffixIcon:isEmpty==false ?IconButton(onPressed:(){
-                                            print('veuillez remplir ce champs');
-                                              setState(() {
-                                                isClicked =true;
-                                              });
-                                          }, icon: const Icon(Icons.error,color: Colors.red,)):null
-                                        ),
-                                        controller: nameTextController,
-                                        validator: (value){
-                                          if(value!.isEmpty){
-                                            return'veuillez remplir ce champs';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                      TextFormField(
-                                        decoration: const InputDecoration(
-                                            hintText: 'Prenom '),
-                                        controller: surnameTextController,
-                                        inputFormatters: [
-                                          FilteringTextInputFormatter.allow(
-                                            RegExp(r"[a-zA-Z]+|\s"),
-                                          )
-                                        ],
-                                        validator: (value){
-                                          if(value!.isEmpty){
-                                            return'veuillez remplir ce champs';
-                                          }else if( value.length<4){
-                                            return 'minimum 4 lettres svp!';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                      TextFormField(
-                                        keyboardType: TextInputType.emailAddress,
-                                        decoration: const InputDecoration(
-                                            hintText: 'Email '),
-                                        controller: emailTextController,
-                                        validator: (val){
-                                          if(!val!.isValidEmail){
-                                            return 'veuillez remplir ce champs';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                      IntlPhoneField(
-                                        keyboardType: TextInputType.phone,
-                                        controller: _phoneTextController,
-                                        showCountryFlag: false,
-                                        dropdownIconPosition:
-                                            IconPosition.trailing,
-                                        decoration: const InputDecoration(
-                                          hintText: 'Telephone 1',
-                                        ),
-                                        onChanged: (phone) {
-                                          // print(phone.completeNumber);
-                                          phoneNo=phone.number;
-                                          countryCode =phone.countryCode;
-                                        },
-                                        initialCountryCode: 'CM',
-                                        invalidNumberMessage:
-                                            invalid_phone,
-                                      ),
-                                      IntlPhoneField(
-                                        showCountryFlag: false,
-                                        autovalidateMode: AutovalidateMode.disabled,
-                                        dropdownIconPosition:
-                                            IconPosition.trailing,
-                                        decoration: const InputDecoration(
-                                          hintText: 'Telephone 2',
-                                        ),
-                                        onChanged: (phone) {
-                                          // print(phone.completeNumber);
-                                        },
-                                        initialCountryCode: 'CM',
-                                        invalidNumberMessage:
-                                          invalid_phone,
-                                      ),
-                                    ],
-                                  )),
-                              Step(
-                                  title: const Text('Authentification'),
-                                  isActive: _currentStep >= 0,
-                                  state: _currentStep > 1
-                                      ? StepState.complete
-                                      : StepState.indexed,
-                                  content: Column(
-                                    children: [
-                                      TextFormField(
-                                        decoration: const InputDecoration(
-                                            labelText: 'Telephone '),
-                                        enabled: false,
-                                        controller: TextEditingController(text: _phoneTextController.text),
-                                      ),
-                                      TextFormField(
-                                        keyboardType: TextInputType.visiblePassword,
-                                        decoration: const InputDecoration(
-                                            hintText: 'Mot de passe '),
-                                        controller: passwordTextController,
-                                        autovalidateMode: AutovalidateMode.onUserInteraction,
-                                        validator: (val){
-                                          if(val!.isEmpty){
-                                            return "Veuillez remplir ce champ";
-                                          } else if(val.length<8){
-                                            return 'Le mot de passe doit contenir aumoins 8 caractères';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                      TextFormField(
-                                        keyboardType: TextInputType.visiblePassword,
-                                        decoration: const InputDecoration(
-                                            hintText:
-                                                'Confirmer le mot de passe'),
-                                        controller:
-                                            confirmPasswordTextController,
-                                        autovalidateMode: AutovalidateMode.onUserInteraction,
-                                        validator: (val){
-                                          if(val!.isEmpty){
-                                            return "Veuillez remplir ce champ";
-                                          } else if(passwordTextController.text != confirmPasswordTextController.text){
-                                            return 'Contenu incorrect';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                    ],
+                                     });
+                                     // setState(() {
+                                     //   isLoading=false;
+                                     // });
+                                      // await phoneSignIn(
+                                      //         phoneNumber:
+                                      //             _phone2TextController
+                                      //                 .text)
+                                      //     .then((value) =>
+                                      //         debugPrint('success'));
+                                    } else {
+                                      debugPrint('error');
+                                    }
+                                  },
+                                  child: const Text(
+                                    "ENREGISTRER",
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold),
                                   ))
-                            ]),
-                      )
+                              : SizedBox(
+                            width: MediaQuery.of(bContext).size.width*0.7,
+                                height: 40,
+                                child: ElevatedButton(
+                                    onPressed: detail.onStepContinue,
+                                    child: const Text(
+                                      "CONTINUER",
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        color: Color(0xffF3F3F3)
+                                      ),
+                                    )),
+                              );
+                        },
+                        type: StepperType.vertical,
+                        physics: const ScrollPhysics(),
+                        onStepContinue: continued,
+                        currentStep: _currentStep,
+                        onStepTapped: (step) => tapped(step),
+                        steps: [
+                          Step(
+                              title: const Text('Information Personnelles'),
+                              isActive: _currentStep >= 0,
+                              state: _currentStep > 0
+                                  ? StepState.complete
+                                  : StepState.indexed,
+                              content: Column(
+                                children: [
+                                  TextFormField(
+                                    keyboardType: TextInputType.name,
+                                    decoration:  InputDecoration(
+                                        hintText: 'Nom ',
+                                      suffixIcon:isEmpty==false ?IconButton(onPressed:(){
+                                        print('veuillez remplir ce champs');
+                                          setState(() {
+                                            isClicked =true;
+                                          });
+                                      }, icon: const Icon(Icons.error,color: Colors.red,)):null
+                                    ),
+                                    controller: nameTextController,
+                                    validator: (value){
+                                      if(value!.isEmpty){
+                                        return'veuillez remplir ce champs';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                  TextFormField(
+                                    decoration: const InputDecoration(
+                                        hintText: 'Prenom '),
+                                    controller: surnameTextController,
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.allow(
+                                        RegExp(r"[a-zA-Z]+|\s"),
+                                      )
+                                    ],
+                                    validator: (value){
+                                      if(value!.isEmpty){
+                                        return'veuillez remplir ce champs';
+                                      }else if( value.length<4){
+                                        return 'minimum 4 lettres svp!';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                  TextFormField(
+                                    keyboardType: TextInputType.emailAddress,
+                                    decoration: const InputDecoration(
+                                        hintText: 'Email '),
+                                    controller: emailTextController,
+                                    validator: (val){
+                                      if(!val!.isValidEmail){
+                                        return 'veuillez remplir ce champs';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                  IntlPhoneField(
+                                    keyboardType: TextInputType.phone,
+                                    controller: _phoneTextController,
+                                    showCountryFlag: false,
+                                    dropdownIconPosition:
+                                        IconPosition.trailing,
+                                    decoration: const InputDecoration(
+                                      hintText: 'Telephone 1',
+                                    ),
+                                    onChanged: (phone) {
+                                      // print(phone.completeNumber);
+                                      phoneNo=phone.number;
+                                      countryCode =phone.countryCode;
+                                    },
+                                    initialCountryCode: 'CM',
+                                    invalidNumberMessage:
+                                        invalid_phone,
+                                  ),
+                                  IntlPhoneField(
+                                    showCountryFlag: false,
+                                    autovalidateMode: AutovalidateMode.disabled,
+                                    dropdownIconPosition:
+                                        IconPosition.trailing,
+                                    decoration: const InputDecoration(
+                                      hintText: 'Telephone 2',
+                                    ),
+                                    onChanged: (phone) {
+                                      // print(phone.completeNumber);
+                                    },
+                                    initialCountryCode: 'CM',
+                                    invalidNumberMessage:
+                                      invalid_phone,
+                                  ),
+                                ],
+                              )),
+                          Step(
+                              title: const Text('Authentification'),
+                              isActive: _currentStep >= 0,
+                              state: _currentStep > 1
+                                  ? StepState.complete
+                                  : StepState.indexed,
+                              content: Column(
+                                children: [
+                                  TextFormField(
+                                    decoration: const InputDecoration(
+                                        labelText: 'Telephone '),
+                                    enabled: false,
+                                    controller: TextEditingController(text: _phoneTextController.text),
+                                  ),
+                                  TextFormField(
+                                    keyboardType: TextInputType.visiblePassword,
+                                    decoration: const InputDecoration(
+                                        hintText: 'Mot de passe '),
+                                    controller: passwordTextController,
+                                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                                    validator: (val){
+                                      if(val!.isEmpty){
+                                        return "Veuillez remplir ce champ";
+                                      } else if(val.length<8){
+                                        return 'Le mot de passe doit contenir aumoins 8 caractères';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                  TextFormField(
+                                    keyboardType: TextInputType.visiblePassword,
+                                    decoration: const InputDecoration(
+                                        hintText:
+                                            'Confirmer le mot de passe'),
+                                    controller:
+                                        confirmPasswordTextController,
+                                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                                    validator: (val){
+                                      if(val!.isEmpty){
+                                        return "Veuillez remplir ce champ";
+                                      } else if(passwordTextController.text != confirmPasswordTextController.text){
+                                        return 'Contenu incorrect';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                ],
+                              ))
+                        ])
                     : const CircularProgressIndicator()
               ],
             ),
@@ -314,14 +306,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
   continued() async {
     _currentStep < 3 ? setState(() => _currentStep += 1) : null;
-    if(_formKeys[_currentStep].currentState!.validate()){
-      switch(_currentStep){
-        case 0:
-          _formKeys[0].currentState!.save();
-          _currentStep++;
-          break;
-      }
-    }
+
   }
 
 

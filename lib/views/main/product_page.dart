@@ -6,7 +6,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:livraison_express/constant/all-constant.dart';
 import 'package:livraison_express/data/user_helper.dart';
 import 'package:livraison_express/model/category.dart';
 import 'package:livraison_express/model/user.dart';
@@ -23,18 +22,19 @@ import '../../model/module_color.dart';
 import '../../model/product.dart';
 import '../super-market/cart-provider.dart';
 import '../super-market/cart.dart';
+import '../widgets/custom_alert_dialog.dart';
 import '../widgets/custom_dialog.dart';
 
 class ProductPage extends StatefulWidget {
   const ProductPage(
       {Key? key,
-      required this.shopId,
-      required this.title,
-      required this.category,
-      required this.fromCategory,
-      required this.moduleColor,
-      this.subSubCategoryId,
-      this.subCategoryId})
+        required this.shopId,
+        required this.title,
+        required this.category,
+        required this.fromCategory,
+        required this.moduleColor,
+        this.subSubCategoryId,
+        this.subCategoryId})
       : super(key: key);
   final int shopId;
   final String title;
@@ -57,7 +57,7 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
   late FToast fToast;
   int page = 1, lastPage = 1;
   int perPage = 10;
-   final ScrollController _controller = ScrollController();
+  final ScrollController _controller = ScrollController();
   bool _loading = false;
   bool _loadingBottom = false;
   bool _show = false;
@@ -98,9 +98,9 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
     _loading = page == 1;
     if (widget.fromCategory == true) {
       await ProductService.getProducts(
-          categoryId: widget.category.id!,
-          shopId: widget.shopId,
-          page: page,).then((response) {
+        categoryId: widget.category.id!,
+        shopId: widget.shopId,
+        page: page,).then((response) {
         setState(() {
           _loading=_loadingBottom=false;
           lastPage = response['last_page'];
@@ -110,51 +110,51 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
         // logger.d("rest only from get product $_loading");
       }).catchError((onError){
         UserHelper.userExitDialog(context, false, CustomAlertDialog(
-            svgIcon: "assets/images/smiley_sad.svg",
-            title: "Oops!",
-            positiveText: 'Réessayer',
-            onCancel: (){
-              Navigator.pop(context);
-              Navigator.pop(context);
-            },
-            message: " Si l'érreur persiste veuillez contacter le service client.",
-            onContinue: getProduct(),
+          svgIcon: "assets/images/smiley_sad.svg",
+          title: "Oops!",
+          positiveText: 'Réessayer',
+          onCancel: (){
+            Navigator.pop(context);
+            Navigator.pop(context);
+          },
+          message: " Si l'érreur persiste veuillez contacter le service client.",
+          onContinue: getProduct(),
           moduleColor: widget.moduleColor,
         ));
         logger.e("from get product ${onError.toString()}");
       });
     } else {
       if (widget.subSubCategoryId == 0) {
-         await ProductService.getProductsWithSubCat(
+        await ProductService.getProductsWithSubCat(
             categoryId: widget.category.id!,
             subCategoryId: widget.subCategoryId!,
             shopId: widget.shopId,
             page: page).then((response){
-           var body = json.decode(response.body);
-           var rest = body['data'] as List;
+          var body = json.decode(response.body);
+          var rest = body['data'] as List;
 
-           products =
-               rest.map<Products>((json) => Products.fromJson(json)).toList();
-           print("rest only from get product from sub category  ");
-           // print('main ${stores[0]}');
-         });
+          products =
+              rest.map<Products>((json) => Products.fromJson(json)).toList();
+          print("rest only from get product from sub category  ");
+          // print('main ${stores[0]}');
+        });
       } else {
-         await ProductService.getProductsWithSubSubCat(
+        await ProductService.getProductsWithSubSubCat(
             categoryId: widget.category.id!,
             subSubCategoryId: widget.subSubCategoryId!,
             subCategoryId: widget.subCategoryId!,
             shopId: widget.shopId,
             page: page).then((response){
-           var body = json.decode(response.body);
-           var rest = body['data'] as List;
+          var body = json.decode(response.body);
+          var rest = body['data'] as List;
 
-           products = rest.map<Products>((json) => Products.fromJson(json)).toList();
-           logger.e("rest only from get product from sub sub category ");
-         });
+          products = rest.map<Products>((json) => Products.fromJson(json)).toList();
+          logger.e("rest only from get product from sub sub category ");
+        });
       }
     }
   }
-   _showBottomSheet({required int index,required BuildContext context})
+  _showBottomSheet({required int index,required BuildContext context})
   {
     if(_show)
     {
@@ -162,7 +162,7 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
           context: context,
           transitionAnimationController: animationController,
           shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20))
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20))
           ),
           builder: (context){
             return Container(
@@ -176,19 +176,19 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
                   ListTile(
                     title: Container(
                       height: SizeConfig.screenHeight!*0.3,
-                     margin: const EdgeInsets.only(bottom: 4),
-                     decoration: BoxDecoration(
-                       image: DecorationImage(
-                         image: CachedNetworkImageProvider(
-                           products[index].image!,
-                         ),
-                         fit: BoxFit.cover
-                       ),
-                         boxShadow: [
-                           BoxShadow(
-                               blurRadius: 10, color: Colors.grey[300]!, spreadRadius: 5)
-                         ]
-                     ),
+                      margin: const EdgeInsets.only(bottom: 4),
+                      decoration: BoxDecoration(
+                          image: DecorationImage(
+                              image: CachedNetworkImageProvider(
+                                products[index].image!,
+                              ),
+                              fit: BoxFit.cover
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                                blurRadius: 10, color: Colors.grey[300]!, spreadRadius: 5)
+                          ]
+                      ),
                     ),
                     subtitle: Center(
                       child: Text(
@@ -217,17 +217,17 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
                     style:  const TextStyle(
                         fontWeight:
                         FontWeight.bold,
-                    fontSize: 24,
-                    color: Colors.black45),
+                        fontSize: 24,
+                        color: Colors.black45),
                   ),
 
                   MaterialButton(
-                    padding: const EdgeInsets.all(20),
-                    minWidth: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      minWidth: double.infinity,
                       height: getProportionateScreenHeight(45),
                       color: widget.moduleColor.moduleColor,
                       shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(10))
+                          borderRadius: BorderRadius.all(Radius.circular(10))
                       ),
                       onPressed: () async{
                         _show = false;
@@ -242,7 +242,7 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
                         final extractedUserData =
                         json.decode(userString!);
                         AppUser1 user = AppUser1.fromJson(extractedUserData);
-                        // cart.addItem(products[index],products[index].id.toString());
+
                         dbHelper!
                             .insert(CartItem(
                             id: index,
@@ -278,10 +278,10 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
                             userId: user.id
                         ))
                             .then((value) {
-                          logger.i(value.toMap());
-                          log('product to cart',
-                              error: value.toMap());
-                          FToast().showToast(child: Container(
+                          // logger.i(value.toMap());
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content:Container(
                             padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(25.0),
@@ -297,7 +297,10 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
                                 Flexible(child: Text("${products[index].libelle!} a ete ajouter au panier")),
                               ],
                             ),
-                          ));
+                          ),
+                                duration: const Duration(milliseconds: 1500),
+                                backgroundColor: Colors.transparent,
+                              ));
                           Provider.of<CartProvider>(context, listen: false)
                               .addTotalPrice(double
                               .parse(products[
@@ -311,8 +314,6 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
                         }).onError((error,
                             stackTrace) {
                           logger.e(' ---- $error');
-                          print(
-                              'stack $stackTrace');
                         });
                       },
                       child: const Text(
@@ -320,15 +321,15 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
                         style: TextStyle(
                             fontWeight:
                             FontWeight.bold,
-                        color: Colors.white),
+                            color: Colors.white),
                       ))
                 ],
               ),
             );
           }).then((value) {
-            setState(() {
-              showFab=true;
-            });
+        setState(() {
+          showFab=true;
+        });
       });
     }
     else{
@@ -336,179 +337,6 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
     }
   }
 
-  _showDialog({required int index,required BuildContext context}){
-    return showDialog<void>(
-        context: context,
-        builder: (context) {
-          return Center(
-            child: AlertDialog(
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ListTile(
-                    title: SizedBox(
-                      height: getProportionateScreenHeight(100),
-                      child:products[index].image!.isNotEmpty?
-                      Image.network(
-                        products[index].image!,
-                        errorBuilder:
-                            (BuildContext
-                        context,
-                            Object
-                            exception,
-                            StackTrace?
-                            stackTrace) {
-                          return Image.asset(
-                              'img/no_image.png');
-                        },
-                      )
-                          :const SizedBox(),
-                      // Image.network(
-                      //   products[index].image!,
-                      //   errorBuilder:
-                      //       (BuildContext
-                      //               context,
-                      //           Object
-                      //               exception,
-                      //           StackTrace?
-                      //               stackTrace) {
-                      //     return Image.asset(
-                      //         'img/no_image.png');
-                      //   },
-                      // )
-                    ),
-                    subtitle: Center(
-                      child: Text(
-                        products[index]
-                            .libelle
-                            .toString(),
-                        style: const TextStyle(
-                            fontWeight:
-                            FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                  const Padding(
-                      padding:
-                      EdgeInsets.symmetric(
-                          vertical: 20)),
-                  const Divider(
-                    color: Colors.black,
-                  ),
-                  Text(
-                    products[index]
-                        .prixUnitaire
-                        .toString() +
-                        ' FCFA',
-                    style: const TextStyle(
-                        fontWeight:
-                        FontWeight.bold),
-                  ),
-                  // Consumer<CartProvider>(builder: (context,provider,child){
-                  //   return ;
-                  // })
-
-                  ElevatedButton(
-                      style: ButtonStyle(
-                          backgroundColor:
-                          MaterialStateProperty
-                              .all(
-                            widget.moduleColor
-                                .moduleColor,
-                          )),
-                      onPressed: () async{
-                        SharedPreferences sharedPreferences =
-                        await SharedPreferences.getInstance();
-                        String? userString =
-                        sharedPreferences.getString("userData");
-                        final extractedUserData =
-                        json.decode(userString!);
-                        AppUser1 user = AppUser1.fromJson(extractedUserData);
-                        // cart.addItem(products[index],products[index].id.toString());
-                        dbHelper!
-                            .insert(CartItem(
-                            id: index,
-                            title: products[
-                            index]
-                                .libelle!,
-                            quantity: 1,
-                            price: products[
-                            index]
-                                .prixUnitaire!,
-                            unitPrice: products[
-                            index]
-                                .prixUnitaire!,
-                            totalPrice: products[
-                            index]
-                                .prixUnitaire!,
-                            quantityMax: products[
-                            index]
-                                .quantiteDispo!,
-                            categoryId: products[
-                            index]
-                                .categorieId!,
-                            productId: products[
-                            index]
-                                .id!,
-                            preparationTime: products[
-                            index]
-                                .tempsPreparation,
-                            moduleSlug: widget.title,
-                            image: products[
-                            index]
-                                .image!,
-                            userId: user.id
-                        ))
-                            .then((value) {
-                          logger.i(value.toMap());
-                          log('product to cart',
-                              error: value.toMap());
-                          FToast().showToast(child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(25.0),
-                              color: widget.moduleColor.moduleColor,
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children:  [
-                                const Icon(Icons.check),
-                                SizedBox(
-                                  width: getProportionateScreenWidth(12.0),
-                                ),
-                                Flexible(child: Text("${products[index].libelle!} a ete ajouter au panier")),
-                              ],
-                            ),
-                          ));
-                          Provider.of<CartProvider>(context, listen: false)
-                              .addTotalPrice(double
-                              .parse(products[
-                          index]
-                              .prixUnitaire
-                              .toString()));
-                          Provider.of<CartProvider>(context, listen: false)
-                              .addCounter();
-                          Navigator.of(context)
-                              .pop();
-                        }).onError((error,
-                            stackTrace) {
-                          logger.e(' ---- $error');
-                          print(
-                              'stack $stackTrace');
-                        });
-                      },
-                      child: const Text(
-                        'AJOUTER AU PANIER',
-                        style: TextStyle(
-                            fontWeight:
-                            FontWeight.bold),
-                      ))
-                ],
-              ),
-            ),
-          );
-        });
-  }
 
 
   @override
@@ -726,6 +554,6 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
             ),
           ),
         ):Container()
-        );
+    );
   }
 }

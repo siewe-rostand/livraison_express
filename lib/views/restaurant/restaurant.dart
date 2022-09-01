@@ -7,21 +7,20 @@ import 'package:flutter_svg/svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
-import 'package:livraison_express/constant/color-constant.dart';
-import 'package:livraison_express/data/my_sharedPreference.dart';
 import 'package:livraison_express/data/user_helper.dart';
 import 'package:livraison_express/model/address-favorite.dart';
 import 'package:livraison_express/model/auto_gene.dart';
 import 'package:livraison_express/model/module_color.dart';
 import 'package:livraison_express/utils/size_config.dart';
 import 'package:livraison_express/views/MapView.dart';
+import 'package:livraison_express/views/address_detail/selected_fav_address.dart';
 import 'package:livraison_express/views/restaurant/delivery_address.dart';
 import 'package:livraison_express/views/restaurant/resto_home.dart';
 import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 
 import '../../model/magasin.dart';
 import '../../service/shopService.dart';
-import '../widgets/custom_dialog.dart';
+import '../widgets/custom_alert_dialog.dart';
 
 class Restaurant extends StatefulWidget {
   const Restaurant(
@@ -303,75 +302,29 @@ class _RestaurantState extends State<Restaurant> {
                       builder: (context) {
                         return Center(
                           child: AlertDialog(
-                            content: Column(
-                              mainAxisAlignment:
-                              MainAxisAlignment
-                                  .spaceBetween,
-                              children: [
-                                const Align(
-                                  child: Text(
-                                    ' Choisir votre adresse: ',
-                                    style: TextStyle(
-                                        fontWeight:
-                                        FontWeight
-                                            .bold,
-                                        color: Colors
-                                            .blue),
-                                  ),
-                                  alignment: Alignment
-                                      .topCenter,
-                                ),
-                                addresses.isEmpty
-                                    ? const Text(
-                                  ' Votre liste est vide ',
-                                  style: TextStyle(
-                                      fontWeight:
-                                      FontWeight
-                                          .bold),
-                                )
-                                    : ListView.builder(
-                                    itemBuilder:
-                                        (context,
-                                        index) {
-                                      return const Text(
-                                          'draw');
-                                    }),
-                                Align(
-                                  alignment: Alignment
-                                      .bottomCenter,
-                                  child: ElevatedButton(
-                                      style: ButtonStyle(
-                                          backgroundColor:
-                                          MaterialStateProperty.all(
-                                              Colors
-                                                  .white)),
-                                      onPressed: () {
-                                        Navigator.of(
-                                            context)
-                                            .pop();
-                                      },
-                                      child: const Text(
-                                        'FERMER',
-                                        style: TextStyle(
-                                            fontWeight:
-                                            FontWeight
-                                                .bold,
-                                            color: Colors
-                                                .black38),
-                                      )),
-                                )
-                              ],
-                            ),
+                            contentPadding: EdgeInsets.zero,
+                            content: SelectedFavAddress(isDialog: true,onTap: (a){
+                              latitude=double.parse(a.latitude!);
+                              longitude=double.parse(a.longitude!);
+                              getShops(latitude, longitude);
+                              },),
                           ),
                         );
                       });
                   break;
                 case 2:
-                  var result =
                   await Navigator.of(context).push(
                       MaterialPageRoute(
                           builder: (context) =>
-                          const MapsView()));
+                          const MapsView())).then((result) {
+                    placeLon = result['Longitude'] ?? 0.0;
+                    placeLat = result['Latitude'] ?? 0.0;
+                    location = result['location'];
+                    getShops(placeLat!, placeLon!);
+                    print(placeLon);
+                  }).catchError((onError){
+                    showError("Nous N'avons pas pu avoir votre localisation", message);
+                  });
               }
             }),
           ],
@@ -379,4 +332,5 @@ class _RestaurantState extends State<Restaurant> {
       ),
     );
   }
+
 }

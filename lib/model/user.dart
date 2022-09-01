@@ -112,6 +112,8 @@ class AppUser1 {
   String? updatedAt;
   dynamic? deletedAt;
 
+  static AppUser1 appUser1=AppUser1();
+
   AppUser1(
       {this.id,
       this.uid,

@@ -22,4 +22,5 @@ class DayItem {
     data['closed_at'] = closedAt;
     return data;
   }
+
 }

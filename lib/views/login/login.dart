@@ -11,9 +11,11 @@ import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:livraison_express/constant/all-constant.dart';
 import 'package:livraison_express/data/user_helper.dart';
 import 'package:livraison_express/service/api_auth_service.dart';
+import 'package:livraison_express/utils/main_utils.dart';
 import 'package:livraison_express/utils/size_config.dart';
-import 'package:livraison_express/views/main/register.dart';
-import 'package:livraison_express/views/main/verification_code.dart';
+import 'package:livraison_express/views/login/register.dart';
+import 'package:livraison_express/views/login/verification_code.dart';
+import 'package:livraison_express/views/widgets/custom_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../model/auto_gene.dart';
@@ -196,7 +198,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ? Container()
                         : const CircularProgressIndicator(),
                     SizedBox(
-                      height: 45,
+                      height: getProportionateScreenHeight(45),
                       width: double.infinity,
                       child: ElevatedButton(
                           style: ButtonStyle(
@@ -207,7 +209,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           ))),
                           onPressed: () async {
                             if (_phoneTextController.text.isNotEmpty) {
-                              print(countryCode);
                               await ApiAuthService(
                                       context: context,
                                       fromLogin: true,
@@ -217,22 +218,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                       telephone: _phoneTextController.text,
                                       countryCode: countryCode,
                                       password: passwordTextController.text);
-                              //     .then((response) {
-                              //   var body = json.decode(response.body);
-                              //   // print(body);
-                              //   String accessToken = body['access_token'];
-                              //   token = accessToken;
-                              //   getUserInfo(false);
-                              // }).catchError((onError) {
-                              //   print(onError);
-                              //   showMessage(
-                              //       message:onError.toString(),
-                              //       title: "Alerte");
-                              //   // showMessage(
-                              //   //     message:
-                              //   //         "Vérifiez votre connexion internet puis réessayez. Si le problème persiste, veuillez contacter le service technique",
-                              //   //     title: "Alerte");
-                              // });
                             }
                             if (emailTextController.text.isNotEmpty) {
                               ApiAuthService(
@@ -242,20 +227,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                           getProgressDialog(context: context))
                                   .signInWithEmail(emailTextController.text,
                                       passwordTextController.text);
-                              // FirebaseAuth auth = FirebaseAuth.instance;
-                              // UserCredential userCredential = await auth.signInWithEmailAndPassword(
-                              //   email: emailTextController.text,
-                              //   password: passwordTextController.text,
-                              // );
-                              // User? user =userCredential.user;
-                              // user?.getIdToken(true).then((value)async {
-                              //   token =value;
-                              //   print('======');
-                              //   await ApiAuthService.getAccessToken(firebaseTokenId: token);
-                              // }).catchError((onError){
-                              //   print('///');
-                              //   showMessage(message: "Erreur d'authentification", title: 'Erreur');
-                              // });
+
                             }
                           },
                           child: const Text(
@@ -295,15 +267,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                   progressDialog:
                                       getProgressDialog(context: context))
                               .signInWithGoogle(context: context);
-                          // GoogleSignIn googleSignIn = GoogleSignIn();
-                          // GoogleSignInAccount? account = await googleSignIn.signIn();
-                          // // User? user= userCredential.user;
-                          // var ur= await FireAuth.firebaseGoogleAuth(account!, context: context);
-                          // debugPrint('google sign $ur');
-                          // setState(() {
-                          //   _isProcessing = false;
-                          // });
-                          // print(user);
                         },
                         child: CircleAvatar(
                             backgroundColor: const Color(0xff4d000000),
@@ -844,11 +807,17 @@ class _MotDePasseState extends State<MotDePasse> {
                                     email: emailController.text)
                                 .then((response) {
                               var body = json.decode(response.body);
-                              var email = body['email'];
+                              var data = body['data'];
+                              var phone = data['phone'];
+                              var email = data['email'];
+                              debugPrint('true/// $phone');
+                              debugPrint('true $email');
                               Navigator.of(context).pushReplacement(
                                   MaterialPageRoute(
                                       builder: (BuildContext context) =>
-                                          ConfirmCode(
+                                          VerificationCode(
+                                            phone: phone,
+                                            resetPassword: true,
                                             email: email,
                                           )));
                             }).catchError((onError) {

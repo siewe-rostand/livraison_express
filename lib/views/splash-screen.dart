@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:livraison_express/model/user.dart';
-import 'package:livraison_express/views/main/login.dart';
+import 'package:livraison_express/views/login/login.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/user_helper.dart';

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -8,7 +9,7 @@ import 'package:livraison_express/model/user.dart';
 import 'package:livraison_express/service/api_auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'login.dart';
+import '../login/login.dart';
 
 class Profile extends StatefulWidget {
   const Profile({Key? key}) : super(key: key);
@@ -48,6 +49,7 @@ class _ProfileState extends State<Profile> {
         tel1 = extractedUserData['telephone'];
         tel2 = extractedUserData['telephone_alt'];
         */
+      log("message ${appUser1.token}");
       email =appUser1.email!;
       uid =appUser1.uid!;
       name =appUser1.firstname!;
@@ -213,7 +215,7 @@ class _ProfileState extends State<Profile> {
                                           "fullname":fNameController.text + " " + nameController.text,
                                           "is_guest":true
                                         };
-                                        await ApiAuthService(context: context,progressDialog: getProgressDialog(context: context)).edit(data: data).then((value){
+                                        await ApiAuthService(context: context).edit(data: data).then((value){
                                           var res = json.decode(value.body);
                                           var msg =res['message'];
                                           var user= res['data'];

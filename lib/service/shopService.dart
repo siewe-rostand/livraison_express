@@ -10,6 +10,7 @@ import 'package:livraison_express/model/magasin.dart';
 import 'package:livraison_express/utils/main_utils.dart';
 import 'package:logger/logger.dart';
 
+import '../data/user_helper.dart';
 import 'api_auth_service.dart';
 
 class ShopServices{
@@ -115,7 +116,7 @@ class ShopServices{
     Response response = await post(
       Uri.parse(url),
       body: jsonEncode({
-        "token": token,
+        "token": UserHelper.token,
         "city": city,
         "module_id": moduleId,
         "latitude": latitude,

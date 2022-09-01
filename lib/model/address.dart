@@ -4,10 +4,12 @@ import 'package:json_annotation/json_annotation.dart';
 class Address{
    int? id;
    int? villeId;
+   int? clientId;
    String? titre;
    String? quarter;
    String? description;
    String? nom;
+   String? surnom;
    String? address;
    String? latitude;
    String? longitude;
@@ -18,6 +20,7 @@ class Address{
   String? providerName;
    String? creationDate;
    String? modificationDate;
+   String? updatedAt;
    bool? isFavorite;
 
   Address({
@@ -36,20 +39,28 @@ class Address{
     this.nom,
     this.pays,
     this.titre,
-    this.ville
+    this.ville,
+    this.clientId,
+    this.surnom,
+    this.updatedAt
 });
 
    Address.fromJson(Map<String, dynamic> json) {
      id = json["id"];
      villeId = json["ville_id"];
+     clientId = json["client_id"];
      latitude = json["latitude"];
      longitude = json["longitude"];
      nom = json["nom"];
+     titre = json["titre"];
+     surnom = json["surnom"];
+     address = json["adresse"];
      description = json["description"];
      quarter = json["quartier"];
      isFavorite = json["est_favorite"];
      creationDate = json["date_creation"];
      modificationDate = json["date_modification"];
+     updatedAt = json["updated_at"];
      providerId = json["provider_id"];
      providerName = json["provider_name"];
      latLng = json["lat_lng"];
@@ -59,15 +70,20 @@ class Address{
      final Map<String, dynamic> data = <String, dynamic>{};
      data["id"] = id;
      data["ville_id"] = villeId;
+     data["client_id"] = clientId;
      data["latitude"] = latitude;
      data["longitude"] = longitude;
      data["nom"] = nom;
+     data["titre"] = titre;
+     data["surnom"] = surnom;
+     data["adresse"] = address;
      data["description"] = description;
      data["quartier"] = quarter;
      data["est_favorite"] = isFavorite;
      data["provider_id"] = providerId;
      data["provider_name"] = providerName;
      data["lat_lng"] = latLng;
+     data["updated_at"] = updatedAt;
      return data;
    }
 }

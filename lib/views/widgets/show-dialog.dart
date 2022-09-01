@@ -14,7 +14,6 @@ class ShowDialog{
     showDialog(
         context: context,
       builder: (BuildContext builderContext){
-        final cartProvider = Provider.of<CartProvider>(context,listen: false);
           return AlertDialog(
             content: Text(message),
             title: Row(
@@ -37,9 +36,6 @@ class ShowDialog{
               TextButton(
                 child:  Text(oui),
                 onPressed: (){
-                  cartProvider.clears();
-                  Navigator.of(builderContext).pop();
-                  listen = true;
                 },
               )
             ],

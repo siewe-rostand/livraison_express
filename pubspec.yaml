@@ -58,23 +58,18 @@ dependencies:
   firebase_auth_oauth: ^1.2.0
   http: ^0.13.4
   font_awesome_flutter: ^10.1.0
-  json_annotation: ^4.5.0
-  pull_to_refresh: ^2.0.0
   flutter_svg: ^1.0.3
   fluttertoast: ^8.0.9
   permission_handler: ^9.2.0
   contacts_service: ^0.6.3
   cached_network_image: ^3.2.0
   logger: ^1.1.0
-  autocomplete_textfield: ^2.0.1
   flutter_stripe: ^3.2.0
   flutter_typeahead: ^3.1.2
   progress_dialog_null_safe: ^1.0.7
-  simple_fontellico_progress_dialog: ^0.2.1
-  location: ^4.4.0
   carousel_slider: ^4.1.1
   smooth_page_indicator: ^1.0.0+2
-  flutter_credit_card: ^3.0.1
+  flutter_svg_provider: ^1.0.3
 
 
 dev_dependencies:

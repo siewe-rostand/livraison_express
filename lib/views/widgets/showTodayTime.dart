@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:livraison_express/views/widgets/showTomorrowTime.dart';
 
+import '../../data/user_helper.dart';
+import '../../model/day.dart';
+
 class ShowTodayTime extends StatefulWidget {
   final String chooseTime;
   const ShowTodayTime({Key? key,required this.chooseTime}) : super(key: key);
@@ -21,6 +24,7 @@ class _ShowTodayTimeState extends State<ShowTodayTime> {
   var selectTime;
   String choose='';
   late DateFormat dateFormat;
+  Days tomorrow =UserHelper.shops.horaires!.tomorrow!;
   @override
   void initState() {
     super.initState();

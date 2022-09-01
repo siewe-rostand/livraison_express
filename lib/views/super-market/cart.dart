@@ -1,17 +1,12 @@
 
-import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:livraison_express/model/module_color.dart';
-import 'package:livraison_express/service/api_auth_service.dart';
 import 'package:livraison_express/utils/size_config.dart';
-import 'package:livraison_express/views/home/home-page.dart';
 import 'package:livraison_express/views/super-market/cart-provider.dart';
 import 'package:livraison_express/data/local_db/db-helper.dart';
 import 'package:livraison_express/views/super-market/valider-panier.dart';
 import 'package:livraison_express/views/widgets/cart-item-view.dart';
-import 'package:livraison_express/views/widgets/show-dialog.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 
@@ -30,9 +25,10 @@ class CartPage extends StatefulWidget {
   State<CartPage> createState() => _CartPageState();
 }
 
-class _CartPageState extends State<CartPage> {
+class _CartPageState extends State<CartPage> with SingleTickerProviderStateMixin{
   TextEditingController controller = TextEditingController();
-  final logger = Logger();
+  late AnimationController animationController;
+ final logger = Logger();
   bool isClick = false;
   bool isButtonActive=false;
   Map<String, dynamic> info = {};
@@ -41,14 +37,19 @@ class _CartPageState extends State<CartPage> {
   DBHelper? dbHelper = DBHelper();
   double amount = 0.0;
   bool listen = false;
+  Map<String, dynamic>? paymentIntentData;
   @override
   void initState() {
     isClick = false;
     isButtonActive=false;
+    animationController=BottomSheet.createAnimationController(this);
+    animationController.duration=const Duration(seconds: 1);
+    animationController.reverseDuration=const Duration(seconds: 1);
     super.initState();
   }
   @override
   void dispose() {
+    animationController.dispose();
     // TODO: implement dispose
     super.dispose();
   }
@@ -60,14 +61,14 @@ class _CartPageState extends State<CartPage> {
         title: const Text('Panier'),
         backgroundColor: widget.moduleColor.moduleColor,
         actions: [
-          IconButton(
-              onPressed: (){
-                Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (BuildContext context)=>const HomePage()));
-              },
-              icon: const Icon(
-                Icons.home,
-                color: Colors.white,
-              )),
+          // IconButton(
+          //     onPressed: (){
+          //       Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (BuildContext context)=>const HomePage()));
+          //     },
+          //     icon: const Icon(
+          //       Icons.home,
+          //       color: Colors.white,
+          //     )),
           IconButton(
               onPressed: () {
                 logger.d("/// ${UserHelper.shops.slug!}");
@@ -75,60 +76,17 @@ class _CartPageState extends State<CartPage> {
                 String message ='Votre panier sera vidé';
                 String non='ANNULER';
                 String oui='VALIDER';
-                // UserHelper.userExitDialog(
-                //     context,
-                //     false,
-                //     CustomAlertDialog(
-                //       svgIcon: "img/icon/svg/smiley_sad.svg",
-                //       title: title,
-                //       message: message ,
-                //       positiveText: 'Fermer',
-                //       negativeText: oui,
-                //       onContinue: () {
-                //         Navigator.pop(context);
-                //       },
-                //       onCancel: () async {
-                //         Navigator.pop(context);
-                //         cartProvider.clears();
-                //         Navigator.of(context).pop();
-                //         setState(() {
-                //           listen = true;
-                //         });
-                //       },
-                //       moduleColor: widget.moduleColor,));
-                showDialog(
-                    context: context,
-                    builder: (BuildContext builderContext){
-                  final cartProvider = Provider.of<CartProvider>(context,listen: false);
-                  return AlertDialog(
-                    content: Text(message),
-                    title: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const FaIcon(FontAwesomeIcons.triangleExclamation,color: Color(0xffFFAE42),),
-                        const SizedBox(
-                          width: 5,
-                        ),
-                        Text(title),
-                      ],
-                    ),
-                    actions: [
-                      TextButton(
-                        child:  Text(non),
-                        onPressed: (){
-                          Navigator.of(builderContext).pop();
-                        },
-                      ),
-                      TextButton(
-                        child:  Text(oui),
-                        onPressed: (){
-                          cartProvider.clears();
-                          Navigator.of(builderContext).pop();
-                        },
-                      )
-                    ],
-                  );
-                });
+                showGenDialog(context, false, CustomDialog(
+                    title: 'Ooooops',
+                    content:
+                    message,
+                    positiveBtnText: "OK",
+                    positiveBtnPressed: () {
+                      cartProvider.clears();
+                      Navigator.of(context).pop();
+                    },
+                    negativeBtnText: non,
+                    ));
               },
               icon: const Icon(
                 Icons.delete_forever_outlined,
@@ -272,8 +230,6 @@ class _CartPageState extends State<CartPage> {
                         Text(text),
                       ),
                     );
-
-
                   },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -287,6 +243,5 @@ class _CartPageState extends State<CartPage> {
         ),
       ),
     ) ;
-
   }
 }

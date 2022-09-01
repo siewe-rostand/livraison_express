@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:livraison_express/model/client.dart';
+import 'package:livraison_express/views/address_detail/selected_fav_address.dart';
 import 'package:logger/logger.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
@@ -19,8 +20,10 @@ import '../../utils/main_utils.dart';
 import '../MapView.dart';
 
 class Step1 extends StatefulWidget {
-  const Step1({Key? key, required this.sender}) : super(key: key);
+  const Step1({Key? key, required this.sender, required this.addressSender, required this.step1FormKey}) : super(key: key);
   final Client sender;
+  final Address addressSender;
+  final GlobalKey<FormState> step1FormKey;
 
   @override
   State<Step1> createState() => _Step1State();
@@ -49,7 +52,7 @@ class _Step1State extends State<Step1> {
   List addresses = [];
   List<Address> addressList = [];
   int radioSelected = 1;
-  String fullName = '',telephone = '',telephone1 = '',email = '';
+  String fullName = '',telephone = '',telephone1 = '',email = '',name='',fname='';
   String? city;
   final logger =Logger();
   final GlobalKey<FormState> step1FormKey = GlobalKey<FormState>();
@@ -65,8 +68,9 @@ class _Step1State extends State<Step1> {
 
   autoComplete(){
     return
-      TypeAheadField(
+      TypeAheadFormField(
         getImmediateSuggestions: true,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
         textFieldConfiguration:  TextFieldConfiguration(
           decoration: const InputDecoration(labelText: 'Nom et prenom *'),
           controller: _typeAheadController,
@@ -90,15 +94,26 @@ class _Step1State extends State<Step1> {
         onSuggestionSelected: (Contact suggestion) {
           suggestion.phones?.forEach((element) {
             telephone=element.value!;
+            widget.sender.telephone=element.value;
           });
+          widget.sender.fullName=suggestion.displayName;
+          fname=suggestion.givenName??'';
+          name=suggestion.familyName??'';
           _typeAheadController.text=suggestion.displayName!;
           phoneDepartTextController.text =telephone;
         },
         hideOnEmpty: true,
         autoFlipDirection: true,
+        validator: (value) {
+          if (value!.isEmpty) {
+            return "Veuillez remplir ce champ";
+          }
+          return null;
+        },
       );
   }
   getStoredUserInfo(int value)async{
+    radioSelected = value;
     SharedPreferences sharedPreferences =
         await SharedPreferences.getInstance();
     String? userString =
@@ -111,20 +126,22 @@ class _Step1State extends State<Step1> {
     fullName =radioSelected==0? appUser1.fullname!:'';
     telephone = radioSelected==0?appUser1.telephone!:'';
     telephone1 =radioSelected==0?appUser1.telephoneAlt??'':'';
-    var id = appUser1.providerId;
+    print('${appUser1.providerId}');
     setState(() {
-      radioSelected = value;
       nomDepartTextController.text = fullName;
       phone2DepartTextController.text =
           telephone1;
       phoneDepartTextController.text =
           telephone;
       emailDepartTextController.text = email;
+      widget.sender.name= radioSelected==0?appUser1.lastname:name;
+      widget.sender.surname= radioSelected==0?appUser1.firstname:fname;
+      // widget.sender.id=appUser1.id;
       // sender.id = int.parse(id);
-      print("${id.runtimeType}");
-      sender.providerName =radioSelected==0?
+      widget.sender.providerId =radioSelected==0?appUser1.providerId:'';
+      widget.sender.providerName =radioSelected==0?
       extractedUserData['provider_name']:'livraison-express';
-      senderAddress.providerName = "livraison-express";
+      widget.addressSender.providerName = "livraison-express";
     });
   }
   setSender(){
@@ -186,14 +203,14 @@ class _Step1State extends State<Step1> {
   @override
   void initState() {
     init();
-    setSender();
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+    final quarter = Provider.of<QuarterProvider>(context);
     return Form(
-      key: step1FormKey,
+      key: widget.step1FormKey,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -228,6 +245,7 @@ class _Step1State extends State<Step1> {
           radioSelected==0? TextFormField(
             autovalidateMode:
             AutovalidateMode.onUserInteraction,
+            onSaved: (value)=>widget.sender.fullName=value,
             readOnly: radioSelected==0 && nomDepartTextController.text.isNotEmpty,
             decoration: const InputDecoration(
                 labelText: 'Nom et prenom *'),
@@ -242,9 +260,10 @@ class _Step1State extends State<Step1> {
           autoComplete(),
           TextFormField(
             keyboardType: TextInputType.phone,
+            onSaved: (value)=>widget.sender.telephone=value,
             autovalidateMode:
             AutovalidateMode.onUserInteraction,
-            readOnly: radioSelected==0 && phone2DepartTextController.text.isNotEmpty,
+            readOnly: radioSelected==0 && phoneDepartTextController.text.isNotEmpty,
             decoration: const InputDecoration(
                 labelText: 'Telephone 1 *'),
             controller: phoneDepartTextController,
@@ -257,6 +276,7 @@ class _Step1State extends State<Step1> {
           ),
           TextFormField(
             keyboardType: TextInputType.phone,
+            onSaved: (value)=>widget.sender.telephoneAlt=value,
             autovalidateMode:
             AutovalidateMode.onUserInteraction,
             decoration: const InputDecoration(
@@ -265,6 +285,7 @@ class _Step1State extends State<Step1> {
           ),
           TextFormField(
             keyboardType: TextInputType.emailAddress,
+            onSaved: (value)=>widget.sender.email=value,
             readOnly: radioSelected==0 && emailDepartTextController.text.isNotEmpty,
             autovalidateMode:
             AutovalidateMode.onUserInteraction,
@@ -291,56 +312,9 @@ class _Step1State extends State<Step1> {
                   builder: (context) {
                     return Center(
                       child: AlertDialog(
-                        content: Column(
-                          mainAxisAlignment:
-                          MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Align(
-                              child: Text(
-                                ' Choisir votre adresse: ',
-                                style: TextStyle(
-                                    fontWeight:
-                                    FontWeight.bold,
-                                    color: Colors.blue),
-                              ),
-                              alignment: Alignment.topCenter,
-                            ),
-                            addresses.isEmpty
-                                ? const Text(
-                              ' Votre liste est vide ',
-                              style: TextStyle(
-                                  fontWeight:
-                                  FontWeight.bold),
-                            )
-                                : ListView.builder(
-                                itemBuilder:
-                                    (context, index) {
-                                  return const Text('draw');
-                                }),
-                            Align(
-                              alignment:
-                              Alignment.bottomCenter,
-                              child: ElevatedButton(
-                                  style: ButtonStyle(
-                                      backgroundColor:
-                                      MaterialStateProperty
-                                          .all(Colors
-                                          .white)),
-                                  onPressed: () {
-                                    Navigator.of(context)
-                                        .pop();
-                                  },
-                                  child: const Text(
-                                    'FERMER',
-                                    style: TextStyle(
-                                        fontWeight:
-                                        FontWeight.bold,
-                                        color:
-                                        Colors.black38),
-                                  )),
-                            )
-                          ],
-                        ),
+                        content: SelectedFavAddress(isDialog: true,onTap: (a){
+                          quarterTextController.text=a.quarter!;
+                        },),
                       ),
                     );
                   });
@@ -361,19 +335,65 @@ class _Step1State extends State<Step1> {
           TextFormField(
             autovalidateMode:
             AutovalidateMode.onUserInteraction,
+            onSaved: (value)=>widget.addressSender.ville=value,
             decoration:
             const InputDecoration(labelText: 'Ville '),
             controller: cityDepartTextController,
             enabled: false,
           ),
+          Autocomplete<String>(
+            optionsBuilder:
+                (TextEditingValue textEditingValue) {
+              if (textEditingValue.text == '') {
+                return const Iterable<String>.empty();
+              }
+              return city=='Douala'|| city == "DOUALA"? quarter.quarterDouala
+                  .where((String quarter) => quarter
+                  .toLowerCase().split(' ').any((word) =>word.startsWith(textEditingValue.text
+                  .toLowerCase()) )
+              )
+                  .toList():quarter.quarterYaounde
+                  .where((item) =>
+                  item.toLowerCase().startsWith(textEditingValue.text.toLowerCase()))
+                  .toList();
+            },
+            onSelected: (String selection) {
+              debugPrint('You just selected $selection');
+              quartierDepart = selection;
+            },
+            fieldViewBuilder: (BuildContext context,
+                TextEditingController
+                fieldTextEditingController,
+                FocusNode fieldFocusNode,
+                VoidCallback onFieldSubmitted) {
+              return TextFormField(
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                controller: fieldTextEditingController,
+                focusNode: fieldFocusNode,
+                onSaved: (val)=>widget.addressSender.quarter=val,
+                decoration: const InputDecoration(
+                    labelText: 'Quartier*'),
+                validator: (value) {
+                  if (value!.isEmpty) {
+                    return "Veuillez remplir ce champ";
+                  }
+                  return null;
+                },
+              );
+            },
+          ),
           TextFormField(
             autovalidateMode:
             AutovalidateMode.onUserInteraction,
+            onSaved: (value)=>widget.addressSender.description=value,
             decoration: const InputDecoration(
                 labelText: 'Description du lieu'),
             controller: descDepartTextController,
           ),
           TextFormField(
+            onSaved: (val){
+              widget.addressSender.nom=val;
+            },
             onTap: ()async{
               MainUtils.hideKeyBoard(context);
               var result = await Navigator.of(context).push(
@@ -384,8 +404,12 @@ class _Step1State extends State<Step1> {
                 placeLonDepart = result['Longitude'] ?? 0.0;
                 placeLatDepart = result['Latitude'] ?? 0.0;
                 location = result['location'];
+                widget.addressSender.latitude=placeLatDepart.toString();
+                widget.addressSender.longitude=placeLonDepart.toString();
+                widget.addressSender.latLng=placeLatDepart.toString()+','+placeLonDepart.toString();
+
                 print(
-                    '//received from map $placeLonDepart / $placeLatDepart');
+                    '//received from map ${addressDepartTextController.text} / $placeLatDepart');
                 addressDepartTextController.text = location!;
                 // senderAddress.nom!=location;
               });
@@ -415,6 +439,7 @@ class _Step1State extends State<Step1> {
                   TextFormField(
                     autovalidateMode:
                     AutovalidateMode.onUserInteraction,
+                    onSaved: (value)=>widget.addressSender.titre=value,
                     decoration: const InputDecoration(
                         hintText: "Titre d'adresse *"),
                     controller: titleDepartTextController,
@@ -448,8 +473,8 @@ class _Step1State extends State<Step1> {
               setState(() {
                 isChecked = value!;
                 if (isChecked==true) {
-                  senderAddress.isFavorite = true;
-                  senderAddress.titre =
+                  widget.addressSender.isFavorite = true;
+                  widget.addressSender.titre =
                       titleDepartTextController.text;
                 }
               });
