@@ -200,7 +200,7 @@ class _MyHomeDrawerState extends State<MyHomeDrawer> {
                                       builder: (    BuildContext contex
                                           ) =>
                                       const LoginScreen()));
-                            }, moduleColor: moduleColor,));
+                            }, ));
                     },
                   ),
                 ],

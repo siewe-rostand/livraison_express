@@ -56,6 +56,8 @@ class Product {
 class Products {
   int? id;
   int? magasinId;
+  int? totalPrice;
+  int?quantity;
   int? possessionId;
   int? possessionCategorieId;
   int? categorieId;
@@ -113,11 +115,16 @@ class Products {
         this.createdAt,
         this.updatedAt,
         this.deletedAt,
-        this.extra});
+        this.extra,
+      this.totalPrice,
+        this.quantity
+      });
 
   Products.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     magasinId = json['magasin_id'];
+    totalPrice = json['prix_total'];
+    quantity = json['quantite'];
     possessionId = json['possession_id'];
     possessionCategorieId = json['possession_categorie_id'];
     categorieId = json['categorie_id'];
@@ -146,6 +153,8 @@ class Products {
     final Map<String, dynamic> data = new Map<String, dynamic>();
     data['id'] = id;
     data['magasin_id'] = magasinId;
+    data['prix_total'] = totalPrice;
+    data['quantite'] = quantity;
     data['possession_id'] = possessionId;
     data['possession_categorie_id'] = possessionCategorieId;
     data['categorie_id'] = categorieId;

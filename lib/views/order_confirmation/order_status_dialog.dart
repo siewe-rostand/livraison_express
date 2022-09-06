@@ -40,7 +40,7 @@ class OrderStatusDialog extends StatelessWidget {
                 decoration: const InputDecoration(
                     labelText: 'Quartier Depart'
                 ),
-                controller: TextEditingController(text: command.sender?.adresses![0].quarter),
+                controller: TextEditingController(text: "command.sender?.adresses![0].quarter"),
               ),
               TextFormField(
                 readOnly: true,
@@ -49,7 +49,7 @@ class OrderStatusDialog extends StatelessWidget {
                 decoration: const InputDecoration(
                     labelText: 'Quartier Livraison'
                 ),
-                controller: TextEditingController(text: command.receiver?.adresses![0].quartier),
+                controller: TextEditingController(text: command.receiver?.adresses![0].quarter),
               ),
               TextFormField(
                 readOnly: true,

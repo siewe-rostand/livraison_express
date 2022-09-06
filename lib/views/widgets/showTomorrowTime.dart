@@ -21,33 +21,6 @@ class _ShowTomorrowTimeState extends State<ShowTomorrowTime> {
   String chooseTime = '';
   var selectTime;
   late DateFormat dateFormat;
-  isOpenTomorrow(){
-    if(tomorrow.toString().isNotEmpty){
-      List<DayItem>? item=tomorrow.items;
-      if(item!.isNotEmpty){
-        for (var i in item) {
-          String? openTime=i.openedAt;
-          String? closeTime = i.closedAt;
-          var nw = openTime?.substring(0, 2);
-          var a = openTime?.substring(3, 5);
-          var cnm = closeTime?.substring(0, 2);
-          var cla = closeTime?.substring(3, 5);
-          DateTime openTimeStamp = DateTime(now.year, now.month,
-              now.day, int.parse(nw!), int.parse(a!), 0);
-          DateTime closeTimeStamp = DateTime(now.year, now.month,
-              now.day, int.parse(cnm!), int.parse(cla!), 0);
-          if (openTime!.isNotEmpty && closeTime!.isNotEmpty){
-            dateFormat = DateFormat.Hm();
-            while (openTimeStamp.isBefore(closeTimeStamp)) {
-              DateTime timeIncrement = openTimeStamp.add(step);
-              openTimeStamp = timeIncrement;
-              timeSlots.add(DateFormat.Hm().format(timeIncrement));
-            }
-          }
-        }
-      }
-    }
-  }
   @override
   void initState() {
 

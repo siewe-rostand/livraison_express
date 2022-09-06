@@ -10,7 +10,7 @@ import '../../data/local_db/db-helper.dart';
 
 class CartItemView extends StatefulWidget {
   final int id;
-  final int quantity;
+  final ValueNotifier<int> quantity;
   final int price;
   final String image;
   final String title;
@@ -24,10 +24,11 @@ class CartItemView extends StatefulWidget {
 
 class _CartItemViewState extends State<CartItemView> {
   final logger = Logger();
-  DBHelper? dbHelper = DBHelper();
+  DBHelper1? dbHelper = DBHelper1();
   @override
   Widget build(BuildContext context) {
     final cartProvider = Provider.of<CartProvider>(context);
+    final cart = Provider.of<CartProvider1>(context);
     return Column(
       children: [
         Row(
@@ -39,7 +40,22 @@ class _CartItemViewState extends State<CartItemView> {
                 color: Colors.white38,
                 child: SizedBox(
                     height: 85,
-                    child:Image.network(widget.image)),
+                    child:Image.network(
+                      widget.image,
+                      errorBuilder:
+                          (BuildContext
+                      context,
+                          Object
+                          exception,
+                          StackTrace?
+                          stackTrace) {
+                        return CircleAvatar(
+                          radius: 34,
+                            child: Container(
+                          color: Colors.grey,
+                        ));
+                      },
+                    )),
               ),
               flex: 2,
             ),
@@ -52,41 +68,43 @@ class _CartItemViewState extends State<CartItemView> {
                   Text( widget.title),
                   Row(
                     children: [
-                      IconButton(
-                          onPressed: () {
-                            int qty = widget.quantity;
-                            int px = widget.price;
-                            qty--;
-                            int total = qty*px;
-                            if(qty>0){
-                              dbHelper!.updateQuantity(
-                                  CartItem(
-                                    id: widget.id,
-                                    quantity:qty,
-                                    price: widget.price,
-                                    title:widget.title,
-                                    image: widget.image,
-                                    totalPrice: total
-                                  )
-                              ).then((value) {
-                                total =0;
-                                qty=0;
-                                print('-----');
-                                cartProvider.removeTotalPrice(double.parse(widget.price.toString()));
-                                setState(() {
-                                  widget.listen=true;
+                      ValueListenableBuilder<int>(
+                        valueListenable:widget.quantity,
+                        builder: (context,val,child) {
+                          return IconButton(
+                              onPressed: () {
+                                // int qty = widget.quantity;
+                                // int px = widget.price;
+                                // qty--;
+                                // int total = qty*px;
+                                cart.addQuantity(widget.id);
+                                dbHelper!.updateQuantity(
+                                    CartItem1(
+                                      id: widget.id,
+                                      quantity:ValueNotifier(widget.quantity.value),
+                                      price: widget.price,
+                                      title:widget.title,
+                                      image: widget.image,
+                                    )
+                                ).then((value) {
+                                  print('-----');
+                                  cart.deleteQuantity(widget.id);
+                                  setState(() {
+                                    cart.removeTotalPrice(widget.price.toDouble());
+                                    widget.listen=true;
+                                  });
+                                }).onError((error, stackTrace) {
+                                  logger.e(error);
                                 });
-                              }).onError((error, stackTrace) {
-                                logger.e(error);
-                              });
-                            }
-                          },
-                          icon: Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: UserHelper.getColor()
-                            ),
-                              child: const Icon(Icons.remove,color: Colors.white70,)),
+                              },
+                              icon: Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: UserHelper.getColor()
+                                ),
+                                  child: const Icon(Icons.remove,color: Colors.white70,)),
+                          );
+                        }
                       ),
                       Text(widget.quantity.toString(),
                         style: const TextStyle(
@@ -94,27 +112,26 @@ class _CartItemViewState extends State<CartItemView> {
                       ),
                       IconButton(
                           onPressed: () {
-                            int qty =  widget.quantity ;
+                            ValueNotifier<int> qty =  ValueNotifier(widget.quantity.value) ;
                             int px = widget.price;
-                            qty++;
-                            int? newPrice = px * qty;
+                            cart.addQuantity(widget.id);
+                            // qty++;
+                            // int? newPrice = px * qty;
                             dbHelper!.updateQuantity(
-                                CartItem(
+                                CartItem1(
                                   id: widget.id,
                                   quantity:qty,
-                                  price:newPrice,
+                                  price:widget.price,
                                   title: widget.title,
                                   image: widget.image,
                                   unitPrice: widget.price
                                 )
                             ).then((value) {
-                              newPrice =0;
-                              qty=0;
-                              cartProvider.addTotalPrice(double.parse(widget.price.toString()));
                               setState(() {
+                                cartProvider.addTotalPrice(widget.price.toDouble());
                                 widget.listen=true;
+                                print('///');
                               });
-                              print('///');
                             }).onError((error, stackTrace) {
                               logger.e('error message',
                               error);
@@ -147,9 +164,9 @@ class _CartItemViewState extends State<CartItemView> {
           child:IconButton(
             onPressed: () async{
               print(widget.id);
-              dbHelper!.delete(widget.id);
-              cartProvider.removeTotalPrice(widget.price.toDouble());
-              cartProvider.removerCounter();
+              dbHelper!.deleteCartItem(widget.id);
+              cart.removeTotalPrice(widget.price.toDouble());
+              cart.removeCounter();
             },
             icon: const Icon(Icons.delete_rounded),
           ),

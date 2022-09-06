@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:livraison_express/constant/all-constant.dart';
@@ -11,6 +12,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../model/city.dart';
 
+  showAnimModal({required BuildContext context, required Widget child}){
+    return showModal(
+      context: context,
+      configuration: const FadeScaleTransitionConfiguration(),
+      builder: (BuildContext context) {
+        return child;
+      },
+    );
+  }
 showGenDialog(context, dismissible, dialog) => showGeneralDialog(
     context: context,
     barrierColor: Colors.black54,
@@ -87,6 +97,7 @@ showToast(
       ),
     ),
     backgroundColor: color,
+    duration: const Duration(milliseconds: 750),
   ));
 }
 
@@ -125,7 +136,7 @@ errorDialog({required BuildContext context,required String title,required String
 class UserHelper {
   static const kPrimaryColor = Color(0xFF2A5CA8);
   static AppUser1? currentUser1 = AppUser1();
-  static String token = "";
+  static String token = "accessToken";
   static String chooseTime = "";
   static String selectedFavAdd = "";
   static City city = City();

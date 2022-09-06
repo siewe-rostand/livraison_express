@@ -96,11 +96,7 @@ class _LivraisonState extends State<Livraison> {
                                   onPressed: () {
                                     Navigator.of(context).push(MaterialPageRoute(
                                         builder: (BuildContext context) =>
-                                            CommandeCoursier(
-                                              city: widget.city,
-                                              shops: magasin,
-                                              moduleColor: widget.moduleColor,
-                                            )));
+                                            CommandeCoursier()));
                                   },
                                   child: const Text(
                                     'COMMANDER',

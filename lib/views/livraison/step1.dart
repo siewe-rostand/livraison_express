@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:livraison_express/model/client.dart';
+import 'package:livraison_express/views/address_detail/map_text_field.dart';
 import 'package:livraison_express/views/address_detail/selected_fav_address.dart';
 import 'package:logger/logger.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -312,8 +313,17 @@ class _Step1State extends State<Step1> {
                   builder: (context) {
                     return Center(
                       child: AlertDialog(
+                        contentPadding: EdgeInsets.zero,
                         content: SelectedFavAddress(isDialog: true,onTap: (a){
                           quarterTextController.text=a.quarter!;
+                          addressDepartTextController.text=a.nom??'';
+                          descDepartTextController.text=a.description??'';
+                          setState(() {
+                            widget.addressSender.latitude=a.latitude;
+                            widget.addressSender.longitude=a.longitude;
+                            widget.addressSender.latLng=a.latLng;
+                          });
+                          print(a.toJson());;
                         },),
                       ),
                     );
@@ -341,46 +351,37 @@ class _Step1State extends State<Step1> {
             controller: cityDepartTextController,
             enabled: false,
           ),
-          Autocomplete<String>(
-            optionsBuilder:
-                (TextEditingValue textEditingValue) {
-              if (textEditingValue.text == '') {
+          TypeAheadFormField<String>(
+            textFieldConfiguration:  TextFieldConfiguration(
+              controller: quarterTextController,
+              decoration: const InputDecoration(
+                  labelText: 'Quartier'),
+            ),
+            suggestionsCallback: (String pattern) async {
+              if(pattern.isEmpty){
                 return const Iterable<String>.empty();
               }
               return city=='Douala'|| city == "DOUALA"? quarter.quarterDouala
                   .where((String quarter) => quarter
-                  .toLowerCase().split(' ').any((word) =>word.startsWith(textEditingValue.text
+                  .toLowerCase().split(' ').any((word) =>word.startsWith(pattern
                   .toLowerCase()) )
               )
                   .toList():quarter.quarterYaounde
                   .where((item) =>
-                  item.toLowerCase().startsWith(textEditingValue.text.toLowerCase()))
+                  item.toLowerCase().startsWith(pattern.toLowerCase()))
                   .toList();
             },
-            onSelected: (String selection) {
-              debugPrint('You just selected $selection');
-              quartierDepart = selection;
-            },
-            fieldViewBuilder: (BuildContext context,
-                TextEditingController
-                fieldTextEditingController,
-                FocusNode fieldFocusNode,
-                VoidCallback onFieldSubmitted) {
-              return TextFormField(
-                autovalidateMode: AutovalidateMode.onUserInteraction,
-                controller: fieldTextEditingController,
-                focusNode: fieldFocusNode,
-                onSaved: (val)=>widget.addressSender.quarter=val,
-                decoration: const InputDecoration(
-                    labelText: 'Quartier*'),
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return "Veuillez remplir ce champ";
-                  }
-                  return null;
-                },
+            itemBuilder: (context, String suggestion) {
+              return ListTile(
+                title: Text(suggestion),
               );
             },
+            onSuggestionSelected: (String suggestion) {
+              quarterTextController.text = suggestion;
+            },
+            onSaved: (value)=>widget.addressSender.quarter=value,
+            autoFlipDirection: true,
+            hideOnEmpty: true,
           ),
           TextFormField(
             autovalidateMode:
@@ -390,48 +391,7 @@ class _Step1State extends State<Step1> {
                 labelText: 'Description du lieu'),
             controller: descDepartTextController,
           ),
-          TextFormField(
-            onSaved: (val){
-              widget.addressSender.nom=val;
-            },
-            onTap: ()async{
-              MainUtils.hideKeyBoard(context);
-              var result = await Navigator.of(context).push(
-                  MaterialPageRoute(
-                      builder: (context) =>
-                      const MapsView()));
-              setState(() {
-                placeLonDepart = result['Longitude'] ?? 0.0;
-                placeLatDepart = result['Latitude'] ?? 0.0;
-                location = result['location'];
-                widget.addressSender.latitude=placeLatDepart.toString();
-                widget.addressSender.longitude=placeLonDepart.toString();
-                widget.addressSender.latLng=placeLatDepart.toString()+','+placeLonDepart.toString();
-
-                print(
-                    '//received from map ${addressDepartTextController.text} / $placeLatDepart');
-                addressDepartTextController.text = location!;
-                // senderAddress.nom!=location;
-              });
-            },
-            readOnly: true,
-            decoration: const InputDecoration(
-                labelText: 'Adresse geolocalisee *'),
-            controller: addressDepartTextController,
-            validator: (value) {
-              if (value!.isEmpty) {
-                return "Veuillez remplir ce champ\n"
-                    "activer votre localisation et reesayer";
-              } else {
-                if (placeLonDepart == 0.0 ||
-                    placeLatDepart == 0.0) {
-                  location = "";
-                  return "La valeur de ce champ est incorrecte";
-                }
-                return null;
-              }
-            },
-          ),
+          MapTextField(address: widget.addressSender,textController: addressDepartTextController,),
           Visibility(
               visible: isChecked,
               child: Column(
@@ -439,7 +399,10 @@ class _Step1State extends State<Step1> {
                   TextFormField(
                     autovalidateMode:
                     AutovalidateMode.onUserInteraction,
-                    onSaved: (value)=>widget.addressSender.titre=value,
+                    onSaved: (value){
+                      widget.addressSender.titre=value;
+                      widget.addressSender.surnom=value;
+                    },
                     decoration: const InputDecoration(
                         hintText: "Titre d'adresse *"),
                     controller: titleDepartTextController,

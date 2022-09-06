@@ -11,15 +11,20 @@ import 'package:livraison_express/model/category.dart';
 import 'package:livraison_express/model/user.dart';
 import 'package:livraison_express/service/product_service.dart';
 import 'package:livraison_express/utils/size_config.dart';
+import 'package:livraison_express/views/main/categoryPage.dart';
+import 'package:livraison_express/views/widgets/floating_action_button.dart';
+import 'package:livraison_express/views/widgets/open_wrapper.dart';
 import 'package:livraison_express/views/widgets/search_Text_field.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/local_db/db-helper.dart';
+import '../../model/auto_gene.dart';
 import '../../model/cart-model.dart';
 import '../../model/module_color.dart';
 import '../../model/product.dart';
+import '../../provider/nav_view_model.dart';
 import '../super-market/cart-provider.dart';
 import '../super-market/cart.dart';
 import '../widgets/custom_alert_dialog.dart';
@@ -27,22 +32,8 @@ import '../widgets/custom_dialog.dart';
 
 class ProductPage extends StatefulWidget {
   const ProductPage(
-      {Key? key,
-        required this.shopId,
-        required this.title,
-        required this.category,
-        required this.fromCategory,
-        required this.moduleColor,
-        this.subSubCategoryId,
-        this.subCategoryId})
+      {Key? key,})
       : super(key: key);
-  final int shopId;
-  final String title;
-  final Category category;
-  final ModuleColor moduleColor;
-  final bool fromCategory;
-  final int? subCategoryId;
-  final int? subSubCategoryId;
 
   @override
   State<ProductPage> createState() => _ProductPageState();
@@ -50,7 +41,7 @@ class ProductPage extends StatefulWidget {
 
 class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin {
   late AnimationController animationController;
-  DBHelper? dbHelper = DBHelper();
+  DBHelper1? dbHelper = DBHelper1();
   final logger = Logger();
   TextEditingController controller = TextEditingController();
   List<Products> products = [];
@@ -63,6 +54,9 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
   bool _show = false;
   bool showFab = true;
   bool isSearch=false;
+  late Category category;
+  late Shops shops;
+  late Modules modules;
   loader(){
     return Positioned(
       bottom: 20,
@@ -84,7 +78,7 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(widget.moduleColor.moduleColor!),
+              valueColor: AlwaysStoppedAnimation<Color>(UserHelper.getColor()),
               strokeWidth: 2.5,
             ),
           ),
@@ -96,10 +90,10 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
   getProduct() async {
     print("$_loading $lastPage");
     _loading = page == 1;
-    if (widget.fromCategory == true) {
+    if (fromCategory == true) {
       await ProductService.getProducts(
-        categoryId: widget.category.id!,
-        shopId: widget.shopId,
+        categoryId: category.id!,
+        shopId: shops.id!,
         page: page,).then((response) {
         setState(() {
           _loading=_loadingBottom=false;
@@ -118,17 +112,16 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
             Navigator.pop(context);
           },
           message: " Si l'érreur persiste veuillez contacter le service client.",
-          onContinue: getProduct(),
-          moduleColor: widget.moduleColor,
+          onContinue: ()=>getProduct(),
         ));
         logger.e("from get product ${onError.toString()}");
       });
     } else {
-      if (widget.subSubCategoryId == 0) {
+      if (sousSousCategoryId == 0) {
         await ProductService.getProductsWithSubCat(
-            categoryId: widget.category.id!,
-            subCategoryId: widget.subCategoryId!,
-            shopId: widget.shopId,
+            categoryId: category.id!,
+            subCategoryId:sousCategoryId!,
+            shopId: shops.id!,
             page: page).then((response){
           var body = json.decode(response.body);
           var rest = body['data'] as List;
@@ -140,10 +133,10 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
         });
       } else {
         await ProductService.getProductsWithSubSubCat(
-            categoryId: widget.category.id!,
-            subSubCategoryId: widget.subSubCategoryId!,
-            subCategoryId: widget.subCategoryId!,
-            shopId: widget.shopId,
+            categoryId: category.id!,
+            subSubCategoryId: sousSousCategoryId!,
+            subCategoryId: sousCategoryId!,
+            shopId: shops.id!,
             page: page).then((response){
           var body = json.decode(response.body);
           var rest = body['data'] as List;
@@ -153,6 +146,87 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
         });
       }
     }
+  }
+  addToCart(int index)async{
+    SharedPreferences sharedPreferences =
+        await SharedPreferences.getInstance();
+    String? userString =
+    sharedPreferences.getString("userData");
+    final extractedUserData =
+    json.decode(userString!);
+    AppUser1 user = AppUser1.fromJson(extractedUserData);
+
+    dbHelper!
+        .insert(CartItem1(
+        id: index,
+        title: products[
+        index]
+            .libelle!,
+        quantity: ValueNotifier(1),
+        price: products[
+        index]
+            .prixUnitaire!,
+        unitPrice: products[
+        index]
+            .prixUnitaire!,
+        totalPrice: products[
+        index]
+            .prixUnitaire!,
+        quantityMax: products[
+        index]
+            .quantiteDispo!,
+        categoryId: products[
+        index]
+            .categorieId!,
+        productId: products[
+        index]
+            .id!,
+        preparationTime: products[
+        index]
+            .tempsPreparation,
+        moduleSlug: modules.slug,
+        image: products[
+        index]
+            .image!,
+        userId: user.id
+    ))
+        .then((value) {
+      logger.i(value.toMap());
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content:Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(25.0),
+                color: UserHelper.getColor(),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children:  [
+                  const Icon(Icons.check),
+                  SizedBox(
+                    width: getProportionateScreenWidth(12.0),
+                  ),
+                  Flexible(child: Text("${products[index].libelle!} a ete ajouter au panier")),
+                ],
+              ),
+            ),
+            duration: const Duration(milliseconds: 1500),
+            backgroundColor: Colors.transparent,
+          ));
+      Provider.of<CartProvider1>(context, listen: false)
+          .addTotalPrice(products[
+      index]
+          .prixUnitaire!.toDouble());
+      Provider.of<CartProvider1>(context, listen: false)
+          .addCounter();
+      Navigator.of(context)
+          .pop();
+    }).onError((error,
+        stackTrace) {
+      logger.e(' ---- $error');
+    });
+
   }
   _showBottomSheet({required int index,required BuildContext context})
   {
@@ -225,7 +299,7 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
                       padding: const EdgeInsets.all(20),
                       minWidth: double.infinity,
                       height: getProportionateScreenHeight(45),
-                      color: widget.moduleColor.moduleColor,
+                      color: UserHelper.getColor(),
                       shape: const RoundedRectangleBorder(
                           borderRadius: BorderRadius.all(Radius.circular(10))
                       ),
@@ -234,87 +308,10 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
                         showFab=true;
                         setState(() {
 
+                          addToCart(index);
                         });
-                        SharedPreferences sharedPreferences =
-                        await SharedPreferences.getInstance();
-                        String? userString =
-                        sharedPreferences.getString("userData");
-                        final extractedUserData =
-                        json.decode(userString!);
-                        AppUser1 user = AppUser1.fromJson(extractedUserData);
 
-                        dbHelper!
-                            .insert(CartItem(
-                            id: index,
-                            title: products[
-                            index]
-                                .libelle!,
-                            quantity: 1,
-                            price: products[
-                            index]
-                                .prixUnitaire!,
-                            unitPrice: products[
-                            index]
-                                .prixUnitaire!,
-                            totalPrice: products[
-                            index]
-                                .prixUnitaire!,
-                            quantityMax: products[
-                            index]
-                                .quantiteDispo!,
-                            categoryId: products[
-                            index]
-                                .categorieId!,
-                            productId: products[
-                            index]
-                                .id!,
-                            preparationTime: products[
-                            index]
-                                .tempsPreparation,
-                            moduleSlug: widget.title,
-                            image: products[
-                            index]
-                                .image!,
-                            userId: user.id
-                        ))
-                            .then((value) {
-                          // logger.i(value.toMap());
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                  content:Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(25.0),
-                              color: widget.moduleColor.moduleColor,
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children:  [
-                                const Icon(Icons.check),
-                                SizedBox(
-                                  width: getProportionateScreenWidth(12.0),
-                                ),
-                                Flexible(child: Text("${products[index].libelle!} a ete ajouter au panier")),
-                              ],
-                            ),
-                          ),
-                                duration: const Duration(milliseconds: 1500),
-                                backgroundColor: Colors.transparent,
-                              ));
-                          Provider.of<CartProvider>(context, listen: false)
-                              .addTotalPrice(double
-                              .parse(products[
-                          index]
-                              .prixUnitaire
-                              .toString()));
-                          Provider.of<CartProvider>(context, listen: false)
-                              .addCounter();
-                          Navigator.of(context)
-                              .pop();
-                        }).onError((error,
-                            stackTrace) {
-                          logger.e(' ---- $error');
-                        });
+
                       },
                       child: const Text(
                         'AJOUTER AU PANIER',
@@ -343,6 +340,10 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
   void initState() {
     fToast = FToast();
     fToast.init(context);
+    shops=UserHelper.shops;
+    modules=UserHelper.module;
+    category=UserHelper.category;
+    print(category.toJson());
     getProduct();
     super.initState();
     _controller.addListener(() {
@@ -377,7 +378,7 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
           preferredSize: const Size.fromHeight(65),
           child: AppBar(
             elevation: 0,
-            backgroundColor: widget.moduleColor.moduleColor,
+            backgroundColor: UserHelper.getColor(),
             title: Container(
               margin: const EdgeInsets.only(
                 top: 2,
@@ -386,7 +387,7 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
               child:isSearch==false? Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(widget.category.libelle.toString().toUpperCase()),
+                  Text(category.libelle.toString().toUpperCase()),
                   IconButton(
                       onPressed: (){
                         setState(() {
@@ -401,7 +402,7 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
           ),
         ),
         body:_loading? Center(child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(widget.moduleColor.moduleColor!),
+          valueColor: AlwaysStoppedAnimation<Color>(UserHelper.getColor()),
           strokeWidth: 2.5,
         )):
         Stack(
@@ -493,7 +494,7 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
                                               style:  TextStyle(
                                                 fontWeight:
                                                 FontWeight.w500,
-                                                color: widget.moduleColor.moduleColor,
+                                                color: UserHelper.getColor(),
                                               ),
                                             ),
                                           ),
@@ -519,41 +520,13 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
             loader()
           ],
         ),
-        floatingActionButton:showFab? CircleAvatar(
-          backgroundColor: Colors.white,
-          radius: 32,
-          child: Badge(
-            padding: const EdgeInsets.all(10),
-            badgeColor: widget.moduleColor.moduleColor!,
-            animationType: BadgeAnimationType.scale,
-            badgeContent: Consumer<CartProvider>(
-              builder: (_, cart, child) {
-                return Text(
-                  (cart.getCounter()).toString(),
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 12,color: Colors.white),
-                );
-              },
-            ),
-            child: IconButton(
-              onPressed: () {
-                print(UserHelper.shops.slug);
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (BuildContext context) =>
-                            CartPage(
-                              moduleColor: widget.moduleColor,
-                              slug: UserHelper.shops.slug!,
-                            )));
-              },
-              icon: Icon(
-                Icons.shopping_cart,
-                color: widget.moduleColor.moduleColor,
-              ),
-            ),
-          ),
-        ):Container()
+        floatingActionButton:showFab? OpenContainerWrapper(
+            closedBuilder: (BuildContext _,VoidCallback openContainer){
+              return CustomFloatingButton(onTap: openContainer);
+            },
+            onClosed: (v) async => Future.delayed(
+                const Duration(milliseconds: 500)),
+            nextPage: const CartPage()):Container()
     );
   }
 }

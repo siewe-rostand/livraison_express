@@ -4,6 +4,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:livraison_express/constant/all-constant.dart';
 import 'package:livraison_express/model/module_color.dart';
 
+import '../../data/user_helper.dart';
 import '../../utils/size_config.dart';
 
 class CustomAlertDialog extends StatelessWidget {
@@ -17,7 +18,6 @@ class CustomAlertDialog extends StatelessWidget {
   final double? width;
   final Function()? onCancel;
   final Function() onContinue;
-  final ModuleColor moduleColor;
 
 
   const CustomAlertDialog({Key? key,
@@ -30,7 +30,7 @@ class CustomAlertDialog extends StatelessWidget {
     this.onCancel,
     this.height,
     this.width,
-    required this.onContinue, required this.moduleColor
+    required this.onContinue,
   }): super(key: key);
 
   @override
@@ -69,7 +69,7 @@ class CustomAlertDialog extends StatelessWidget {
                   flex: 3,
                   child: Container(
                     width: SizeConfig.screenWidth,
-                    color: moduleColor.moduleColorDark??primaryColor,
+                    color: UserHelper.getColorDark(),
                     child: Padding(
                       padding: const EdgeInsets.all(10),
                       child: Column(
@@ -119,7 +119,7 @@ class CustomAlertDialog extends StatelessWidget {
                                 child: Text(
                                   positiveText,
                                   style: TextStyle(
-                                      color: moduleColor.moduleColorLight??primaryColor,
+                                      color: UserHelper.getColor(),
                                       fontWeight: FontWeight.w600
                                   ),
                                 ),

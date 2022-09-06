@@ -1,11 +1,12 @@
 
 import 'package:livraison_express/model/address.dart';
+import 'package:livraison_express/model/product.dart';
 
 class Command {
   Infos? infos;
   Client? client;
-  Sender? sender;
-  Receiver? receiver;
+  Client? sender;
+  Client? receiver;
   Magasin? magasin;
   Orders? orders;
   List<dynamic>? attachments;
@@ -17,8 +18,8 @@ class Command {
   Command.fromJson(Map<String, dynamic> json) {
     infos = json["infos"] == null ? null : Infos.fromJson(json["infos"]);
     client = json["client"] == null ? null : Client.fromJson(json["client"]);
-    sender = json["sender"] == null ? null : Sender.fromJson(json["sender"]);
-    receiver = json["receiver"] == null ? null : Receiver.fromJson(json["receiver"]);
+    sender = json["sender"] == null ? null : Client.fromJson(json["sender"]);
+    receiver = json["receiver"] == null ? null : Client.fromJson(json["receiver"]);
     magasin = json["magasin"] == null ? null : Magasin.fromJson(json["magasin"]);
     orders = json["orders"] == null ? null : Orders.fromJson(json["orders"]);
     attachments = json["attachments"] ?? [];
@@ -212,8 +213,9 @@ class Orders {
   String? commentaireClient;
   String? description;
   bool? listeArticles;
+  List<Products>? articles;
 
-  Orders({this.idLivraison, this.idAchat, this.moduleId, this.module, this.magasinId, this.magasin, this.montantLivraison, this.montantRecuperation, this.montantExpedition, this.montantAchat, this.montantTotal, this.codePromo, this.commentaire, this.type, this.gratuitePour, this.commentaireClient, this.description, this.listeArticles});
+  Orders({this.idLivraison, this.idAchat, this.moduleId, this.module, this.magasinId, this.magasin, this.montantLivraison, this.montantRecuperation, this.montantExpedition, this.montantAchat, this.montantTotal, this.codePromo, this.commentaire, this.type, this.gratuitePour, this.commentaireClient, this.description,this.articles});
 
   Orders.fromJson(Map<String, dynamic> json) {
     idLivraison = json["id_livraison"];
@@ -234,6 +236,7 @@ class Orders {
     commentaireClient = json["commentaire_client"];
     description = json["description"];
     listeArticles = json["liste_articles"];
+    // articles = json["liste_articles"];
   }
 
   Map<String, dynamic> toJson() {
@@ -256,6 +259,7 @@ class Orders {
     data["commentaire_client"] = commentaireClient;
     data["description"] = description;
     data["liste_articles"] = listeArticles;
+    data["liste_articles"] = articles;
     return data;
   }
 }
@@ -575,7 +579,7 @@ class Client {
   dynamic? dateSuppression;
   dynamic? nbreCoursesDistribuable;
   dynamic? cautionIncrementationCoursesDistribuable;
-  List<dynamic>? adresses;
+  List<Address>? adresses;
 
   Client({this.id, this.providerId, this.providerName, this.fullname, this.username, this.email, this.telephone, this.telephoneAlt, this.noteInterne, this.dateCreation, this.dateModification, this.dateSuppression, this.nbreCoursesDistribuable, this.cautionIncrementationCoursesDistribuable, this.adresses});
 
@@ -594,7 +598,7 @@ class Client {
     dateSuppression = json["date_suppression"];
     nbreCoursesDistribuable = json["nbre_courses_distribuable"];
     cautionIncrementationCoursesDistribuable = json["caution_incrementation_courses_distribuable"];
-    adresses = json["adresses"] ?? [];
+    adresses = json["adresses"]==null ? null : (json["adresses"] as List).map((e)=>Address.fromJson(e)).toList();
   }
 
   Map<String, dynamic> toJson() {
@@ -614,7 +618,7 @@ class Client {
     data["nbre_courses_distribuable"] = nbreCoursesDistribuable;
     data["caution_incrementation_courses_distribuable"] = cautionIncrementationCoursesDistribuable;
     if(adresses != null) {
-      data["adresses"] = adresses;
+      data["adresses"] = adresses?.map((e)=>e.toJson()).toList();
     }
     return data;
   }

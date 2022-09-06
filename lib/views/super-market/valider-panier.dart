@@ -3,6 +3,7 @@ import 'dart:developer';
 
 import 'package:contacts_service/contacts_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart' as stripe;
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -15,11 +16,13 @@ import 'package:livraison_express/model/cart-model.dart';
 import 'package:livraison_express/model/client.dart';
 import 'package:livraison_express/model/day_item.dart';
 import 'package:livraison_express/model/infos.dart';
+import 'package:livraison_express/model/orders.dart' as command;
 import 'package:livraison_express/model/payment.dart';
 import 'package:livraison_express/model/user.dart';
 import 'package:livraison_express/service/paymentApi.dart';
 import 'package:livraison_express/utils/main_utils.dart';
 import 'package:livraison_express/utils/size_config.dart';
+import 'package:livraison_express/views/main/product_page.dart';
 import 'package:livraison_express/views/order_confirmation/order_confirmation.dart';
 import 'package:livraison_express/views/super-market/widget/step1.dart';
 import 'package:livraison_express/views/super-market/widget/step2.dart';
@@ -40,12 +43,12 @@ import '../../model/module_color.dart';
 import '../../model/order.dart';
 import '../../service/course_service.dart';
 import 'cart-provider.dart';
+import 'cart.dart';
 
 enum DeliveryType { express, heure_livraison }
 
 class ValiderPanier extends StatefulWidget {
-  const ValiderPanier({Key? key, required this.moduleColor, required this.totalAmount}) : super(key: key);
-  final ModuleColor moduleColor;
+  const ValiderPanier({Key? key, required this.totalAmount}) : super(key: key);
   final double totalAmount;
 
   @override
@@ -63,6 +66,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
   List addresses = [];
   bool isChecked = false;
   bool isChecked1 = false;
+  bool isLoading=false;
   bool isToday = false;
   String chooseTime = '';
   List<String> timeSlots = [];
@@ -125,6 +129,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
   double? placeLon;
   String? location;
   String? city;
+  int? cityId;
   String? slug;
   String? moduleSlug,paymentIntentClientSecret;
   int? idChargement;
@@ -146,17 +151,45 @@ class _ValiderPanierState extends State<ValiderPanier> {
     super.initState();
   }
 
-  initView()async{
-    city =await UserHelper.getCity();
+  initView(){
+    city = UserHelper.city.name;
+    cityId = UserHelper.city.id;
     cityDepartTextController = TextEditingController(text: city);
     isOpened(UserHelper.shops.horaires!);
   }
 
 
+   makePayment({required String amount, required BuildContext context}) async {
+    try {
+
+      var paymentIntentData =
+      await PaymentApi(context: context).createPaymentIntent(amount, 'XAF'); //json.decode(response.body);
+      // print('Response body==>${response.body.toString()}');
+      await stripe.Stripe.instance.initPaymentSheet(
+          paymentSheetParameters: stripe.SetupPaymentSheetParameters(
+            paymentIntentClientSecret: paymentIntentData!['client_secret'],
+            applePay: true,
+            googlePay: true,
+            testEnv: true,
+            style: ThemeMode.dark,
+            merchantCountryCode: 'US',
+            merchantDisplayName: 'ROSTAND',
+            customerId: paymentIntentData!['customer'],
+            customerEphemeralKeySecret: paymentIntentData!['ephemeralKey'],)).then((value){
+      });
+
+
+      ///now finally display payment sheeet
+      PaymentApi(context: context).displayPaymentSheet();
+
+    } catch (e, s) {
+      print('exception:$e$s');
+    }
+  }
+
   setSenderAndReceiverInfo() async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
     Shops shops=UserHelper.shops;
-    var cityId = sharedPreferences.getInt('city_id');
     var providerName = "livraison-express";
     senderClient.id = shops.client?.id;
     senderClient.providerId = shops.client?.providerId;
@@ -171,6 +204,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
     senderAddress.id = shops.adresseFavorite?.id;
     senderAddress.titre = shops.adresseFavorite?.surnom;
     senderAddress.villeId = cityId;
+    senderAddress.ville = city;
     senderAddress.pays = "Cameroun";
     senderAddress.quarter = shops.adresse?.quartier;
     senderAddress.description = shops.adresse?.description;
@@ -204,6 +238,9 @@ class _ValiderPanierState extends State<ValiderPanier> {
     addressReceiver.providerName = "livraison-express";
     addressReceiver.id = null;
     addressReceiver.providerId = null;
+    addressReceiver.ville=city;
+    addressReceiver.villeId=cityId;
+    addressReceiver.pays="Cameroun";
     // print(';;;${isFavoriteAddress(selectedFavoriteAddress, addressReceiver) }${selectedFavoriteAddress.toString().length}');
     log("message ${addressReceiver.toJson()}");
     // log("message ${UserHelper.chooseTime}");
@@ -392,7 +429,19 @@ class _ValiderPanierState extends State<ValiderPanier> {
 
     await CourseApi().commnander2( data: data).then((response) {
       var body = json.decode(response.body);
-      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context)=>const OrderConfirmation()));
+      var com = body['data'];
+      command.Command ord =command.Command.fromJson(com);
+      log("body ${ord}");
+      UserHelper.userExitDialog(context, true,  CustomAlertDialog(
+          svgIcon: "img/icon/svg/smiley_happy.svg", title: "Youpiii".toUpperCase(),
+          message: "Felicitation, Commande enregistrée avec succès\nN° commande ${ord.infos?.ref} ",
+          positiveText: "OK",
+          onContinue:(){
+            Navigator.of(context).pop();
+            Provider.of<CartProvider>(context,listen: false).clears();
+            Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context)=>const CartPage()));
+          },
+          ));
     }).catchError((onError){
       logger.e(onError);
       UserHelper.userExitDialog(context, true,  CustomAlertDialog(
@@ -401,7 +450,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
           positiveText: "OK",
           onContinue:(){
             Navigator.of(context).pop();
-      }, moduleColor: widget.moduleColor));
+      }));
     });
   }
   Future<List<Contact>> getContacts(String query) async {
@@ -577,7 +626,15 @@ class _ValiderPanierState extends State<ValiderPanier> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Valider Panier'),
-        backgroundColor: widget.moduleColor.moduleColor,
+        leading: IconButton(
+            onPressed: (){
+              Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (BuildContext context)=>const CartPage()));
+            },
+            icon: const Icon(
+              Icons.arrow_back,
+              color: Colors.white,
+            )),
+        backgroundColor: UserHelper.getColor(),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -586,22 +643,29 @@ class _ValiderPanierState extends State<ValiderPanier> {
               data: ThemeData(
                   colorScheme: Theme.of(context)
                       .colorScheme
-                      .copyWith(primary: widget.moduleColor.moduleColor)),
+                      .copyWith(primary: UserHelper.getColor())),
               child: Stepper(
                 controlsBuilder:
                     (BuildContext context, ControlsDetails detail) {
-                  return _currentStep >= 3
+                  return isLoading==true?const CircularProgressIndicator(): _currentStep >= 3
                       ? ElevatedButton(
                           style: ButtonStyle(
                               backgroundColor: MaterialStateProperty.all(
-                                  widget.moduleColor.moduleColor)),
+                                  UserHelper.getColor())),
                           onPressed: () {
+                            isLoading=true;
                             debugPrint('////');
                             if(payMode == "cash"){
                               debugPrint('////');
                               saveOrder("cash", '', '', '');
                             }else if(payMode == "card"){
-                              saveOrder('card', '', '', '');
+                              var amt=cartProvider.totalPrice +deliveryPrice;
+                              var amount= amt.toString();
+                              PaymentApi(context: context).makePayment(amount: amount).then((value){
+                                logger.e('_ValiderPanierState.build');
+                                // saveOrder('card', '', '', '');
+                                // log("message $value");
+                              });
                             }else{
                               Fluttertoast.showToast(msg: "Veuillez choisir un moyen de paiement");
                             }
@@ -664,7 +728,10 @@ class _ValiderPanierState extends State<ValiderPanier> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               InkWell(
-                                onTap: !isTodayOpened && isTomorrowOpened?null:() {
+                                onTap: !isTodayOpened && isTomorrowOpened? (){
+                                  showToast(context: context, text: "Service Momentanement indisponible", iconData: Icons.close_rounded, color: Colors.red);
+                                }
+                                    :() {
                                   if(isTodayOpened) {
                                     setState(() {
                                     _deliveryType = DeliveryType.express;
@@ -678,11 +745,12 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                 child: Row(
                                   children: [
                                     Radio<DeliveryType>(
-                                      activeColor: widget.moduleColor.moduleColorDark,
+                                      activeColor: UserHelper.getColorDark(),
                                       value: DeliveryType.express,
                                       groupValue: _deliveryType,
                                       onChanged:!isTodayOpened && isTomorrowOpened?null: (DeliveryType? value) {
-                                        setState(() {
+
+                                                  setState(() {
                                           _deliveryType = value;
                                           chooseTime=express;
                                           UserHelper.chooseTime=chooseTime;
@@ -709,7 +777,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                 child: Row(
                                   children: [
                                     Radio<DeliveryType>(
-                                      activeColor: widget.moduleColor.moduleColorDark,
+                                      activeColor: UserHelper.getColorDark(),
                                       value: DeliveryType.heure_livraison,
                                       groupValue: _deliveryType,
                                       onChanged: (DeliveryType? value) {
@@ -907,9 +975,6 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                       payMode = 'card';
                                     });
                                   }
-                                  var amt=cartProvider.totalPrice +deliveryPrice;
-                                  var amount= amt.toString();
-                                  PaymentApi(context: context).makePayment(amount: amount);
                                 }
                             ),
                             const Text('Payer par carte bancaire',style: TextStyle(color: grey90),),

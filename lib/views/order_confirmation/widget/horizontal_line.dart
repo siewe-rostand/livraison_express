@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 
-import '../../utils/size_config.dart';
+import '../../../utils/size_config.dart';
 
 class HorizontalLine extends StatelessWidget {
   final Color color;

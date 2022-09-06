@@ -24,11 +24,9 @@ import '../widgets/custom_alert_dialog.dart';
 
 class Restaurant extends StatefulWidget {
   const Restaurant(
-      {Key? key, required this.moduleColor, this.moduleId, required this.city})
+      {Key? key, this.moduleId, })
       : super(key: key);
-  final ModuleColor moduleColor;
   final int? moduleId;
-  final String city;
 
   @override
   State<Restaurant> createState() => _RestaurantState();
@@ -163,7 +161,6 @@ class _RestaurantState extends State<Restaurant> {
           onContinue: () {
             Navigator.pop(context);
           },
-          moduleColor: widget.moduleColor,
         ));
   }
 
@@ -199,7 +196,6 @@ class _RestaurantState extends State<Restaurant> {
                 city: city,
                 latitude: latitude,
                 longitude: longitude,
-                moduleColor: widget.moduleColor,
                 shops: shops,
               )));
     }
@@ -249,8 +245,8 @@ class _RestaurantState extends State<Restaurant> {
     return Scaffold(
       appBar: AppBar(
         systemOverlayStyle: SystemUiOverlayStyle(
-            statusBarColor: widget.moduleColor.moduleColor),
-        backgroundColor: widget.moduleColor.moduleColor,
+            statusBarColor: UserHelper.getColor()),
+        backgroundColor: UserHelper.getColor(),
         title: const Text('Restaurant'),
       ),
       body: Padding(

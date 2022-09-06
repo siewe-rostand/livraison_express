@@ -32,7 +32,7 @@ class ApiAuthService {
   final BuildContext context;
   final ProgressDialog? progressDialog;
   bool? fromLogin;
-  ApiAuthService({required this.context, this.fromLogin, this.progressDialog});
+  ApiAuthService({required this.context, this.fromLogin=true, this.progressDialog});
 
   Future getAccessToken({required String firebaseTokenId}) async {
     String url = '$baseUrl/login/firebase';
@@ -48,7 +48,7 @@ class ApiAuthService {
       }),
     );
     if (response.statusCode == 200) {
-      logger.i('get token inside get access token /// ${response.body}');
+      // logger.i('get token inside get access token /// ${response.body}');
       var body = json.decode(response.body);
       String accessToken = body['access_token'];
       // // print("body access $accessToken");
@@ -500,7 +500,6 @@ class ApiAuthService {
             onContinue: () {
               Navigator.pop(context);
             },
-            moduleColor: moduleColor,
           ));
       print('///|||');
     }
@@ -527,7 +526,6 @@ class ApiAuthService {
         preferences.setString("userData", userData);
         logger.i(
             'user profile //${appUser1.emailVerifiedAt}//${appUser1.phoneVerifiedAt}');
-        // debugPrint('user profile ${appUser1.toJson()}');
         getConfigs();
       } else {
         progressDialog!.hide();
@@ -549,13 +547,16 @@ class ApiAuthService {
       };
       final response = await get(Uri.parse(url), headers: headers);
       if (response.statusCode == 200) {
-        progressDialog!.hide();
+        print(';;;get config');
         Map<String, dynamic> value = jsonDecode(response.body)['data'];
         SharedPreferences preferences = await SharedPreferences.getInstance();
         preferences.setString('modules', jsonEncode(value['modules']));
         preferences.setString('cities', jsonEncode(value['cities']));
         Fluttertoast.showToast(
             msg: "Connexion avec success", backgroundColor: Colors.green);
+        if(fromLogin ==true) {
+          progressDialog!.hide();
+        }
         await Future.delayed(
             const Duration(seconds: 1),
             () => Navigator.of(context).pushReplacement(

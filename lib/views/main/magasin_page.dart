@@ -15,9 +15,7 @@ import '../../service/shopService.dart';
 import '../../utils/size_config.dart';
 
 class MagasinPage extends StatefulWidget {
-  final ModuleColor moduleColor;
-  final List<Shops> shops;
-  const MagasinPage({Key? key, required this.moduleColor, required this.shops}) : super(key: key);
+  const MagasinPage({Key? key}) : super(key: key);
 
   @override
   State<MagasinPage> createState() => _MagasinPageState();
@@ -31,7 +29,7 @@ class _MagasinPageState extends State<MagasinPage> {
   @override
   void initState() {
     super.initState();
-    shops = widget.shops;
+    shops = UserHelper.module.shops!;
   }
   @override
   Widget build(BuildContext context) {
@@ -40,8 +38,9 @@ class _MagasinPageState extends State<MagasinPage> {
         preferredSize: const Size.fromHeight(65),
         child: AppBar(
           systemOverlayStyle: SystemUiOverlayStyle(
-              statusBarColor: widget.moduleColor.moduleColor),
-          backgroundColor: widget.moduleColor.moduleColor,
+              statusBarColor:
+              UserHelper.getColor(),),
+          backgroundColor: UserHelper.getColor(),
           title: Container(
             margin: const EdgeInsets.only(
               top: 10,
@@ -74,7 +73,7 @@ class _MagasinPageState extends State<MagasinPage> {
                         now.day, int.parse(nw!), int.parse(a!), 0);
                     DateTime closeTimeStamp = DateTime(now.year, now.month,
                         now.day, int.parse(cnm!), int.parse(cla!), 0);
-                    debugPrint('close time // $closeTimeStamp');
+                    debugPrint('close time magasin page// $closeTimeStamp');
                     if ((now.isAtSameMomentAs(openTimeStamp) ||
                         now.isAfter(openTimeStamp)) &&
                         now.isBefore(closeTimeStamp)) {
@@ -113,14 +112,10 @@ class _MagasinPageState extends State<MagasinPage> {
                   await ShopServices.getCategories(shopId: shopId!);
                   UserHelper.isTodayOpen=isTodayOpened;
                   UserHelper.isTomorrowOpen=isTomorrowOpened;
+                  UserHelper.category=categoryList[index];
+                  print('_MagasinPageState.build ${categoryList[index].toJson()}');
                   Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => CategoryPage(
-                        module: 'delivery',
-                        moduleColor: widget.moduleColor,
-                        shops: shops[index],
-                        isOpenedTomorrow: isTomorrowOpened,
-                        isOpenedToday: isTodayOpened,
-                      )));
+                      builder: (context) => const CategoryPage()));
                 },
                 child: Stack(
                   children: [
@@ -216,19 +211,12 @@ class _MagasinPageState extends State<MagasinPage> {
                                           const EdgeInsets.symmetric(
                                               horizontal: 10)),
                                       backgroundColor:
-                                      MaterialStateProperty.all(widget
-                                          .moduleColor.moduleColorDark)),
+                                      MaterialStateProperty.all(UserHelper.getColor())),
                                   onPressed: () {
                                     UserHelper.isTodayOpen=isTodayOpened;
                                     UserHelper.isTomorrowOpen=isTomorrowOpened;
                                     Navigator.of(context).push(MaterialPageRoute(
-                                        builder: (context) => CategoryPage(
-                                          module: UserHelper.module.slug!,
-                                          moduleColor: widget.moduleColor,
-                                          shops: shops[index],
-                                          isOpenedTomorrow: isTomorrowOpened,
-                                          isOpenedToday: isTodayOpened,
-                                        )));
+                                        builder: (context) => const CategoryPage()));
                                   },
                                   child: const Text(
                                     'Précommander',

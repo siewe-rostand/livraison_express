@@ -24,10 +24,8 @@ class ShopServices{
       "Origin":origin
     });
     if(response.statusCode == 200){
-      print('module App Start loading data retrieved successfully');
       var body=json.decode(response.body);
       var rest = body['data'] as List;
-      print("rest only  ");
       // print('restq ${rest}');
       List<Shops> shops;
 
@@ -47,7 +45,6 @@ class ShopServices{
       "Origin":origin
     });
     if(response.statusCode == 200){
-      print('module App Start loading data retrieved successfully');
       var body=json.decode(response.body);
       var rest = body['data'] as List;
       // print("rest only  ");
@@ -73,7 +70,6 @@ class ShopServices{
       print('module App Start loading data retrieved successfully');
       var body=json.decode(response.body);
       var rest = body['data'] as List;
-      print("rest only  ");
       // print('restq ${rest}');
       List<Category> categories;
 

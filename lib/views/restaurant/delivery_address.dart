@@ -10,6 +10,7 @@ import 'package:livraison_express/service/shopService.dart';
 import 'package:livraison_express/views/main/categoryPage.dart';
 import 'package:livraison_express/views/restaurant/restaurant.dart';
 
+import '../../data/user_helper.dart';
 import '../../model/auto_gene.dart';
 import '../../model/category.dart';
 import '../../model/day_item.dart';
@@ -22,14 +23,12 @@ class DeliveryAddress extends StatefulWidget {
       required this.city,
       required this.latitude,
       required this.longitude,
-      required this.moduleColor,
       required this.shops})
       : super(key: key);
   final int moduleId;
   final String city;
   final double latitude;
   final double longitude;
-  final ModuleColor moduleColor;
   final List<Shops> shops;
 
   @override
@@ -68,17 +67,15 @@ class _DeliveryAddressState extends State<DeliveryAddress> {
                     context,
                     MaterialPageRoute(
                         builder: (context) => Restaurant(
-                              moduleColor: widget.moduleColor,
-                              city: widget.city,
                               moduleId: widget.moduleId,
                             )));
               },
               icon: const Icon(Icons.arrow_back_rounded),
             ),
             systemOverlayStyle: SystemUiOverlayStyle(
-                statusBarColor: widget.moduleColor.moduleColor),
+                statusBarColor: UserHelper.getColor()),
             elevation: 0,
-            backgroundColor: widget.moduleColor.moduleColor,
+            backgroundColor: UserHelper.getColor(),
             title: Container(
               margin: const EdgeInsets.only(
                 top: 10,
@@ -169,11 +166,6 @@ class _DeliveryAddressState extends State<DeliveryAddress> {
                         await ShopServices.getCategories(shopId: shopId!);
                     Navigator.of(context).push(MaterialPageRoute(
                         builder: (context) => CategoryPage(
-                              shops: shops[index],
-                              module: 'delivery',
-                              moduleColor: widget.moduleColor,
-                          isOpenedToday: isTodayOpened,
-                          isOpenedTomorrow: isTomorrowOpened,
                             )));
                   },
                   child: Stack(
@@ -270,16 +262,10 @@ class _DeliveryAddressState extends State<DeliveryAddress> {
                                             const EdgeInsets.symmetric(
                                                 horizontal: 10)),
                                         backgroundColor:
-                                            MaterialStateProperty.all(widget
-                                                .moduleColor.moduleColorDark)),
+                                            MaterialStateProperty.all(UserHelper.getColorDark())),
                                     onPressed: () {
                                       !isTomorrowOpened?Fluttertoast.showToast(msg: 'Service indisponible demain'):Navigator.of(context).push(MaterialPageRoute(
                                           builder: (context) => CategoryPage(
-                                            shops: shops[index],
-                                            module: 'delivery',
-                                            moduleColor: widget.moduleColor,
-                                            isOpenedToday: isTodayOpened,
-                                            isOpenedTomorrow: isTomorrowOpened,
                                           )));
                                     },
                                     child: const Text(

@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../../model/category.dart';
 import '../../model/module_color.dart';
+import '../../provider/nav_view_model.dart';
 import '../../service/shopService.dart';
 import '../custom-container.dart';
 import '../super-market/cart-provider.dart';
@@ -14,9 +15,8 @@ import '../super-market/cart.dart';
 
 class SubCategory extends StatefulWidget {
   const SubCategory({Key? key,required this.shopId,required this.categoryId,required this.title,
-    required this.moduleColor,}) : super(key: key);
+    }) : super(key: key);
   final int shopId;
-  final ModuleColor moduleColor;
   final String title;
   final int categoryId;
 
@@ -31,19 +31,25 @@ class _SubCategoryState extends State<SubCategory> {
   String name = '';
    int parentCategoryId = 0;
    int grandParentCategoryId = 0;
+
+   @override
+  void initState() {
+     print('sub category page');
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion(
       value:
-      SystemUiOverlayStyle(statusBarColor: widget.moduleColor.moduleColor),
+      SystemUiOverlayStyle(statusBarColor:UserHelper.getColor()),
       child: SafeArea(
         child: Scaffold(
-            backgroundColor: widget.moduleColor.moduleColor,
+            backgroundColor: UserHelper.getColor(),
             appBar: PreferredSize(
               preferredSize: const Size.fromHeight(75),
               child: AppBar(
                 elevation: 0,
-                backgroundColor: widget.moduleColor.moduleColor,
+                backgroundColor:UserHelper.getColor(),
                 title: Container(
                   margin: const EdgeInsets.only(
                     top: 10,
@@ -85,7 +91,7 @@ class _SubCategoryState extends State<SubCategory> {
                             CustomContainer(
                               progress: 0.5,
                               size: 70,
-                              backgroundColor: widget.moduleColor.moduleColor,
+                              backgroundColor: UserHelper.getColor(),
                               progressColor: Colors.white,
                             ),
                           ],
@@ -153,8 +159,6 @@ class _SubCategoryState extends State<SubCategory> {
                                                 builder: (context) =>
                                                     SubCategory(
                                                       shopId: shopId,
-                                                      moduleColor:
-                                                      widget.moduleColor,
                                                       categoryId: catId!,
                                                       title: title!,
                                                     )));
@@ -163,22 +167,15 @@ class _SubCategoryState extends State<SubCategory> {
                                         var title = categoryList[index].libelle;
                                         var catId = categoryList[index].id;
                                         bool fromCategory =false;
-                                        int categoryId = grandParentCategoryId == 0 ? parentCategoryId : grandParentCategoryId;
-                                        int? sousCategoryId = grandParentCategoryId == 0 ?catId:parentCategoryId;
-                                        int? sousSousCategoryId = sousCategoryId == catId ? 0 : catId;
+                                         categoryId = grandParentCategoryId == 0 ? parentCategoryId : grandParentCategoryId;
+                                         sousCategoryId = grandParentCategoryId == 0 ?catId:parentCategoryId;
+                                         sousSousCategoryId = sousCategoryId == catId ? 0 : catId;
+
+                                        UserHelper.category = categoryList[index];
                                         Navigator.of(context).push(
                                             MaterialPageRoute(
                                                 builder: (context) =>
-                                                    ProductPage(
-                                                      shopId: shopId,
-                                                      moduleColor:
-                                                      widget.moduleColor,
-                                                      category: categoryList[index],
-                                                      title: title!,
-                                                      fromCategory: false,
-                                                      subCategoryId: sousCategoryId,
-                                                      subSubCategoryId: sousSousCategoryId,
-                                                    )));
+                                                    const ProductPage()));
                                       }
                                     },
                                     child: Card(
@@ -233,13 +230,11 @@ class _SubCategoryState extends State<SubCategory> {
                         context,
                         MaterialPageRoute(
                             builder: (BuildContext context) => CartPage(
-                              moduleColor: widget.moduleColor,
-                              slug: UserHelper.shops.slug!,
                             )));
                   },
                   icon: Icon(
                     Icons.shopping_cart,
-                    color: widget.moduleColor.moduleColor,
+                    color: UserHelper.getColor(),
                   ),
                 ),
               ),

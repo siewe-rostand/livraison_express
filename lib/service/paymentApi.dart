@@ -15,7 +15,7 @@ class PaymentApi{
   final logger = Logger();
   final BuildContext context;
   PaymentApi({required this.context});
-  Future<void> makePayment({required String amount}) async {
+   makePayment({required String amount}) async {
     try {
 
       paymentIntentData =
@@ -29,7 +29,7 @@ class PaymentApi{
             testEnv: true,
             style: ThemeMode.dark,
             merchantCountryCode: 'US',
-            merchantDisplayName: 'ANNIE',
+            merchantDisplayName: 'ROSTAND',
             customerId: paymentIntentData!['customer'],
             customerEphemeralKeySecret: paymentIntentData!['ephemeralKey'],)).then((value){
       });
@@ -37,6 +37,8 @@ class PaymentApi{
 
       ///now finally display payment sheeet
       displayPaymentSheet();
+      logger.w(paymentIntentData);
+
     } catch (e, s) {
       print('exception:$e$s');
     }

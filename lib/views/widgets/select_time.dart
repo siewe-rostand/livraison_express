@@ -30,14 +30,14 @@ class _SelectTimeState extends State<SelectTime> {
   bool isToday = false;
    bool selected = false;
   String chooseTime = '';
-  late bool isTodayOpened,isTomorrowOpened;
+   bool isTodayOpened=false,isTomorrowOpened=false;
+  late Days today;
 
 
-
-
-  showToday(BuildContext context) {
-    Navigator.of(context).pop();
-    Days today =UserHelper.shops.horaires!.today!;
+  getTodayTimes(){
+    dateFormat = DateFormat.Hm();
+    selectTodayTime = dateFormat.format(t);
+     today =UserHelper.shops.horaires!.today!;
     if(today.toString().isNotEmpty){
       List<DayItem>? item = today.items;
       if(item!.isNotEmpty){
@@ -53,24 +53,42 @@ class _SelectTimeState extends State<SelectTime> {
           DateTime closeTimeStamp = DateTime(now.year, now.month,
               now.day, int.parse(cnm!), int.parse(cla!), 0);
           if (openTime!.isNotEmpty && closeTime!.isNotEmpty){
+            dateFormat = DateFormat.Hm();
+            if(now.isBefore(openTimeStamp)){
+              todayTime=[];
+              selectTodayTime=i.openedAt!;
+              while (openTimeStamp.isBefore(closeTimeStamp)) {
+                DateTime timeIncrement = openTimeStamp.add(step);
+                openTimeStamp = timeIncrement;
+                todayTime.add(DateFormat.Hm().format(timeIncrement));
+              }
+            }
             if ((now.isAtSameMomentAs(openTimeStamp) ||
                 now.isAfter(openTimeStamp)) && now.isBefore(closeTimeStamp)){
+              isTodayOpened=true;
+              todayTime=[];
               while (now1.isBefore(closeTimeStamp)) {
                 now1;
                 DateTime incr = now1.add(step);
                 todayTime.add(DateFormat.Hm().format(incr));
                 now1 = incr;
               }
+              selectTodayTime=todayTime.first;
+              print('... ${now}');
             }
           }
         }
       }
     }
+    isToday=today.toString().isNotEmpty;
+  }
+
+  showToday(BuildContext context) {
+    Navigator.of(context).pop();
+    Days today =UserHelper.shops.horaires!.today!;
     showDialog<void>(
         context: context,
         builder: (context) {
-          dateFormat = DateFormat.Hm();
-          selectTodayTime = dateFormat.format(t);
           var selectTime;
           return StatefulBuilder(builder: (context, setStateSB) {
             log("select time  $selectTodayTime, ");
@@ -209,8 +227,12 @@ class _SelectTimeState extends State<SelectTime> {
                           DateFormat('dd-MM-yyyy  k:mm').format(startTime2);
                           Navigator.of(context).pop();
                           chooseTime = selectTime ?? selectTime1;
-                          UserHelper.chooseTime=chooseTime;
-                          // print("// ${UserHelper.chooseTime}");
+                          if (mounted) {
+                            setState(() {
+                              UserHelper.chooseTime=chooseTime;
+                            });
+                          }
+                          print("// ${UserHelper.chooseTime}");
                         },
                         child:  Text('VALIDER',style: TextStyle(color: UserHelper.getColorDark()),),
                       ),
@@ -238,12 +260,12 @@ class _SelectTimeState extends State<SelectTime> {
           });
         });
   }
-
   showTomorrow(BuildContext context) {
     Navigator.of(context).pop();
     Days tomorrow =UserHelper.shops.horaires!.tomorrow!;
     if(tomorrow.toString().isNotEmpty){
       List<DayItem>? item=tomorrow.items;
+      timeSlots=[];
       if(item!.isNotEmpty){
         for (var i in item) {
           String? openTime=i.openedAt;
@@ -267,7 +289,7 @@ class _SelectTimeState extends State<SelectTime> {
         }
       }
     }
-  nextStart = '';
+    nextStart = '';
     showDialog<void>(
         context: context,
         builder: (context) {
@@ -444,6 +466,7 @@ class _SelectTimeState extends State<SelectTime> {
         });
   }
 
+
   bool isOpened(Horaires horaires) {
     bool juge = false;
     if(horaires.toString().isNotEmpty){
@@ -501,9 +524,7 @@ class _SelectTimeState extends State<SelectTime> {
   @override
   void initState() {
     super.initState();
-    isOpened(UserHelper.shops.horaires!);
-    // print("$isTomorrowOpened //$isTodayOpened");
-    isToday = false;
+    getTodayTimes();
   }
   @override
   Widget build(BuildContext context) {
@@ -547,7 +568,7 @@ class _SelectTimeState extends State<SelectTime> {
                     backgroundColor:
                     MaterialStateProperty
                         .all(UserHelper.getColorDark())),
-                onPressed: () {
+                onPressed:() {
                   if(!isTodayOpened && isTomorrowOpened) {
                     Fluttertoast.showToast(msg: "Service Momentanement indisponible");
 

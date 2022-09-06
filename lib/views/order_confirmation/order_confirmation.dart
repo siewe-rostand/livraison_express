@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart' as provider;
 import 'package:livraison_express/utils/size_config.dart';
 
+import '../../model/orders.dart';
 import 'command_history.dart';
 class OrderConfirmation extends StatelessWidget {
-  const OrderConfirmation({Key? key}) : super(key: key);
+  final String order;
+  const OrderConfirmation({Key? key, required this.order}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -31,10 +33,10 @@ class OrderConfirmation extends StatelessWidget {
             Center(
               child: Row(
                 mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Text('N° commande'),
-                  SizedBox(width: 10,),
-                  Text('1111111111111111111111',style: TextStyle(fontWeight: FontWeight.bold),),
+                children:  [
+                  const Text('N° commande'),
+                  const SizedBox(width: 10,),
+                  Text(order,style: const TextStyle(fontWeight: FontWeight.bold),),
                 ],
               ),
             ),

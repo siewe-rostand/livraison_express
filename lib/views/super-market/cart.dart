@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:livraison_express/model/module_color.dart';
 import 'package:livraison_express/utils/size_config.dart';
+import 'package:livraison_express/views/main/product_page.dart';
 import 'package:livraison_express/views/super-market/cart-provider.dart';
 import 'package:livraison_express/data/local_db/db-helper.dart';
 import 'package:livraison_express/views/super-market/valider-panier.dart';
@@ -16,10 +17,8 @@ import '../widgets/custom_dialog.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({
-    Key? key, required this.moduleColor, required this.slug,
+    Key? key,
   }) : super(key: key);
-  final ModuleColor moduleColor;
-  final String slug;
 
   @override
   State<CartPage> createState() => _CartPageState();
@@ -45,6 +44,7 @@ class _CartPageState extends State<CartPage> with SingleTickerProviderStateMixin
     animationController=BottomSheet.createAnimationController(this);
     animationController.duration=const Duration(seconds: 1);
     animationController.reverseDuration=const Duration(seconds: 1);
+    context.read<CartProvider1>().getData();
     super.initState();
   }
   @override
@@ -59,7 +59,7 @@ class _CartPageState extends State<CartPage> with SingleTickerProviderStateMixin
     return Scaffold(
       appBar: AppBar(
         title: const Text('Panier'),
-        backgroundColor: widget.moduleColor.moduleColor,
+        backgroundColor: UserHelper.getColor(),
         actions: [
           // IconButton(
           //     onPressed: (){
@@ -94,95 +94,184 @@ class _CartPageState extends State<CartPage> with SingleTickerProviderStateMixin
               )),
         ],
       ),
-      body: FutureBuilder(
-        future: cartProvider.getData(),
-        builder: (context ,AsyncSnapshot<List<CartItem>> snapshot){
-          if(snapshot.hasData){
-            if(snapshot.data!.isEmpty){
-             return Container(
-                alignment: Alignment.center,
-                margin: const EdgeInsets.only(top: 40),
-                child: Column(
-                  children: [
-                    const Image(
-                      image: AssetImage('img/empty_cart.png'),
-                    ),
-                    const SizedBox(height: 20,),
-                    Text('Votre panier est vide 😌' ,style: Theme.of(context).textTheme.headline5),
-                    const SizedBox(height: 20,),
-                    Text('Explore products and shop your\nfavourite items' , textAlign: TextAlign.center ,style: Theme.of(context).textTheme.subtitle2)
+      body: Column(
+        children: [
+          Consumer<CartProvider1>(
+              builder: (BuildContext context,provider,_){
+              if(provider.cart.isEmpty){
+                return Container(
+                  alignment: Alignment.center,
+                  margin: const EdgeInsets.only(top: 40),
+                  child: Column(
+                    children: [
+                      const Image(
+                        image: AssetImage('img/empty_cart.png'),
+                      ),
+                      const SizedBox(height: 20,),
+                      Text('Votre panier est vide 😌' ,style: Theme.of(context).textTheme.headline5),
+                      const SizedBox(height: 20,),
+                      Text('Explore products and shop your\nfavourite items' , textAlign: TextAlign.center ,style: Theme.of(context).textTheme.subtitle2)
 
-                  ],
-                ),
-              );
-            }else{
-             return Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: ListView.builder(
-                          shrinkWrap: true,
-                          itemCount:snapshot.data!.length + 1,
-                          itemBuilder: (context, index) {
-                            if (index == snapshot.data!.length) {
-                              return Column(
-                                children: [
-                                  Row(
-                                    children: [
-                                      const Icon(Icons.file_copy),
-                                      TextButton(
-                                          onPressed: () {
-                                            setState(() {
-                                              isClick = true;
-                                            });
-                                          },
-                                          child: const Text('Ajouter une instruction',style: TextStyle(color: Color(0xff00a117)),))
-                                    ],
-                                  ),
-                                  Visibility(
-                                    visible: isClick,
-                                    child: TextFormField(
-                                      decoration: InputDecoration(
-                                          floatingLabelBehavior:
-                                          FloatingLabelBehavior.auto,
-                                          fillColor: Colors.white,
-                                          filled: true,
-                                          labelText: 'Ajouter une instruction',
-                                          border: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(6)),
-                                          suffixIcon: controller.text.isEmpty
-                                              ? IconButton(
-                                              onPressed: () {
-                                                setState(() {
-                                                  isClick = false;
-                                                });
-                                              },
-                                              icon: const Icon(Icons.clear))
-                                              : null),
+                    ],
+                  ),
+                );
+              }else{
+                return Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: ListView.builder(
+                            shrinkWrap: true,
+                            itemCount:provider.cart.length + 1,
+                            itemBuilder: (context, index) {
+                              if (index == provider.cart.length) {
+                                return Column(
+                                  children: [
+                                    Row(
+                                      children: [
+                                        const Icon(Icons.file_copy),
+                                        TextButton(
+                                            onPressed: () {
+                                              setState(() {
+                                                isClick = true;
+                                              });
+                                            },
+                                            child:  Text('Ajouter une instruction',style: TextStyle(color: UserHelper.getColorDark()),))
+                                      ],
                                     ),
-                                  ),
-                                  const Divider()
-                                ],
-                              );
-                            }
-                            return
-                              CartItemView(
-                                id: snapshot.data![index].id!,
-                                title: snapshot.data![index].title!,
-                                image: snapshot.data![index].image,
-                                quantity: snapshot.data![index].quantity!,
-                                price: snapshot.data![index].price!,
-                              listen: true,);
-                          }),
-                    ),
-                  ],
-                ),
-              );
-            }
-          }
-          return const Text('') ;
-        },
+                                    Visibility(
+                                      visible: isClick,
+                                      child: TextFormField(
+                                        decoration: InputDecoration(
+                                            floatingLabelBehavior:
+                                            FloatingLabelBehavior.auto,
+                                            fillColor: Colors.white,
+                                            filled: true,
+                                            labelText: 'Ajouter une instruction',
+                                            border: OutlineInputBorder(
+                                                borderRadius: BorderRadius.circular(6)),
+                                            suffixIcon: controller.text.isEmpty
+                                                ? IconButton(
+                                                onPressed: () {
+                                                  setState(() {
+                                                    isClick = false;
+                                                  });
+                                                },
+                                                icon: const Icon(Icons.clear))
+                                                : null),
+                                      ),
+                                    ),
+                                    const Divider()
+                                  ],
+                                );
+                              }
+                              return
+                                CartItemView(
+                                  id: provider.cart[index].id!,
+                                  title: provider.cart[index].title!,
+                                  image: provider.cart[index].image,
+                                  quantity: provider.cart[index].quantity!,
+                                  price: provider.cart[index].price!,
+                                  listen: true,);
+                            }),
+                      ),
+                    ],
+                  ),
+                );
+              }
+          }),
+          // FutureBuilder(
+          //   future: cartProvider.getData(),
+          //   builder: (context ,AsyncSnapshot<List<CartItem>> snapshot){
+          //     if(snapshot.hasData){
+          //       if(snapshot.data!.isEmpty){
+          //        return Container(
+          //           alignment: Alignment.center,
+          //           margin: const EdgeInsets.only(top: 40),
+          //           child: Column(
+          //             children: [
+          //               const Image(
+          //                 image: AssetImage('img/empty_cart.png'),
+          //               ),
+          //               const SizedBox(height: 20,),
+          //               Text('Votre panier est vide 😌' ,style: Theme.of(context).textTheme.headline5),
+          //               const SizedBox(height: 20,),
+          //               Text('Explore products and shop your\nfavourite items' , textAlign: TextAlign.center ,style: Theme.of(context).textTheme.subtitle2)
+          //
+          //             ],
+          //           ),
+          //         );
+          //       }else{
+          //        return Padding(
+          //           padding: const EdgeInsets.all(8.0),
+          //           child: Column(
+          //             children: [
+          //               Expanded(
+          //                 child: ListView.builder(
+          //                     shrinkWrap: true,
+          //                     itemCount:snapshot.data!.length + 1,
+          //                     itemBuilder: (context, index) {
+          //                       if (index == snapshot.data!.length) {
+          //                         return Column(
+          //                           children: [
+          //                             Row(
+          //                               children: [
+          //                                 const Icon(Icons.file_copy),
+          //                                 TextButton(
+          //                                     onPressed: () {
+          //                                       setState(() {
+          //                                         isClick = true;
+          //                                       });
+          //                                     },
+          //                                     child:  Text('Ajouter une instruction',style: TextStyle(color: UserHelper.getColorDark()),))
+          //                               ],
+          //                             ),
+          //                             Visibility(
+          //                               visible: isClick,
+          //                               child: TextFormField(
+          //                                 decoration: InputDecoration(
+          //                                     floatingLabelBehavior:
+          //                                     FloatingLabelBehavior.auto,
+          //                                     fillColor: Colors.white,
+          //                                     filled: true,
+          //                                     labelText: 'Ajouter une instruction',
+          //                                     border: OutlineInputBorder(
+          //                                         borderRadius: BorderRadius.circular(6)),
+          //                                     suffixIcon: controller.text.isEmpty
+          //                                         ? IconButton(
+          //                                         onPressed: () {
+          //                                           setState(() {
+          //                                             isClick = false;
+          //                                           });
+          //                                         },
+          //                                         icon: const Icon(Icons.clear))
+          //                                         : null),
+          //                               ),
+          //                             ),
+          //                             const Divider()
+          //                           ],
+          //                         );
+          //                       }
+          //                       return
+          //                         CartItemView(
+          //                           id: snapshot.data![index].id!,
+          //                           title: snapshot.data![index].title!,
+          //                           image: snapshot.data![index].image,
+          //                           quantity: snapshot.data![index].quantity!,
+          //                           price: snapshot.data![index].price!,
+          //                         listen: true,);
+          //                     }),
+          //               ),
+          //             ],
+          //           ),
+          //         );
+          //       }
+          //     }
+          //     return const Text('') ;
+          //   },
+          // ),
+        ],
       ),
 
       bottomNavigationBar: Padding(
@@ -209,7 +298,7 @@ class _CartPageState extends State<CartPage> with SingleTickerProviderStateMixin
               child:
               MaterialButton(
                 height: getProportionateScreenHeight(45),
-                  color: widget.moduleColor.moduleColor,
+                  color: UserHelper.getColor(),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10)
                 ),
@@ -218,10 +307,9 @@ class _CartPageState extends State<CartPage> with SingleTickerProviderStateMixin
                     // await ApiAuthService.getUser();
                     String text ='Veuillez remplir votre panier avant de le valider';
                     bool cartLength=cartList.isEmpty;
-                    !cartLength?Navigator.of(context).push(MaterialPageRoute(
+                    !cartLength?Navigator.of(context).pushReplacement(MaterialPageRoute(
                         builder: (BuildContext context) =>
                          ValiderPanier(
-                           moduleColor: widget.moduleColor,
                            totalAmount: amount,
                          ))):ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(

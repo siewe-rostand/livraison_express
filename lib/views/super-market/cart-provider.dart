@@ -10,6 +10,8 @@ class CartProvider extends ChangeNotifier{
 
   DBHelper db = DBHelper() ;
   int _counter = 0 ;
+  int _quantity = 1;
+  int get quantity => _quantity;
   int get counter => _counter;
 
   double _totalPrice = 0.0 ;
@@ -27,6 +29,7 @@ class CartProvider extends ChangeNotifier{
   void _setPrefItems()async{
     SharedPreferences prefs = await SharedPreferences.getInstance() ;
     prefs.setInt('cart_item', _counter);
+    prefs.setInt('item_quantity', _quantity);
     prefs.setDouble('total_price', _totalPrice);
     notifyListeners();
   }
@@ -34,6 +37,7 @@ class CartProvider extends ChangeNotifier{
     SharedPreferences prefs = await SharedPreferences.getInstance() ;
     _counter = prefs.getInt('cart_item') ?? 0;
     _totalPrice = prefs.getDouble('total_price') ?? 0.0;
+    _quantity = prefs.getInt('item_quantity') ?? 1;
     notifyListeners();
   }
   void _clearPrefAllItems()async{
@@ -194,7 +198,7 @@ class Cart with ChangeNotifier {
 
   add(Product product){
 
-    var ca= CartItem(id: product.id,title: product.name,quantity: 1,price: product.unitPrice,image: product.image);
+    var ca= CartItem(id: product.id,title: product.name,quantity: 1,price: product.unitPrice,image: product.image, quantity1: ValueNotifier(1));
     _products.add(ca);
     var a=jsonEncode(_products.map((player) => player.toJson()).toList());
     Map<String, dynamic> v =jsonDecode(a);
@@ -260,3 +264,105 @@ class Cart with ChangeNotifier {
     notifyListeners();
   }
 }
+
+class CartProvider1 with ChangeNotifier {
+  DBHelper1 dbHelper = DBHelper1();
+  int _counter = 0;
+  int _quantity = 1;
+  int get counter => _counter;
+  int get quantity => _quantity;
+
+  double _totalPrice = 0.0;
+  double get totalPrice => _totalPrice;
+
+  List<CartItem1> cart = [];
+
+  Future<List<CartItem1>> getData() async {
+    cart = await dbHelper.getCartList();
+    notifyListeners();
+    return cart;
+  }
+
+  void _setPrefsItems() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setInt('cart_items', _counter);
+    prefs.setInt('item_quantity', _quantity);
+    prefs.setDouble('total_price', _totalPrice);
+    notifyListeners();
+  }
+
+  void _getPrefsItems() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    _counter = prefs.getInt('cart_items') ?? 0;
+    _quantity = prefs.getInt('item_quantity') ?? 1;
+    _totalPrice = prefs.getDouble('total_price') ?? 0;
+  }
+
+  void addCounter() {
+    _counter++;
+    _setPrefsItems();
+    notifyListeners();
+  }
+
+  void removeCounter() {
+    _counter--;
+    _setPrefsItems();
+    notifyListeners();
+  }
+
+  int getCounter() {
+    _getPrefsItems();
+    return _counter;
+  }
+
+  void addQuantity(int id) {
+    final index = cart.indexWhere((element) => element.id == id);
+    cart[index].quantity!.value = cart[index].quantity!.value + 1;
+    _setPrefsItems();
+    notifyListeners();
+  }
+
+  void deleteQuantity(int id) {
+    final index = cart.indexWhere((element) => element.id == id);
+    final currentQuantity = cart[index].quantity!.value;
+    if (currentQuantity <= 1) {
+      currentQuantity == 1;
+    } else {
+      cart[index].quantity!.value = currentQuantity - 1;
+    }
+    _setPrefsItems();
+    notifyListeners();
+  }
+
+  void removeItem(int id) {
+    final index = cart.indexWhere((element) => element.id == id);
+    cart.removeAt(index);
+    _setPrefsItems();
+    notifyListeners();
+  }
+
+  int getQuantity(int quantity) {
+    _getPrefsItems();
+    return _quantity;
+  }
+
+  void addTotalPrice(double productPrice) {
+    _totalPrice = _totalPrice + productPrice;
+    _setPrefsItems();
+    notifyListeners();
+  }
+
+  void removeTotalPrice(double productPrice) {
+    _totalPrice = _totalPrice - productPrice;
+    _setPrefsItems();
+    notifyListeners();
+  }
+
+  double getTotalPrice() {
+    _getPrefsItems();
+    return _totalPrice;
+  }
+}
+
+
+

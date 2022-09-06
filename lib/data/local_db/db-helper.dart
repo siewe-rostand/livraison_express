@@ -1,3 +1,4 @@
+
 import 'package:livraison_express/model/cart-model.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
@@ -12,6 +13,7 @@ class DBHelper {
   final String priceCol = "price";
   final String totalPriceCol = "prix_total";
   final String qtyCol = "quantity";
+  final String qty1Col = "quantity1";
   final String imgCol = "image";
   final String maxQtyCol = "quantiteMax";
   final String pIdCol = "id_produit";
@@ -98,5 +100,71 @@ class DBHelper {
   Future deleteAlls() async {
     var dbClient = await db;
     dbClient.delete(tableName);
+  }
+}
+
+
+class DBHelper1 {
+  final String tableName = 'carts';
+  final String idCol = "id";
+  final String textCol = 'title';
+  final String unitPriceCol = "prix_unitaire";
+  final String priceCol = "price";
+  final String totalPriceCol = "prix_total";
+  final String qtyCol = "quantity";
+  final String qty1Col = "quantity1";
+  final String imgCol = "image";
+  final String maxQtyCol = "quantiteMax";
+  final String pIdCol = "id_produit";
+  final String idCatCol = "id_categorie";
+  final String uIdCol = "id_user";
+  final String comCol = "complements";
+  final String moduleCol = "module_slug";
+  final String prepTimeCol = "temps_preparation";
+  static Database? _database;
+
+  Future<Database?> get database async {
+    if (_database != null) {
+      return _database!;
+    }
+    _database = await initDatabase();
+    return null;
+  }
+
+  initDatabase() async {
+    io.Directory directory = await getApplicationDocumentsDirectory();
+    String path = join(directory.path, 'panier.db');
+    var db = await openDatabase(path, version: 1, onCreate: _onCreate);
+    return db;
+  }
+// creating database table
+  _onCreate(Database db, int version) async {
+    await db.execute(
+        '''CREATE TABLE $tableName ($idCol INTEGER PRIMARY KEY ,$textCol TEXT, $priceCol INTEGER , $unitPriceCol INTEGER , $totalPriceCol INTEGER ,$qtyCol INTEGER, $imgCol TEXT,
+         $maxQtyCol INTEGER, $pIdCol INTEGER,$idCatCol INTEGER , $uIdCol INTEGER, $comCol TEXT, $moduleCol TEXT,  $prepTimeCol INTEGER)''');
+  }
+// inserting data into the table
+  Future<CartItem1> insert(CartItem1 cart) async {
+    var dbClient = await database;
+    await dbClient!.insert('carts', cart.toMap());
+    return cart;
+  }
+// getting all the items in the list from the database
+  Future<List<CartItem1>> getCartList() async {
+    var dbClient = await database;
+    final List<Map<String, Object?>> queryResult =
+    await dbClient!.query('carts');
+    return queryResult.map((result) => CartItem1.fromMap(result)).toList();
+  }
+  Future<int> updateQuantity(CartItem1 cart) async {
+    var dbClient = await database;
+    return await dbClient!.update('carts', cart.toMap(),
+        where: "productId = ?", whereArgs: [cart.productId]);
+  }
+
+// deleting an item from the cart screen
+  Future<int> deleteCartItem(int id) async {
+    var dbClient = await database;
+    return await dbClient!.delete('carts', where: 'id = ?', whereArgs: [id]);
   }
 }

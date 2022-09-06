@@ -9,6 +9,7 @@ const gazOrange = Color(0XFFFF9B37);
 const gazOrangeDark = Color(0XFFC76C00);
 const primaryGreen = Color(0XFF83C127);
 const primaryGreenDark = Color(0XFF007100);
+
 const darkGreen = Color(0XFF509000);
 const cadeauGold = Color(0XFFFCC201);
 const cadeauGoldDark = Color(0XFFB78628);
@@ -23,6 +24,7 @@ const grey40 = Color(0XFF999999);
 const kOverlay40 = Color(0x66000000);
 const libModCol = Color(0xff036d6b);
 const kOverlay10 = Color(0x1A000000);
+const kGrey5 = Color(0xFFf2f2f2);
 
 const kShopBackgroundGradient = LinearGradient(
     begin: Alignment.topCenter,

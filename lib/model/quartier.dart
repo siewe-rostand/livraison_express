@@ -190,9 +190,9 @@ class QuarterProvider extends ChangeNotifier{
     return [...city];
   }
   getQuarter(String city){
-   if(city == 'douala'){
+   if(city == 'douala' || city=="DOUALA"){
      return quarterDouala;
-   }if(city == 'yaounde'){
+   }if(city == 'yaounde' || city=="YAOUNDE"){
      return quarterYaounde;
    }
    notifyListeners();

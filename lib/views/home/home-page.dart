@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:animations/animations.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -17,6 +18,7 @@ import 'package:livraison_express/service/api_auth_service.dart';
 import 'package:livraison_express/utils/main_utils.dart';
 import 'package:livraison_express/utils/size_config.dart';
 import 'package:livraison_express/views/drawer/home-drawer.dart';
+import 'package:livraison_express/views/expand-fab.dart';
 import 'package:livraison_express/views/main/categoryPage.dart';
 import 'package:livraison_express/views/main/magasin_page.dart';
 import 'package:livraison_express/views/restaurant/restaurant.dart';
@@ -27,6 +29,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../model/city.dart';
 import '../../model/day_item.dart';
 import '../livraison/commande-coursier.dart';
+import '../widgets/open_wrapper.dart';
 import 'carousel_with_indicator.dart';
 import 'custom_bottom_nav.dart';
 
@@ -74,7 +77,6 @@ class _HomePageState extends State<HomePage> {
 
   getModule(
       {required String module,
-      required ModuleColor moduleColor,
       required bool isRestaurant}) {
     bool isAvailable = true;
     // print("module ");
@@ -94,21 +96,20 @@ class _HomePageState extends State<HomePage> {
           UserHelper.module = modul;
 
           if (isRestaurant) {
-            ModuleColor moduleColor = ModuleColor(
-              moduleColor: redDark,
-              moduleColorLight: redDark,
-              moduleColorDark: redDark,
-            );
             var moduleId = modul.id;
             Navigator.of(context).push(MaterialPageRoute(
                 builder: (context) => Restaurant(
-                      moduleColor: moduleColor,
                       moduleId: moduleId,
-                      city: initialDropValue,
                     )));
           } else {
             try {
-              if (shopsList!.isNotEmpty) {
+              if(module=='delivery'){
+                Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (BuildContext
+                        context) =>
+                            CommandeCoursier()));
+              }else if (shopsList!.isNotEmpty) {
                 print("++++--=${isOpened(shopsList[0].horaires!)}");
                 if (shopsList.length == 1 &&
                     shopsList[0].toString().isNotEmpty &&
@@ -117,17 +118,11 @@ class _HomePageState extends State<HomePage> {
                     isOpened1(shopsList[0].horaires?.today!.items)) {
                   debugPrint('from home page ${shopsList[0].slug}');
                   Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => CategoryPage(
-                            module: module,
-                            moduleColor: moduleColor,
-                            shops: shops,
-                            isOpenedToday: isTodayOpened,
-                            isOpenedTomorrow: isTomorrowOpened,
+                      builder: (context) => const CategoryPage(
                           )));
                 } else {
                   Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => MagasinPage(
-                          moduleColor: moduleColor, shops: shopsList)));
+                      builder: (context) => const MagasinPage()));
                 }
               } else {
                 isAvailable = false;
@@ -178,21 +173,23 @@ class _HomePageState extends State<HomePage> {
     if (response.statusCode == 200) {
       List moduleList = jsonDecode(response.body)['data']['modules'] as List;
       List cityList = jsonDecode(response.body)['data']['cities'] as List;
-      setState(() {
-        for (var element in moduleList) {
-          Modules module = Modules.fromJson(element);
-          UserHelper.module=module;
-          modules.add(module);
-        }
-        for (var element in cityList) {
-          City city = City.fromJson(element);
-          cities.add(city);
-          city = cities.first;
-          if (city.name?.toLowerCase() == cityString.toLowerCase()) {
-            UserHelper.city = city;
+      if (mounted) {
+        setState(() {
+          for (var element in moduleList) {
+            Modules module = Modules.fromJson(element);
+            UserHelper.module=module;
+            modules.add(module);
           }
-        }
-      });
+          for (var element in cityList) {
+            City city = City.fromJson(element);
+            cities.add(city);
+            city = cities.first;
+            if (city.name?.toLowerCase() == cityString.toLowerCase()) {
+              UserHelper.city = city;
+            }
+          }
+        });
+      }
     }
     Navigator.pop(context);
   }
@@ -203,17 +200,21 @@ class _HomePageState extends State<HomePage> {
         List<dynamic>.from(jsonDecode(pref.getString('modules')!));
     List cityList = List<dynamic>.from(jsonDecode(pref.getString('cities')!));
     for (var element in moduleList) {
-      setState(() {
-        modules.add(Modules.fromJson(element));
-      });
+      if (mounted) {
+        setState(() {
+          modules.add(Modules.fromJson(element));
+        });
+      }
     }
     for (var element in cityList) {
-      setState(() {
-        cities.add(City.fromJson(element));
-        city = cities.first;
-        UserHelper.city=city;
-        ville.add(city.name!);
-      });
+      if (mounted) {
+        setState(() {
+          cities.add(City.fromJson(element));
+          city = cities.first;
+          UserHelper.city=city;
+          ville.add(city.name!);
+        });
+      }
     }
     debugPrint("cities // ${cities[0].toJson()}");
   }
@@ -236,7 +237,7 @@ class _HomePageState extends State<HomePage> {
             now.day, int.parse(nw!), int.parse(a!), 0);
         DateTime closeTimeStamp = DateTime(now.year, now.month,
             now.day, int.parse(cnm!), int.parse(cla!), 0);
-        debugPrint('close time // $closeTimeStamp');
+        debugPrint('close time home page // $closeTimeStamp');
         if ((now.isAtSameMomentAs(openTimeStamp) ||
             now.isAfter(openTimeStamp)) &&
             now.isBefore(closeTimeStamp)) {
@@ -291,10 +292,12 @@ class _HomePageState extends State<HomePage> {
           if ((now.isAtSameMomentAs(openTimeStamp) ||
                   now.isAfter(openTimeStamp)) &&
               now.isBefore(closeTimeStamp)) {
-            setState(() {
-              isTodayOpened = true;
-              juge = true;
-            });
+            if (mounted) {
+              setState(() {
+                isTodayOpened = true;
+                juge = true;
+              });
+            }
             break;
           }
           log('from home page today', error: isTodayOpened.toString());
@@ -320,7 +323,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     MainUtils.hideKeyBoard(context);
     return AnnotatedRegion(
-      value: const SystemUiOverlayStyle(statusBarColor: Color(0xff2a5ca8)),
+      value: const SystemUiOverlayStyle(statusBarColor: primaryColor),
       child: SafeArea(
         child: Scaffold(
           appBar: PreferredSize(
@@ -330,9 +333,9 @@ class _HomePageState extends State<HomePage> {
                   child: Image.asset(
                 'img/logo_start.png',
                 height: getProportionateScreenHeight(70),
-                width: MediaQuery.of(context).size.width,
+                width: double.infinity,
               )),
-              iconTheme: const IconThemeData(color: Color(0xff2a5ca8)),
+              iconTheme: const IconThemeData(color: primaryColor),
               backgroundColor: Colors.white,
               actions: [
 
@@ -407,17 +410,18 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ],
               ),
-              const CarouselWithIndicator(),
-              Container(
-                height: getProportionateScreenHeight(30),
-                alignment: Alignment.centerLeft,
-                margin: const EdgeInsets.only(left: 10),
-                child:  Text("Nos Services",
-                  style: TextStyle(
-                      color: Colors.black45,
-                      fontSize: getProportionateScreenWidth(22),
-                      fontWeight: FontWeight.bold
-                  ),),),
+              // const CarouselWithIndicator(),
+
+              // Container(
+              //   height: getProportionateScreenHeight(30),
+              //   alignment: Alignment.centerLeft,
+              //   margin: const EdgeInsets.only(left: 10),
+              //   child:  Text("Nos Services",
+              //     style: TextStyle(
+              //         color: Colors.black45,
+              //         fontSize: getProportionateScreenWidth(22),
+              //         fontWeight: FontWeight.bold
+              //     ),),),
               Expanded(
                 child: GridView.builder(
                     controller: _controller,
@@ -432,179 +436,40 @@ class _HomePageState extends State<HomePage> {
                                 2.5)),
                     itemBuilder: (context, index) {
                       isAvailableInCity =
-                      modules[index].isActiveInCity!;
-                      return Container(
-                        margin: EdgeInsets.zero,
-                        decoration: const BoxDecoration(
-                            border: Border(
-                                bottom: BorderSide(
-                                    color: Colors.black12,
-                                    width: 1.5),
-                                left: BorderSide(
-                                    color: Colors.black12,
-                                    width: 1.5))),
-                        height:
-                        getProportionateScreenHeight(80),
-                        child: InkWell(
-                          splashColor: Colors.black87,
-                          onTap: () {
-                            if (modules[index].slug ==
-                                'delivery') {
-                              UserHelper.module =
-                              modules[index];
-                              UserHelper.shops =
-                                  modules[index].shops!.first;
-                              ModuleColor moduleColor =
-                              ModuleColor(
-                                moduleColor: primaryColor,
-                                moduleColorLight: primaryColor,
-                                moduleColorDark: primaryColor,
-                              );
-                              Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                      builder: (BuildContext
-                                      context) =>
-                                          CommandeCoursier(
-                                            shops: modules[index]
-                                                .shops![0], moduleColor: moduleColor,
-                                          )));
-                            }
-                            if (modules[index].slug ==
-                                'market') {
-                              UserHelper.module =
-                              modules[index];
-                              UserHelper.shops =
-                                  modules[index].shops!.first;
-                              ModuleColor moduleColor =
-                              ModuleColor(
-                                moduleColor: primaryGreen,
-                                moduleColorLight: darkGreen,
-                                moduleColorDark: pharmacyGreenDark,
-                              );
-                              getModule(
-                                  module:modules[index].slug!,
-                                  moduleColor: moduleColor,
-                                  isRestaurant: false);
-                            }
-                            if (modules[index].slug == 'gas') {
-                              UserHelper.module =
-                              modules[index];
-                              UserHelper.shops =
-                                  modules[index].shops!.first;
-                              ModuleColor moduleColor =
-                              ModuleColor(
-                                moduleColor: gazOrange,
-                                moduleColorLight: gazOrange,
-                                moduleColorDark: gazOrange,
-                              );
-                              getModule(
-                                  module: modules[index].slug!,
-                                  moduleColor: moduleColor,
-                                  isRestaurant: false);
-                            }
-                            if (modules[index].slug ==
-                                'pharmacy') {
-                              UserHelper.module =
-                              modules[index];
-                              ModuleColor moduleColor =
-                              ModuleColor(
-                                moduleColor: pharmacyGreen,
-                                moduleColorLight: pharmacyGreen,
-                                moduleColorDark:
-                                pharmacyGreenDark,
-                              );
-                              getModule(
-                                  module: modules[index].slug!,
-                                  moduleColor: moduleColor,
-                                  isRestaurant: false);
-                            }
-                            if (modules[index].slug ==
-                                'librairie') {
-                              UserHelper.module =
-                              modules[index];
-                              print('mod col ${modules[index].moduleColor}');
-                              ModuleColor moduleColor =
-                              ModuleColor(
-                                moduleColor: libModCol,
-                                moduleColorLight: libModCol,
-                                moduleColorDark: libModCol,
-                              );
-                              getModule(
-                                  module: modules[index].slug!,
-                                  moduleColor: moduleColor,
-                                  isRestaurant: false);
-                            }
-                            if (modules[index].slug == 'gift') {
-                              UserHelper.module =
-                              modules[index];
-                              ModuleColor moduleColor =
-                              ModuleColor(
-                                moduleColor: cadeauGold,
-                                moduleColorLight: cadeauGold,
-                                moduleColorDark: cadeauGold,
-                              );
-                              getModule(
-                                  module: modules[index].slug!,
-                                  moduleColor: moduleColor,
-                                  isRestaurant: false);
-                            }
-                            if (modules[index].slug ==
-                                'restaurant') {
-                              UserHelper.module =
-                              modules[index];
-                              ModuleColor moduleColor =
-                              ModuleColor(
-                                moduleColor: redDark,
-                                moduleColorLight: redDark,
-                                moduleColorDark: redDark,
-                              );
-                              getModule(
-                                  module: modules[index].slug!,
-                                  moduleColor: moduleColor,
-                                  isRestaurant: true);
-                            }
-                          },
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment:
-                            MainAxisAlignment.spaceEvenly,
-                            children: [
-                              Container(
-                                height:
-                                getProportionateScreenHeight(
-                                    80),
-                                decoration: BoxDecoration(
-                                    image: DecorationImage(
-                                        image:
-                                        CachedNetworkImageProvider(
-                                            modules[index]
-                                                .image!),
-                                        colorFilter:
-                                        isAvailableInCity ==
-                                            false
-                                            ? const ColorFilter
-                                            .mode(
-                                            Colors
-                                                .white,
-                                            BlendMode
-                                                .saturation)
-                                            : null)),
-                              ),
-                              Text(
-                                modules[index].libelle!,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 16),
-                              )
-                            ],
-                          ),
-                        ),
+                          modules[index].isActiveInCity!;
+                      List<Shops> shopsList= modules[index].shops!;
+                      return OpenContainerWrapper(
+                        transitionType: ContainerTransitionType.fade,
+                        nextPage: modules[index].slug == 'delivery'
+                            ? const CommandeCoursier()
+                            : modules[index].slug == 'restaurant'
+                            ? const Restaurant()
+                            : (shopsList.length == 2 &&
+                            shopsList[0].toString().isNotEmpty &&
+                            shopsList[0].horaires != null &&
+                            shopsList[0].horaires?.today != null &&
+                            isOpened1(shopsList[0].horaires?.today!.items))? const CategoryPage():const MagasinPage(),
+                        closedBuilder: (BuildContext _, VoidCallback openContainer) {
+                          return InkWellOverlay(
+                              onTap: () {
+                                if (modules[index].isActiveInCity==true) {
+                                  UserHelper.module = modules[index];
+                                  UserHelper.shops = modules[index].shops!.first;
+                                  openContainer();
+                                }else{
+                                  showToast(context: context, text: "Service Pas disponible dans cette ville", iconData: Icons.close, color: Colors.red);
+                                }
+                              },
+                              child: item(modules[index], modules[index].isActiveInCity!));
+                        },
+                        onClosed: (v) async => Future.delayed(
+                            const Duration(milliseconds: 500), () => UserHelper.clear()),
                       );
                     }),
               ),
             ],
           ),
-          bottomNavigationBar: _buildBottomBar(),
+          floatingActionButton: const FancyFab(),
 
           // Column(
           //   children: [
@@ -1400,6 +1265,42 @@ class _HomePageState extends State<HomePage> {
           inactiveColor: _inactiveColor,
           textAlign: TextAlign.center,
         ),
+      ],
+    );
+  }
+  Widget item(Modules module, bool isAvailableInCity) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment:
+      MainAxisAlignment.spaceEvenly,
+      children: [
+        Container(
+          height:
+          getProportionateScreenHeight(
+              80),
+          decoration: BoxDecoration(
+              image: DecorationImage(
+                  image:
+                  CachedNetworkImageProvider(
+                      module
+                          .image!),
+                  colorFilter:
+                  isAvailableInCity ==
+                      false
+                      ? const ColorFilter
+                      .mode(
+                      Colors
+                          .white,
+                      BlendMode
+                          .saturation)
+                      : null)),
+        ),
+        Text(
+          module.libelle!,
+          style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 16),
+        )
       ],
     );
   }

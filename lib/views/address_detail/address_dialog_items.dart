@@ -41,7 +41,7 @@ class _AddressDialogItemsState extends State<AddressDialogItems> {
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(widget.address.surnom ?? "fav[index].titre!", style: const TextStyle(fontWeight: FontWeight.w800),),
+                  Center(child: Text(widget.address.surnom?.toUpperCase() ?? widget.address.titre!.toUpperCase(), style: const TextStyle(fontWeight: FontWeight.w800),)),
                   const SizedBox(height: 8,),
                   Text(widget.address.quarter??''),
                 ],

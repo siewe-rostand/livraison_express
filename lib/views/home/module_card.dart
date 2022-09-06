@@ -27,34 +27,62 @@ import '../main/magasin_page.dart';
 import '../restaurant/restaurant.dart';
 
 class ChoiceCard extends StatelessWidget {
-  const ChoiceCard({Key? key, required this.modules, required this.isAvailableInCity}) : super(key: key);
+  const ChoiceCard({Key? key, required this.modules, required this.isAvailableInCity, required this.onTap}) : super(key: key);
   final Modules modules;
   final bool isAvailableInCity;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 80,
-      width: 80,
-      decoration:
-      const BoxDecoration(border:Border(
-        bottom: BorderSide(color: Colors.black38),
-        right: BorderSide(color: Colors.black38)
-      )),
-      child: Center(
+      margin: EdgeInsets.zero,
+      decoration: const BoxDecoration(
+          border: Border(
+              bottom: BorderSide(
+                  color: Colors.black12,
+                  width: 1.5),
+              left: BorderSide(
+                  color: Colors.black12,
+                  width: 1.5))),
+      height:
+      getProportionateScreenHeight(80),
+      child: InkWell(
+        splashColor: Colors.black87,
+        onTap: onTap,
         child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Image.network(modules.image!,height: 80,width: 80,color: isAvailableInCity == false?Colors.grey:null,),
-              Text(
-                modules.libelle!,
-                style: const TextStyle(
-                  color: Color(0xff37474F),
-                ),
-              ),
-            ]),
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment:
+          MainAxisAlignment.spaceEvenly,
+          children: [
+            Container(
+              height:
+              getProportionateScreenHeight(
+                  80),
+              decoration: BoxDecoration(
+                  image: DecorationImage(
+                      image:
+                      CachedNetworkImageProvider(
+                          modules
+                              .image!),
+                      colorFilter:
+                      isAvailableInCity ==
+                          false
+                          ? const ColorFilter
+                          .mode(
+                          Colors
+                              .white,
+                          BlendMode
+                              .saturation)
+                          : null)),
+            ),
+            Text(
+              modules.libelle!,
+              style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16),
+            )
+          ],
+        ),
       ),
     );
   }
@@ -106,21 +134,15 @@ class _ModuleCardState extends State<ModuleCard> {
       if (modul.slug == module) {
         if (modul.isActive == 1) {
           Shops shops = modul.shops!.first;
+          UserHelper.shops=shops;
+          UserHelper.module=modul;
 
           if (isRestaurant) {
             // categoryList = await ShopServices.getCategories(shopId: shopsList![0].id!);
-
-            ModuleColor moduleColor = ModuleColor(
-              moduleColor: redDark,
-              moduleColorLight: redDark,
-              moduleColorDark: redDark,
-            );
             var moduleId = modul.id;
             Navigator.of(context).push(MaterialPageRoute(
                 builder: (context) => Restaurant(
-                  moduleColor: moduleColor,
                   moduleId: moduleId,
-                  city: city,
                 )));
           } else {
             try {
@@ -136,21 +158,13 @@ class _ModuleCardState extends State<ModuleCard> {
                   final shopData = json.encode(shops);
                   // pref.setString('magasin', shopData);
                   // MySession.saveValue('magasin', shopData);
-                  UserHelper.shops = shops;
-                  UserHelper.module = modul;
                   // categoryList = await ShopServices.getCategories(shopId: shopId!);
                   Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => CategoryPage(
-                        module: module,
-                        moduleColor: moduleColor,
-                        shops: shops,
-                        isOpenedToday: isTodayOpened,
-                        isOpenedTomorrow: isTomorrowOpened,
+                      builder: (context) => const CategoryPage(
                       )));
                 } else {
                   Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => MagasinPage(
-                          moduleColor: moduleColor, shops: shopsList)));
+                      builder: (context) => const MagasinPage()));
                 }
               } else {
                 isAvailable = false;
@@ -205,6 +219,7 @@ class _ModuleCardState extends State<ModuleCard> {
         for (var element in moduleList) {
           Modules module = Modules.fromJson(element);
           modules.add(module);
+          UserHelper.module=module;
         }
         for (var element in cityList) {
           City city = City.fromJson(element);
@@ -391,11 +406,7 @@ class _ModuleCardState extends State<ModuleCard> {
                                         MaterialPageRoute(
                                             builder: (BuildContext
                                             context) =>
-                                            CommandeCoursier(
-                                              shops: modules[index]
-                                                  .shops![0],
-                                              moduleColor: moduleColor,
-                                            )));
+                                            const CommandeCoursier()));
                                   }
                                   if (modules[index].slug ==
                                       'market') {
