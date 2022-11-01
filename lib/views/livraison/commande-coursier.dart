@@ -7,12 +7,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:livraison_express/constant/all-constant.dart';
-import 'package:livraison_express/model/address-favorite.dart';
 import 'package:livraison_express/model/address.dart';
-import 'package:livraison_express/model/auto_gene.dart';
 import 'package:livraison_express/model/client.dart';
 import 'package:livraison_express/model/distance_matrix.dart';
 import 'package:livraison_express/model/infos.dart';
@@ -22,25 +19,18 @@ import 'package:livraison_express/model/user.dart';
 import 'package:livraison_express/service/course_service.dart';
 import 'package:livraison_express/service/paymentApi.dart';
 import 'package:livraison_express/utils/size_config.dart';
-import 'package:livraison_express/views/MapView.dart';
-import 'package:livraison_express/views/address_detail/selected_fav_address.dart';
-import 'package:livraison_express/views/home/home-page.dart';
 import 'package:livraison_express/views/livraison/step1.dart';
 import 'package:livraison_express/views/livraison/step2.dart';
 import 'package:logger/logger.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/user_helper.dart';
 import '../../model/day_item.dart';
 import '../../model/horaire.dart';
-import '../../model/module_color.dart';
 import '../../model/order.dart';
 import '../../model/quartier.dart';
-import '../../utils/main_utils.dart';
-import '../order_confirmation/order_confirmation.dart';
-import '../super-market/cart-provider.dart';
+import '../../model/shop.dart';
 import '../widgets/custom_alert_dialog.dart';
 
 enum DeliveryType { express, heure_livraison }
@@ -93,7 +83,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
   TextEditingController cityDepartTextController = TextEditingController();
   TextEditingController titleDepartTextController = TextEditingController();
   Address senderAddress = Address();
-  AddressFavorite selectedAddressDepart = AddressFavorite();
+  Adresse selectedAddressDepart = Adresse();
   double? placeLatDepart, placeLonDepart;
   String? location;
   String quartierDepart = '';
@@ -121,7 +111,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
   TextEditingController titleDestinationTextController =
       TextEditingController();
   Address receiverAddress = Address();
-  AddressFavorite selectedAddressDestination = AddressFavorite();
+  Adresse selectedAddressDestination = Adresse();
   double? placeLatDestination, placeLonDestination;
   String? locationDestination;
   String quartierDestination = '';
@@ -148,8 +138,8 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
   //step4 variables
   Payment payment = Payment();
   String payMode = '';
-  Order order = Order();
-  Info info = Info();
+  Orders order = Orders();
+  Infos info = Infos();
   Client client = Client();
   String codePromo = '';
   int duration = 0, distance = 0;
@@ -705,7 +695,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
     order.description = descColisTextController.text;
     order.montantLivraison = deliveryPrice;
     // order.articles=[];
-    order.promoCode = codePromo;
+    order.codePromo = codePromo;
     order.commentaire = "";
     info.origin = "Livraison express";
     info.platform = "Mobile";
@@ -715,11 +705,10 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
     info.jourLivraison = currentDate;
     info.villeLivraison = av;
     info.duration = duration;
-    info.distance = distance.toString();
+    info.distance = distance;
     info.durationText = durationText;
     info.distanceText = distanceText;
-    info.statusHuman = '';
-    info.type = '';
+    info.statutHuman = '';
     // client.id=int.parse(userId);
     client.providerName = providerName;
     client.fullName = fullName;
@@ -876,7 +865,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
     return juge;
   }
 
-  bool isFavoriteAddress(AddressFavorite addressFavorite, Address address) {
+  bool isFavoriteAddress(Adresse addressFavorite, Address address) {
     if (addressFavorite.toString().isEmpty) {
       return false;
     }

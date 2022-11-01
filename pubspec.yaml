@@ -99,12 +99,13 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
+    - assets/images/
     - img/
     - img/supermarche/
     - img/social/
     - img/icon/
     - img/icon/svg/
-    - img/supermarche/chocolate/
+#    - img/supermarche/chocolate/
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
@@ -124,9 +125,13 @@ flutter:
   #        - asset: font/Roboto-Regular.ttf
   #       - asset: fonts/Schyler-Italic.ttf
   #         style: italic
-     - family: Fira Sans Condensed
+     - family: Muli
        fonts:
-         - asset: assets/font/Fira_Sans_Condensed/FiraSansCondensed-Regular.ttf
+         - asset: assets/fonts/muli/Muli.ttf
+         - asset:  assets/fonts/muli/Muli-Bold.ttf
+           weight: 700
+         - asset: assets/fonts/muli/Muli-Light.ttf
+           weight: 300
   #       - asset: fonts/TrajanPro_Bold.ttf
   #         weight: 700
   #

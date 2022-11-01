@@ -71,7 +71,7 @@ class _MyHomeDrawerState extends State<MyHomeDrawer> {
   }
 
   getOrders() async {
-    await CourseApi.getOrders().then((value) {
+    await CourseApi().getOrders().then((value) {
     }).catchError((onError) {
       showMessage(message: onError.toString(), title: 'Alerte');
     });
@@ -83,7 +83,7 @@ class _MyHomeDrawerState extends State<MyHomeDrawer> {
     AppUser1 user1=AppUser1.fromJson(extractedUserData);
     AppUser1? appUser1 = UserHelper.currentUser1??user1;
     setState(() {
-      name=appUser1.firstname!;
+      name=appUser1.fullname!;
       tel1=appUser1.telephone??appUser1.email!;
 
     });
@@ -108,20 +108,20 @@ class _MyHomeDrawerState extends State<MyHomeDrawer> {
                       height: getProportionateScreenHeight(186),
                       margin: const EdgeInsets.only(left: 10),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children:  [
-                          SvgPicture.asset('img/icon/svg/user_head.svg',height: getProportionateScreenHeight(80),
+                          SvgPicture.asset('img/icon/svg/user_head.svg',height: getProportionateScreenHeight(60),
                           width: getProportionateScreenWidth(80),color: Colors.white,),
-                          SizedBox(height: getProportionateScreenWidth(6),),
+                          SizedBox(height: getProportionateScreenWidth(3),),
+                          Text(
+                            name.toUpperCase(),
+                            style: const TextStyle(fontSize: 16, color: Colors.white),
+                          ),
+                          SizedBox(height: getProportionateScreenWidth(3),),
                           Text(
                             tel1,
                             style: const TextStyle(fontSize: 16, color: Colors.white),
                           ),
-                          SizedBox(height: getProportionateScreenWidth(6),),
-                          Text(
-                            name.toUpperCase(),
-                            style: const TextStyle(fontSize: 16, color: Colors.white),
-                          )
                         ],
                       ),
                     ),
@@ -129,80 +129,55 @@ class _MyHomeDrawerState extends State<MyHomeDrawer> {
                     curve: Curves.fastOutSlowIn,
                     duration: const Duration(milliseconds: 2500),
                   ),
-                  ListTile(
-                    onTap: () {
-                      Navigator.of(context).pop();
-                    },
-                    title: const Text('Accueil'),
-                    leading: const Icon(Icons.home),
-                  ),
-                  ListTile(
-                    title: const Text('Mes Commandes'),
-                    leading:
-                        SvgPicture.asset('img/icon/svg/ic_view_list_black.svg'),
-                    onTap: ()  {
-                      Navigator.of(context).push(MaterialPageRoute(builder: (context)=>const CommandLists()));
-                    },
-                  ),
-                  ListTile(
-                    title: const Text('Mes Adresses'),
-                    leading: SvgPicture.asset(
-                      'img/icon/svg/ic_address.svg',
-                      height: 24,
-                    ),
-                    onTap: (){
-                      Navigator.of(context).push(MaterialPageRoute(builder: (context)=>const SelectedFavAddress(isDialog: false)));
-                    },
-                  ),
-                  ListTile(
-                    title: const Text('Mon Profil'),
-                    leading: const Icon(Icons.person),
-                    onTap: () {
-                      Navigator.of(context).push(MaterialPageRoute(
-                          builder: (BuildContext context) => const Profile()));
-                    },
-                  ),
-                  Builder(builder: (BuildContext context) {
-                    return ListTile(
-                      title: const Text('Partager'),
-                      leading: const Icon(Icons.share),
-                      onTap: () => _onShare(context),
-                    );
+                  drawerItem(Icons.home_rounded, 'Accueil', () {
+                    Navigator.pop(context);
                   }),
-                  ListTile(
-                    title: const Text('Deconnexion'),
-                    leading: const Icon(Icons.power_settings_new),
-                    onTap: () {
-                      UserHelper.userExitDialog(
-                          context,
-                          false,
-                          CustomAlertDialog(
-                            svgIcon: "img/icon/svg/smiley_cry.svg",
-                            title: "Déconnexion",
-                            message:  "Voulez vous vraiment nous quitter?",
-                            negativeText: "Quitter",
-                            positiveText: 'Annuler',
-                            height: SizeConfig.screenHeight!*0.3,
-                            width: SizeConfig.screenWidth!*0.4,
-                            onContinue: () {
-                              Navigator.pop(context);
-                              Navigator.pop(context);
-                            },
-                            onCancel: () async {
-                              Navigator.pop(context);
-                              SharedPreferences pref = await SharedPreferences
-                                  .getInstance();
-                              pref.clear();
-                              Provider.of<CartProvider>(context,listen: false).clears();
-                              FireAuth.signOutFromGoogle();
-                              Navigator.of(context).pushReplacement(
-                                  MaterialPageRoute(
-                                      builder: (    BuildContext contex
-                                          ) =>
-                                      const LoginScreen()));
-                            }, ));
-                    },
-                  ),
+                  drawerItem(Icons.list_rounded, 'Mes Commandes', () {
+                    Navigator.of(context).push(MaterialPageRoute(builder: (context)=>const CommandLists()));
+                  }),
+                  drawerItem(Icons.location_city_rounded, 'Mes Adresses', () {
+                    Navigator.of(context).push(MaterialPageRoute(builder: (context)=>const SelectedFavAddress(isDialog: false)));
+                  }),
+                  drawerItem(Icons.person_rounded, 'Mon Profil', () {
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (BuildContext context) => const Profile()));
+                  }),
+                  Builder(builder: (BuildContext context) {
+                    return
+                      drawerItem(Icons.share_rounded, 'Partager', () {
+                        _onShare(context);
+                      });
+                  }),
+                  drawerItem(Icons.power_settings_new, 'Deconnexion', () {
+                    UserHelper.userExitDialog(
+                        context,
+                        false,
+                        CustomAlertDialog(
+                          svgIcon: "img/icon/svg/smiley_cry.svg",
+                          title: "Déconnexion",
+                          message:  "Voulez vous vraiment nous quitter?",
+                          negativeText: "Quitter",
+                          positiveText: 'Annuler',
+                          height: SizeConfig.screenHeight!*0.3,
+                          width: SizeConfig.screenWidth!*0.4,
+                          onContinue: () {
+                            Navigator.pop(context);
+                            Navigator.pop(context);
+                          },
+                          onCancel: () async {
+                            Navigator.pop(context);
+                            SharedPreferences pref = await SharedPreferences
+                                .getInstance();
+                            pref.clear();
+                            Provider.of<CartProvider>(context,listen: false).clears();
+                            FireAuth.signOutFromGoogle();
+                            Navigator.of(context).pushReplacement(
+                                MaterialPageRoute(
+                                    builder: (    BuildContext contex
+                                        ) =>
+                                    const LoginScreen()));
+                          }, ));
+                  }),
                 ],
               ),
             ),
@@ -239,5 +214,18 @@ class _MyHomeDrawerState extends State<MyHomeDrawer> {
   void _onShare(BuildContext context) async {
     await Share.share(
         "Découvrez quelque chose de cool\n https://play.google.com/store/apps/details?id=com.mcs.livraison_express");
+  }
+  drawerItem(IconData icon, String title, VoidCallback press) {
+    return TextButton(
+      style: ButtonStyle(
+          padding: MaterialStateProperty.all(const EdgeInsets.symmetric(horizontal: 0))
+      ),
+      onPressed: press,
+      child: ListTile(
+        leading: Icon(icon, color: Colors.grey[700],),
+        title: Text(
+          title, style: TextStyle(fontSize: getProportionateScreenWidth(15)),),
+      ),
+    );
   }
 }

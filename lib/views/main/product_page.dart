@@ -1,9 +1,6 @@
 import 'dart:convert';
-import 'dart:developer';
 
-import 'package:badges/badges.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:livraison_express/data/user_helper.dart';
@@ -11,7 +8,6 @@ import 'package:livraison_express/model/category.dart';
 import 'package:livraison_express/model/user.dart';
 import 'package:livraison_express/service/product_service.dart';
 import 'package:livraison_express/utils/size_config.dart';
-import 'package:livraison_express/views/main/categoryPage.dart';
 import 'package:livraison_express/views/widgets/floating_action_button.dart';
 import 'package:livraison_express/views/widgets/open_wrapper.dart';
 import 'package:livraison_express/views/widgets/search_Text_field.dart';
@@ -20,15 +16,14 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/local_db/db-helper.dart';
-import '../../model/auto_gene.dart';
 import '../../model/cart-model.dart';
-import '../../model/module_color.dart';
+import '../../model/module.dart';
 import '../../model/product.dart';
+import '../../model/shop.dart';
 import '../../provider/nav_view_model.dart';
 import '../super-market/cart-provider.dart';
 import '../super-market/cart.dart';
 import '../widgets/custom_alert_dialog.dart';
-import '../widgets/custom_dialog.dart';
 
 class ProductPage extends StatefulWidget {
   const ProductPage(
@@ -41,7 +36,7 @@ class ProductPage extends StatefulWidget {
 
 class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin {
   late AnimationController animationController;
-  DBHelper1? dbHelper = DBHelper1();
+  DBHelper? dbHelper = DBHelper();
   final logger = Logger();
   TextEditingController controller = TextEditingController();
   List<Products> products = [];
@@ -78,7 +73,7 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(UserHelper.getColor()),
+              valueColor: AlwaysStoppedAnimation<Color>(UserHelper.getColorDark()),
               strokeWidth: 2.5,
             ),
           ),
@@ -191,7 +186,15 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
         userId: user.id
     ))
         .then((value) {
-      logger.i(value.toMap());
+      // logger.i(value.toMap());
+      Provider.of<CartProvider>(context, listen: false)
+          .addTotalPrice(products[
+      index]
+          .prixUnitaire!.toDouble());
+      Provider.of<CartProvider>(context, listen: false)
+          .addCounter();
+      Navigator.of(context)
+          .pop();
       ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content:Container(
@@ -211,20 +214,12 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
                 ],
               ),
             ),
-            duration: const Duration(milliseconds: 1500),
+            duration: const Duration(seconds: 2),
             backgroundColor: Colors.transparent,
           ));
-      Provider.of<CartProvider1>(context, listen: false)
-          .addTotalPrice(products[
-      index]
-          .prixUnitaire!.toDouble());
-      Provider.of<CartProvider1>(context, listen: false)
-          .addCounter();
-      Navigator.of(context)
-          .pop();
     }).onError((error,
         stackTrace) {
-      logger.e(' ---- $error');
+      logger.e(' ---- ${error.toString()}');
     });
 
   }
@@ -343,7 +338,6 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
     shops=UserHelper.shops;
     modules=UserHelper.module;
     category=UserHelper.category;
-    print(category.toJson());
     getProduct();
     super.initState();
     _controller.addListener(() {

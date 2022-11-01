@@ -5,42 +5,36 @@ import 'package:contacts_service/contacts_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart' as stripe;
 import 'package:flutter_svg/svg.dart';
-import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:livraison_express/data/local_db/db-helper.dart';
 import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/model/articles.dart';
-import 'package:livraison_express/model/auto_gene.dart';
 import 'package:livraison_express/model/cart-model.dart';
 import 'package:livraison_express/model/client.dart';
 import 'package:livraison_express/model/day_item.dart';
 import 'package:livraison_express/model/infos.dart';
 import 'package:livraison_express/model/orders.dart' as command;
 import 'package:livraison_express/model/payment.dart';
+import 'package:livraison_express/model/product.dart';
 import 'package:livraison_express/model/user.dart';
 import 'package:livraison_express/service/paymentApi.dart';
 import 'package:livraison_express/utils/main_utils.dart';
 import 'package:livraison_express/utils/size_config.dart';
-import 'package:livraison_express/views/main/product_page.dart';
-import 'package:livraison_express/views/order_confirmation/order_confirmation.dart';
 import 'package:livraison_express/views/super-market/widget/step1.dart';
 import 'package:livraison_express/views/super-market/widget/step2.dart';
 import 'package:livraison_express/views/widgets/custom_alert_dialog.dart';
 import 'package:livraison_express/views/widgets/custom_dialog.dart';
 import 'package:livraison_express/views/widgets/select_time.dart';
 import 'package:logger/logger.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../constant/color-constant.dart';
-import '../../model/address-favorite.dart';
 import '../../model/address.dart';
 import '../../model/distance_matrix.dart';
 import '../../model/horaire.dart';
-import '../../model/module_color.dart';
 import '../../model/order.dart';
+import '../../model/shop.dart';
 import '../../service/course_service.dart';
 import 'cart-provider.dart';
 import 'cart.dart';
@@ -114,7 +108,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
   Client receiverClient = Client();
   Address senderAddress = Address();
   Address addressReceiver = Address();
-  AddressFavorite selectedFavoriteAddress = AddressFavorite();
+  Adresse selectedFavoriteAddress = Adresse();
   TextEditingController quarterTextController = TextEditingController();
   TextEditingController nameTextController = TextEditingController();
   TextEditingController phoneTextController = TextEditingController();
@@ -124,7 +118,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
   TextEditingController descTextController = TextEditingController();
   TextEditingController cityDepartTextController = TextEditingController();
   TextEditingController titleTextController = TextEditingController();
-  AddressFavorite selectedAddressDepart = AddressFavorite();
+  Adresse selectedAddressDepart = Adresse();
   double? placeLat;
   double? placeLon;
   String? location;
@@ -133,7 +127,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
   String? slug;
   String? moduleSlug,paymentIntentClientSecret;
   int? idChargement;
-  List<Article> productList =[];
+  List<Products> productList =[];
   List<Contact> contacts=[];
   bool isTodayOpened=false,isTomorrowOpened=false;
 
@@ -187,10 +181,9 @@ class _ValiderPanierState extends State<ValiderPanier> {
     }
   }
 
-  setSenderAndReceiverInfo() async {
-    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+  setSenderAndReceiverInfo() {
+    var city =  UserHelper.city;
     Shops shops=UserHelper.shops;
-    var providerName = "livraison-express";
     senderClient.id = shops.client?.id;
     senderClient.providerId = shops.client?.providerId;
     senderClient.providerName = shops.client?.providerName;
@@ -203,8 +196,8 @@ class _ValiderPanierState extends State<ValiderPanier> {
 
     senderAddress.id = shops.adresseFavorite?.id;
     senderAddress.titre = shops.adresseFavorite?.surnom;
-    senderAddress.villeId = cityId;
-    senderAddress.ville = city;
+    senderAddress.villeId = city.id;
+    senderAddress.ville = city.name;
     senderAddress.pays = "Cameroun";
     senderAddress.quarter = shops.adresse?.quartier;
     senderAddress.description = shops.adresse?.description;
@@ -214,10 +207,6 @@ class _ValiderPanierState extends State<ValiderPanier> {
     senderAddress.providerName = shops.adresse?.providerName;
     senderAddress.nom=shops.slug;
 
-    // receiverClient.fullName = nameTextController.text;
-    // receiverClient.telephone = phoneTextController.text;
-    // receiverClient.email = emailTextController.text;
-    // addressReceiver.address = addressTextController.text;
     logger.d('4${receiverClient.toJson()}');
     if (mounted) {
       setState(() {
@@ -227,14 +216,6 @@ class _ValiderPanierState extends State<ValiderPanier> {
   }
 
   setDeliveryAddress() {
-
-    // addressReceiver.address = addressTextController.text;
-    // addressReceiver.villeId = villeId;
-    // addressReceiver.description = descTextController.text;
-    // addressReceiver.quarter = quarterTextController.text;
-    // addressReceiver.titre = titleTextController.text;
-    // addressReceiver.latitude = placeLat.toString();
-    // addressReceiver.longitude = placeLon.toString();
     addressReceiver.providerName = "livraison-express";
     addressReceiver.id = null;
     addressReceiver.providerId = null;
@@ -247,22 +228,8 @@ class _ValiderPanierState extends State<ValiderPanier> {
     calculateDistance();
   }
 
-  bool isFavoriteAddress(AddressFavorite addressFavorite, Address address) {
-    if (addressFavorite.toString().isEmpty) {
-      return false;
-    }
-    return addressFavorite.quartier == address.quarter &&
-        addressFavorite.description == address.description &&
-        addressFavorite.latitude == address.latitude &&
-        addressFavorite.longitude == address.longitude &&
-        addressFavorite.nom == address.address;
-  }
 
   calculateDistance() async {
-    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    String? mags = sharedPreferences.getString("magasin");
-    // final magasinData = json.decode(mags!);
-    // Magasin magasin = Magasin.fromJson(magasinData);
 
     Shops shops=UserHelper.shops;
     String slug = shops.slug!;
@@ -297,6 +264,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
               _currentStep++;
             });
           }
+          log("message${distanceMatrix.toJson()}");
     }).catchError((onError) {
       logger.e(onError);
       var message ="Une erreur est survenue lors du calcul de la distance. Veuillez vérifier vos informations puis réessayez.";
@@ -319,23 +287,20 @@ class _ValiderPanierState extends State<ValiderPanier> {
     return deliveryTime;
   }
   setCartItems()async {
-    List<CartItem> cartList =await dbHelper.getCartList();
+    List<CartItem1> cartList =await dbHelper.getCartList();
     for(int i=0; i<cartList.length;i++){
-      CartItem cartItem = cartList[i];
-      Article article =Article();
+      CartItem1 cartItem = cartList[i];
+      Products article =Products();
       article.id=cartItem.id;
       article.libelle=cartItem.title;
-      article.unitPrice=cartItem.price;
+      article.prixUnitaire=cartItem.price;
       article.totalPrice=cartItem.totalPrice;
-      article.categoryId=cartItem.categoryId;
+      article.categorieId=cartItem.categoryId;
       article.subCategoryId=cartItem.categoryId;
       article.totalPrice = widget.totalAmount.toInt();
-      article.quantity =cartItem.quantity;
-      article.subTotalAmount =cartItem.quantity!*cartItem.price!;
-      article.description ="";
-      // var list =json.decode(cartItem.complement!)as List;
-      // List<Attributes> attributes = list.map((json) => Attributes.fromJson(json)).toList();
-      // article.attributes =attributes;
+      article.quantity =cartItem.quantity?.value;
+      article.subTotalAmount =Provider.of<CartProvider>(context).getTotalPrice().toInt();
+
       productList.add(article);
     }
   }
@@ -351,24 +316,18 @@ class _ValiderPanierState extends State<ValiderPanier> {
 
 
     AppUser1 appUser1 = AppUser1.fromJson(extractedUserData);
-    List<CartItem> cartList =await dbHelper.getCartList();
+    List<CartItem1> cartList =await dbHelper.getCartList();
     for(int i=0; i<cartList.length;i++){
-      CartItem cartItem = cartList[i];
-      Article article =Article();
+      CartItem1 cartItem = cartList[i];
+      Products article =Products();
       article.id=cartItem.productId;
       article.libelle=cartItem.title;
-      article.unitPrice=cartItem.price;
+      article.prixUnitaire=cartItem.price;
       article.totalPrice=cartItem.totalPrice;
-      // article.categoryId=cartItem.categoryId;
-      // article.subCategoryId=cartItem.categoryId;
       article.totalPrice = widget.totalAmount.toInt();
-      article.quantity =cartItem.quantity;
-      article.subTotalAmount =cartItem.quantity!*cartItem.price!;
-      article.description ="";
+      article.quantity =cartItem.quantity?.value;
+      article.subTotalAmount =Provider.of<CartProvider>(context,listen: false).getTotalPrice().toInt();
       article.magasinId=shops.id;
-      // var list =json.decode(cartItem.complement!)as List;
-      // List<Attributes> attributes = list.map((json) => Attributes.fromJson(json)).toList();
-      // article.attributes =attributes;
       productList.add(article);
       // logger.wtf(cartItem.id);
     }
@@ -388,12 +347,12 @@ class _ValiderPanierState extends State<ValiderPanier> {
     originalClient.email =appUser1.email;
 
 
-    Order order =Order();
+    Orders order =Orders();
     order.module=UserHelper.module.slug;
-    order.articles =productList;
+    order.listeArticles =productList;
     order.description ="";
     order.montantTotal =widget.totalAmount.toInt();
-    order.promoCode =codePromo;
+    order.codePromo =codePromo;
     order.commentaire ='';
     order.montantLivraison =initialDeliveryPrice;
     order.magasinId=shops.id;
@@ -405,7 +364,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
     payment.status = status;
     payment.paymentIntent = pi;
 
-    Info info = Info();
+    Infos info = Infos();
     info.origin ="Livraison express";
     info.platform ="Mobile";
     info.dateLivraison=currentDate + " "+ currentTime;
@@ -414,7 +373,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
     info.jourLivraison=currentDate;
     info.villeLivraison=av;
     info.duration = duration;
-    info.distance = distance.toString();
+    info.distance = distance;
     info.durationText=durationText;
     info.distanceText=distanceText;
 
@@ -431,7 +390,6 @@ class _ValiderPanierState extends State<ValiderPanier> {
       var body = json.decode(response.body);
       var com = body['data'];
       command.Command ord =command.Command.fromJson(com);
-      log("body ${ord}");
       UserHelper.userExitDialog(context, true,  CustomAlertDialog(
           svgIcon: "img/icon/svg/smiley_happy.svg", title: "Youpiii".toUpperCase(),
           message: "Felicitation, Commande enregistrée avec succès\nN° commande ${ord.infos?.ref} ",
@@ -452,92 +410,6 @@ class _ValiderPanierState extends State<ValiderPanier> {
             Navigator.of(context).pop();
       }));
     });
-  }
-  Future<List<Contact>> getContacts(String query) async {
-    //We already have permissions for contact when we get to this page, so we
-    // are now just retrieving it
-    final PermissionStatus permission = await Permission.contacts.status;
-    if(permission == PermissionStatus.granted) {
-      return await ContactsService.getContacts(query: query,
-          withThumbnails: false,photoHighResolution: false
-      );
-    }else{
-      await Permission.contacts.request().then((value) {
-        if(value==PermissionStatus.granted){
-          getContacts(query);
-        }
-      });
-      throw Exception('error');
-    }
-  }
-  autoComplete(){
-    return
-      TypeAheadField(
-        getImmediateSuggestions: true,
-        textFieldConfiguration:  TextFieldConfiguration(
-          decoration: const InputDecoration(labelText: 'Nom et prenom *'),
-          controller: _typeAheadController,
-        ),
-        suggestionsCallback: (pattern) {
-          // call the function to get suggestions based on text entered
-          return getContacts(pattern);
-        },
-        itemBuilder: (context,Contact suggestion) {
-          // show suggection list
-          suggestion.phones?.forEach((element) {
-            telephone=element.value!;
-          });
-          return ListTile(
-            title: Text(suggestion.displayName!),
-            subtitle: Text(
-              telephone,
-            ),
-          );
-        },
-        onSuggestionSelected: (Contact suggestion) {
-          suggestion.phones?.forEach((element) {
-            telephone=element.value!;
-          });
-          _typeAheadController.text=suggestion.displayName!;
-          phoneTextController.text =telephone;
-        },
-        hideOnEmpty: true,
-        autoFlipDirection: true,
-      );
-}
-  bool isOpened1(List<DayItem>? itemsToday) {
-    bool juge = false;
-    if(itemsToday!.isNotEmpty) {
-      for (DayItem i in itemsToday) {
-        try {
-          DateTime now = DateTime.now();
-          String? openTime = i.openedAt;
-          String? closeTime = i.closedAt;
-          var nw = openTime?.substring(0, 2);
-          var a = openTime?.substring(3, 5);
-          var cnm = closeTime?.substring(0, 2);
-          var cla = closeTime?.substring(3, 5);
-          DateTime openTimeStamp = DateTime(
-              now.year, now.month, now.day, int.parse(nw!), int.parse(a!), 0);
-          DateTime closeTimeStamp = DateTime(now.year, now.month, now.day,
-              int.parse(cnm!), int.parse(cla!), 0);
-          debugPrint('close time // $closeTimeStamp');
-          if ((now.isAtSameMomentAs(openTimeStamp) ||
-              now.isAfter(openTimeStamp)) &&
-              now.isBefore(closeTimeStamp)) {
-            setState(() {
-              isTodayOpened = true;
-              juge = true;
-            });
-            break;
-          }
-          log('from home page today', error: isTodayOpened.toString());
-        } catch (e) {
-          debugPrint('shop get time error $e');
-        }
-      }
-    }
-    return juge;
   }
   bool isOpened(Horaires horaires) {
     bool juge = false;
@@ -593,36 +465,9 @@ class _ValiderPanierState extends State<ValiderPanier> {
     }
     return juge;
   }
-  getUserData(int? value)async{
-    SharedPreferences sharedPreferences =
-    await SharedPreferences.getInstance();
-    String? userString =
-    sharedPreferences.getString("userData");
-    final extractedUserData =
-    json.decode(userString!);
-    AppUser1 appUser = AppUser1.fromJson(extractedUserData);
-    AppUser1? user=UserHelper.currentUser1??appUser;
-    email =(user.email??appUser.email)!;
-    fullName =(user.fullname??appUser.fullname)!;
-    telephone =(user.telephone??appUser.telephone)!;
-    telephone1 =(user.telephoneAlt??appUser.telephoneAlt)??'';
-    setState(() {
-      radioSelected = value!;
-      nameTextController.text = fullName;
-      phone2DepartTextController.text = telephone1;
-      phoneTextController.text = telephone;
-      emailTextController.text = email;
-      senderClient.providerName=user.providerName;
-      senderAddress.providerName =
-      "livraison-express";
-    });
-  }
   @override
   Widget build(BuildContext context) {
     final cartProvider = Provider.of<CartProvider>(context);
-
-    // print(' times ${selectTodayTime}');
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Valider Panier'),
@@ -653,7 +498,6 @@ class _ValiderPanierState extends State<ValiderPanier> {
                               backgroundColor: MaterialStateProperty.all(
                                   UserHelper.getColor())),
                           onPressed: () {
-                            isLoading=true;
                             debugPrint('////');
                             if(payMode == "cash"){
                               debugPrint('////');
@@ -822,7 +666,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               const Text('Montant du panier: '),
-                              Text(cartProvider.totalPrice.toString() + 'FCFA')
+                              Text(cartProvider.getTotalPrice().toString() + 'FCFA')
                             ],
                           ),
                         ),
@@ -840,7 +684,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             const Text('Total: '),
-                            Consumer<Cart>(
+                            Consumer<CartProvider>(
                               builder: (_, cart, child)
                               {
                                 var total=cartProvider.getTotalPrice() +deliveryPrice;

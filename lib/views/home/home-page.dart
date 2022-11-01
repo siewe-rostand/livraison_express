@@ -4,15 +4,11 @@ import 'dart:developer';
 import 'package:animations/animations.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart';
 import 'package:livraison_express/constant/all-constant.dart';
-import 'package:livraison_express/data/local_db/db-helper.dart';
 import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/model/auto_gene.dart';
 import 'package:livraison_express/model/horaire.dart';
-import 'package:livraison_express/model/module_color.dart';
 import 'package:livraison_express/model/user.dart';
 import 'package:livraison_express/service/api_auth_service.dart';
 import 'package:livraison_express/utils/main_utils.dart';
@@ -24,20 +20,19 @@ import 'package:livraison_express/views/main/magasin_page.dart';
 import 'package:livraison_express/views/restaurant/restaurant.dart';
 import 'package:livraison_express/views/home/select_city.dart';
 import 'package:logger/logger.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../model/city.dart';
 import '../../model/day_item.dart';
+import '../../model/module.dart';
+import '../../model/shop.dart';
 import '../livraison/commande-coursier.dart';
+import '../super-market/cart-provider.dart';
 import '../widgets/open_wrapper.dart';
-import 'carousel_with_indicator.dart';
-import 'custom_bottom_nav.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key, this.modules, this.city}) : super(key: key);
-  final List<Modules>? modules;
-  final String? city;
-  static String routeName = "/home_screen";
+  const HomePage({Key? key}) : super(key: key);
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -50,15 +45,11 @@ class _HomePageState extends State<HomePage> {
   String saveCity = '';
   final logger = Logger();
   double heightBottom = getProportionateScreenHeight(110);
-  int _currentIndex = 0;
-
-  final _inactiveColor = Colors.grey;
 
   City city = City();
   int cityId = 0;
   List<City> cities = [];
   List<String> citiesListString = [];
-  AppUser appUser = AppUser();
   AppUser1 appUser1 = AppUser1();
   Modules module = Modules();
   List<Modules> modules = [];
@@ -96,11 +87,8 @@ class _HomePageState extends State<HomePage> {
           UserHelper.module = modul;
 
           if (isRestaurant) {
-            var moduleId = modul.id;
             Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => Restaurant(
-                      moduleId: moduleId,
-                    )));
+                builder: (context) => const Restaurant()));
           } else {
             try {
               if(module=='delivery'){
@@ -108,9 +96,8 @@ class _HomePageState extends State<HomePage> {
                     MaterialPageRoute(
                         builder: (BuildContext
                         context) =>
-                            CommandeCoursier()));
+                            const CommandeCoursier()));
               }else if (shopsList!.isNotEmpty) {
-                print("++++--=${isOpened(shopsList[0].horaires!)}");
                 if (shopsList.length == 1 &&
                     shopsList[0].toString().isNotEmpty &&
                     shopsList[0].horaires != null &&
@@ -159,16 +146,13 @@ class _HomePageState extends State<HomePage> {
   getModulesOnCityChange({String cityString = "douala",required BuildContext context}) async {
     SharedPreferences pref = await SharedPreferences
         .getInstance();
-    DBHelper dbHelper=DBHelper();
     Future.delayed(Duration.zero,()=>_showDialog(context));
     cities.clear();
     modules.clear();
-    pref.remove('cart_item');
-    pref.remove('total_price');
-    dbHelper.deleteAlls();
+    Provider.of<CartProvider>(context).clears();
     String url = "$baseUrl/modules?city=$cityString";
     final response = await get(Uri.parse(url)).catchError((e) {
-      print(e.toString());
+      logger.e(e.toString());
     });
     if (response.statusCode == 200) {
       List moduleList = jsonDecode(response.body)['data']['modules'] as List;
@@ -216,7 +200,6 @@ class _HomePageState extends State<HomePage> {
         });
       }
     }
-    debugPrint("cities // ${cities[0].toJson()}");
   }
   bool isOpened(Horaires horaires) {
     bool juge = false;
@@ -410,18 +393,8 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ],
               ),
-              // const CarouselWithIndicator(),
 
-              // Container(
-              //   height: getProportionateScreenHeight(30),
-              //   alignment: Alignment.centerLeft,
-              //   margin: const EdgeInsets.only(left: 10),
-              //   child:  Text("Nos Services",
-              //     style: TextStyle(
-              //         color: Colors.black45,
-              //         fontSize: getProportionateScreenWidth(22),
-              //         fontWeight: FontWeight.bold
-              //     ),),),
+
               Expanded(
                 child: GridView.builder(
                     controller: _controller,
@@ -454,7 +427,9 @@ class _HomePageState extends State<HomePage> {
                               onTap: () {
                                 if (modules[index].isActiveInCity==true) {
                                   UserHelper.module = modules[index];
-                                  UserHelper.shops = modules[index].shops!.first;
+                                  if(modules[index].slug == 'delivery') {
+                                    UserHelper.shops = modules[index].shops!.first;
+                                  }
                                   openContainer();
                                 }else{
                                   showToast(context: context, text: "Service Pas disponible dans cette ville", iconData: Icons.close, color: Colors.red);
@@ -462,810 +437,14 @@ class _HomePageState extends State<HomePage> {
                               },
                               child: item(modules[index], modules[index].isActiveInCity!));
                         },
-                        onClosed: (v) async => Future.delayed(
-                            const Duration(milliseconds: 500), () => UserHelper.clear()),
                       );
                     }),
               ),
             ],
           ),
           floatingActionButton: const FancyFab(),
-
-          // Column(
-          //   children: [
-          //     Expanded(
-          //       child: ListView(
-          //         padding: const EdgeInsets.only(top: 15),
-          //         shrinkWrap: true,
-          //         children: [
-          //           const Center(
-          //               child: Text(
-          //                 'services disponible a ',
-          //                 style: TextStyle(fontSize: 18,color: primaryColor),
-          //               )),
-          //           Center(
-          //             child: DropdownButton<City>(
-          //               value: city,
-          //               icon: const Icon(Icons.arrow_drop_down_outlined),
-          //               elevation: 16,
-          //               style:  const TextStyle(color:primaryColor,fontSize: 18,fontWeight: FontWeight.w500),
-          //               onChanged: (City? newValue) async{
-          //                 SharedPreferences pref= await SharedPreferences.getInstance();
-          //                 setState(() {
-          //                   city = newValue!;
-          //                   pref.setInt('city_id', newValue.id!);
-          //                   pref.setString("city", newValue.name!);
-          //                 });
-          //               },
-          //               items:
-          //               cities
-          //                   .map<DropdownMenuItem<City>>((City value) {
-          //                 return DropdownMenuItem<City>(
-          //                   value: value,
-          //                   child: Text(value.name!.toUpperCase()),
-          //                 );
-          //               }).toList(),
-          //             ),
-          //           ),
-          //           Container(
-          //             decoration: const BoxDecoration(
-          //                 border: Border(bottom: BorderSide(color: Colors.black12,width: 1.5))
-          //             ),
-          //             height: getProportionateScreenHeight(125),
-          //             child: Row(
-          //               children: [
-          //                 Expanded(
-          //                   child: InkWell(
-          //                     splashColor: Colors.black87,
-          //                     onTap: () {
-          //                       for (Modules m in modules) {
-          //                         if (m.toString().isNotEmpty &&
-          //                             m.slug != null &&
-          //                             m.slug == 'delivery') {
-          //                           if (m.shops != null &&
-          //                               m.shops!.isNotEmpty) {
-          //                             ModuleColor moduleColor = ModuleColor(
-          //                               moduleColor: primaryColor,
-          //                               moduleColorLight: primaryColor,
-          //                               moduleColorDark: primaryColor,
-          //                             );
-          //                             // MySession.saveValue('selected_module', m.shops?.first);
-          //                             Navigator.of(context).push(
-          //                                 MaterialPageRoute(
-          //                                     builder:
-          //                                         (BuildContext context) =>
-          //                                         Livraison(
-          //                                           city:
-          //                                           initialDropValue,
-          //                                           moduleColor:
-          //                                           moduleColor,
-          //                                           shops: m.shops![0],
-          //                                         )));
-          //                           }
-          //                         }
-          //                       }
-          //                     },
-          //                     child: Column(
-          //                       children: [
-          //                         ListTile(
-          //                           title: Image.asset(
-          //                             'img/livraison.png',
-          //                             height: getProportionateScreenHeight(80),
-          //                             width: getProportionateScreenWidth(80),
-          //                           ),
-          //                           subtitle: const Center(
-          //                               child: Text(
-          //                                 'Livraison',
-          //                                 style: TextStyle(
-          //                                     fontWeight: FontWeight.bold,
-          //                                     color: Color(0xff37474F)),
-          //                               )),
-          //                         ),
-          //                       ],
-          //                     ),
-          //                   ),
-          //                 ),
-          //                 const VerticalDivider(thickness: 1.5,),
-          //                 Expanded(
-          //                   child: InkWell(
-          //                     onTap: () {
-          //                       // Navigator.of(context).push(MaterialPageRoute(
-          //                       //     builder: (BuildContext context) =>
-          //                       //         const SuperMarket()));
-          //
-          //                       ModuleColor color = ModuleColor(
-          //                         moduleColor:primaryGreen,
-          //                         moduleColorLight: primaryGreen,
-          //                         moduleColorDark: primaryGreen,
-          //                       );
-          //                       getModule(
-          //                           module: 'market',
-          //                           moduleColor: color,
-          //                           isRestaurant: false);
-          //                     },
-          //                     child: Column(
-          //                       children: [
-          //                         Image.asset(
-          //                           'img/supermarché.png',
-          //                           height: getProportionateScreenHeight(80),
-          //                         ),
-          //                         Container(
-          //                             margin: const EdgeInsets.only(top: 5),
-          //                             child: const Text(
-          //                               'supermarché',
-          //                               style: TextStyle(
-          //                                   color: Color(0xff37474F),
-          //                                   fontSize: 15,
-          //                                   fontWeight: FontWeight.bold),
-          //                             )),
-          //                       ],
-          //                     ),
-          //                   ),
-          //                 ),
-          //               ],
-          //             ),
-          //           ),
-          //           Container(
-          //             decoration: const BoxDecoration(
-          //                 border: Border(bottom: BorderSide(color: Colors.black12,width: 1.5))
-          //             ),
-          //             height: getProportionateScreenHeight(125),
-          //             child: Row(
-          //               children: [
-          //                 Expanded(
-          //                   child: InkWell(
-          //                     onTap: () {
-          //                       ModuleColor moduleColor = ModuleColor(
-          //                         moduleColor: redDark,
-          //                         moduleColorLight: redDark,
-          //                         moduleColorDark:redDark,
-          //                       );
-          //                       getModule(
-          //                           module: 'restaurant',
-          //                           moduleColor: moduleColor,
-          //                           isRestaurant: true);
-          //                     },
-          //                     child: Column(
-          //                       children: [
-          //                         ListTile(
-          //                           title: Image.asset(
-          //                             'img/restaurant.png',
-          //                             height: getProportionateScreenHeight(80),
-          //                           ),
-          //                           subtitle: const Center(
-          //                               child: Text(
-          //                                 'Restaurant',
-          //                                 style: TextStyle(
-          //                                     fontWeight: FontWeight.bold),
-          //                               )),
-          //                         ),
-          //                       ],
-          //                     ),
-          //                   ),
-          //                 ),
-          //                 const VerticalDivider(
-          //                   thickness: 1.5,
-          //                 ),
-          //                 Expanded(
-          //                   child: InkWell(
-          //                     onTap: () {
-          //                       ModuleColor moduleColor = ModuleColor(
-          //                         moduleColor: gazOrange,
-          //                         moduleColorLight: gazOrange,
-          //                         moduleColorDark: gazOrange,
-          //                       );
-          //                       getModule(
-          //                           module: 'gas',
-          //                           moduleColor: moduleColor,
-          //                           isRestaurant: false);
-          //                     },
-          //                     child: Column(
-          //                       children: [
-          //                         ListTile(
-          //                           title: Image.asset(
-          //                             'img/gaz.png',
-          //                             height: getProportionateScreenHeight(80),
-          //                           ),
-          //                           subtitle: const Center(
-          //                               child: Text(
-          //                                 'Gaz',
-          //                                 style: TextStyle(
-          //                                     fontWeight: FontWeight.bold),
-          //                               )),
-          //                         ),
-          //                       ],
-          //                     ),
-          //                   ),
-          //                 ),
-          //               ],
-          //             ),
-          //           ),
-          //           Container(
-          //             decoration: const BoxDecoration(
-          //                 border: Border(bottom: BorderSide(color: Colors.black12,width: 1.5))
-          //             ),
-          //             height: getProportionateScreenHeight(125),
-          //             child: Row(
-          //               children: [
-          //                 Expanded(
-          //                   child: GestureDetector(
-          //                     onTap: () {
-          //                       ModuleColor moduleColor = ModuleColor(
-          //                         moduleColor:pharmacyGreen,
-          //                         moduleColorLight: pharmacyGreen,
-          //                         moduleColorDark: pharmacyGreenDark,
-          //                       );
-          //                       getModule(
-          //                           module: 'pharmacy',
-          //                           moduleColor: moduleColor,
-          //                           isRestaurant: false);
-          //                     },
-          //                     child: Column(
-          //                       children: [
-          //                         ListTile(
-          //                           title: Image.asset(
-          //                             'img/pharmacie.png',
-          //                             height: getProportionateScreenHeight(80),
-          //                           ),
-          //                           subtitle: const Center(
-          //                               child: Text(
-          //                                 'Pharmacie',
-          //                                 style: TextStyle(
-          //                                     fontWeight: FontWeight.bold),
-          //                               )),
-          //                         ),
-          //                       ],
-          //                     ),
-          //                   ),
-          //                 ),
-          //                 const VerticalDivider(
-          //                   thickness: 1.5,
-          //                 ),
-          //                 Expanded(
-          //                   child: GestureDetector(
-          //                     onTap: () {
-          //                       ModuleColor moduleColor = ModuleColor(
-          //                         moduleColor: redDark,
-          //                         moduleColorLight: redDark,
-          //                         moduleColorDark: redDark,
-          //                       );
-          //                       getModule(
-          //                           module: 'librairie',
-          //                           moduleColor: moduleColor,
-          //                           isRestaurant: false);
-          //                     },
-          //                     child: Column(
-          //                       children: [
-          //                         ListTile(
-          //                           title: Image.asset(
-          //                             'img/librairie.jpg',
-          //                             height: getProportionateScreenHeight(80),
-          //                           ),
-          //                           subtitle: const Center(
-          //                               child: Text(
-          //                                 'Librairie',
-          //                                 style: TextStyle(
-          //                                     fontWeight: FontWeight.bold),
-          //                               )),
-          //                         ),
-          //                       ],
-          //                     ),
-          //                   ),
-          //                 ),
-          //               ],
-          //             ),
-          //           ),
-          //           Container(
-          //             decoration: const BoxDecoration(
-          //                 border: Border(bottom: BorderSide(color: Colors.black12,width: 1.5))
-          //             ),
-          //             height: getProportionateScreenHeight(125),
-          //             child:Row(
-          //               children: [
-          //                 Expanded(
-          //                   child: InkWell(
-          //                     splashColor: Colors.black87,
-          //                     onTap: () {
-          //                       print('////');
-          //                     },
-          //                     child: Column(
-          //                       children: [
-          //                         ListTile(
-          //                           title: ColorFiltered(
-          //                             colorFilter: const ColorFilter.mode(
-          //                               Colors.grey,
-          //                               BlendMode.saturation,
-          //                             ),
-          //                             child: Image.asset(
-          //                               'img/fleuriste.png',
-          //                               height: getProportionateScreenHeight(80),
-          //                               fit: BoxFit.contain,
-          //                             ),
-          //                           ),
-          //                           subtitle: const Center(
-          //                               child: Text(
-          //                                 'Fleuriste',
-          //                                 style: TextStyle(
-          //                                     fontWeight: FontWeight.bold),
-          //                               )),
-          //                         ),
-          //                       ],
-          //                     ),
-          //                   ),
-          //                 ),
-          //                 const VerticalDivider(thickness: 1.5,),
-          //                 Expanded(
-          //                   child: GestureDetector(
-          //                     onTap: () {
-          //                       ModuleColor moduleColor = ModuleColor(
-          //                         moduleColor:cadeauGold,
-          //                         moduleColorLight: cadeauGold,
-          //                         moduleColorDark: cadeauGold,
-          //                       );
-          //                       getModule(
-          //                           module: 'gift',
-          //                           moduleColor: moduleColor,
-          //                           isRestaurant: false);
-          //                     },
-          //                     child: Column(
-          //                       children: [
-          //                         ListTile(
-          //                           title: Image.asset(
-          //                             'img/cadeau.png',
-          //                             height: getProportionateScreenHeight(80),
-          //                           ),
-          //                           subtitle: const Center(
-          //                               child: Text(
-          //                                 'Cadeau',
-          //                                 style: TextStyle(
-          //                                     fontWeight: FontWeight.bold),
-          //                               )),
-          //                         ),
-          //                       ],
-          //                     ),
-          //                   ),
-          //                 ),
-          //               ],
-          //             ),
-          //           ),
-          //         ],
-          //       ),
-          //     ),
-          //   ],
-          // ),
-          //     SizedBox(
-          //   height: MediaQuery.of(context).size.height * 0.8,
-          //   child: Column(
-          //     mainAxisAlignment: MainAxisAlignment.center,
-          //     mainAxisSize: MainAxisSize.min,
-          //     crossAxisAlignment: CrossAxisAlignment.start,
-          //     children: [
-          //       const Center(
-          //           child: Text(
-          //         'services disponible a ',
-          //         style: TextStyle(fontSize: 18, color: Color(0xff37474F)),
-          //       )),
-          //       Center(
-          //         child: DropdownButton<String>(
-          //           value: initialDropValue,
-          //           icon: const Icon(Icons.arrow_drop_down_outlined),
-          //           elevation: 16,
-          //           style: const TextStyle(
-          //               color: Color(0xff1A237E),
-          //               fontSize: 18,
-          //               fontWeight: FontWeight.w500),
-          //           onChanged: (String? newValue) {
-          //             setState(() {
-          //               initialDropValue = newValue!;
-          //             });
-          //           },
-          //           items: quarter.city
-          //               .map<DropdownMenuItem<String>>((String value) {
-          //             return DropdownMenuItem<String>(
-          //               value: value,
-          //               child: Text(value),
-          //             );
-          //           }).toList(),
-          //         ),
-          //       ),
-          //       Expanded(
-          //         child: Column(
-          //           mainAxisAlignment: MainAxisAlignment.center,
-          //           mainAxisSize: MainAxisSize.min,
-          //           children: [
-          //             Container(
-          //               decoration: const BoxDecoration(
-          //                   border: Border(
-          //                       bottom: BorderSide(
-          //                           color: Colors.black12, width: 1.5))),
-          //               child: Row(
-          //                 children: [
-          //                   Expanded(
-          //                     child: InkWell(
-          //                       splashColor: Colors.black87,
-          //                       onTap: () {
-          //                         for (Modules m in modules) {
-          //                           if (m != null &&
-          //                               m.slug != null &&
-          //                               m.slug == 'delivery') {
-          //                             if (m.shops != null &&
-          //                                 m.shops!.isNotEmpty) {
-          //                               ModuleColor moduleColor = ModuleColor(
-          //                                 moduleColor: Color(int.parse(
-          //                                     ColorConstant.colorPrimary)),
-          //                                 moduleColorLight: Color(int.parse(
-          //                                     ColorConstant.colorPrimary)),
-          //                                 moduleColorDark: Color(int.parse(
-          //                                     ColorConstant.primaryBleuDark)),
-          //                               );
-          //                               Navigator.of(context).push(
-          //                                   MaterialPageRoute(
-          //                                       builder:
-          //                                           (BuildContext context) =>
-          //                                               Livraison(
-          //                                                 city:
-          //                                                     initialDropValue,
-          //                                                 moduleColor:
-          //                                                     moduleColor,
-          //                                                 shops: m.shops![0],
-          //                                               )));
-          //                             }
-          //                           }
-          //                         }
-          //                       },
-          //                       child: Column(
-          //                         children: [
-          //                           ListTile(
-          //                             title: Image.asset(
-          //                               'img/livraison.png',
-          //                               height: 80,
-          //                               width: 80,
-          //                             ),
-          //                             subtitle: const Center(
-          //                                 child: Text(
-          //                               'Livraison',
-          //                               style: TextStyle(
-          //                                   fontWeight: FontWeight.bold,
-          //                                   color: Color(0xff37474F)),
-          //                             )),
-          //                           ),
-          //                         ],
-          //                       ),
-          //                     ),
-          //                   ),
-          //                   const VerticalDivider(
-          //                     thickness: 1.5,
-          //                   ),
-          //                   Expanded(
-          //                     child: InkWell(
-          //                       onTap: () {
-          //                         // Navigator.of(context).push(MaterialPageRoute(
-          //                         //     builder: (BuildContext context) =>
-          //                         //         const SuperMarket()));
-          //
-          //                         ModuleColor color = ModuleColor(
-          //                           moduleColor: Color(int.parse(
-          //                               ColorConstant.primaryGreen)),
-          //                           moduleColorLight: Color(int.parse(
-          //                               ColorConstant.primaryGreen)),
-          //                           moduleColorDark: Color(
-          //                               int.parse(ColorConstant.darkGreen)),
-          //                         );
-          //                         getModule(
-          //                             module: 'market',
-          //                             moduleColor: color,
-          //                             isRestaurant: false);
-          //                       },
-          //                       child: Column(
-          //                         children: [
-          //                           Image.asset(
-          //                             'img/supermarché.png',
-          //                             height: 80,
-          //                           ),
-          //                           Container(
-          //                               margin: const EdgeInsets.only(top: 5),
-          //                               child: const Text(
-          //                                 'supermarché',
-          //                                 style: TextStyle(
-          //                                     color: Color(0xff37474F),
-          //                                     fontSize: 15,
-          //                                     fontWeight: FontWeight.bold),
-          //                               )),
-          //                         ],
-          //                       ),
-          //                     ),
-          //                   ),
-          //                 ],
-          //               ),
-          //             ),
-          //             Container(
-          //               decoration: const BoxDecoration(
-          //                   border: Border(
-          //                       bottom: BorderSide(
-          //                           color: Colors.black12, width: 1.5))),
-          //               child: Row(
-          //                 children: [
-          //                   Expanded(
-          //                     child: InkWell(
-          //                       onTap: () {
-          //                         ModuleColor moduleColor = ModuleColor(
-          //                           moduleColor: Color(
-          //                               int.parse(ColorConstant.redDark)),
-          //                           moduleColorLight: Color(
-          //                               int.parse(ColorConstant.redDark)),
-          //                           moduleColorDark: Color(
-          //                               int.parse(ColorConstant.redDarker)),
-          //                         );
-          //                         getModule(
-          //                             module: 'restaurant',
-          //                             moduleColor: moduleColor,
-          //                             isRestaurant: true);
-          //                       },
-          //                       child: Column(
-          //                         children: [
-          //                           ListTile(
-          //                             title: Image.asset(
-          //                               'img/restaurant.png',
-          //                               height: 80,
-          //                             ),
-          //                             subtitle: const Center(
-          //                                 child: Text(
-          //                               'Restaurant',
-          //                               style: TextStyle(
-          //                                   fontWeight: FontWeight.bold),
-          //                             )),
-          //                           ),
-          //                         ],
-          //                       ),
-          //                     ),
-          //                   ),
-          //                   const VerticalDivider(
-          //                     thickness: 1.5,
-          //                   ),
-          //                   Expanded(
-          //                     child: InkWell(
-          //                       onTap: () {
-          //                         ModuleColor moduleColor = ModuleColor(
-          //                           moduleColor: Color(
-          //                               int.parse(ColorConstant.gazOrange)),
-          //                           moduleColorLight: Color(
-          //                               int.parse(ColorConstant.gazOrange)),
-          //                           moduleColorDark: Color(int.parse(
-          //                               ColorConstant.gazOrangeDark)),
-          //                         );
-          //                         getModule(
-          //                             module: 'gas',
-          //                             moduleColor: moduleColor,
-          //                             isRestaurant: false);
-          //                       },
-          //                       child: Column(
-          //                         children: [
-          //                           ListTile(
-          //                             title: Image.asset(
-          //                               'img/gaz.png',
-          //                               height: 80,
-          //                             ),
-          //                             subtitle: const Center(
-          //                                 child: Text(
-          //                               'Gaz',
-          //                               style: TextStyle(
-          //                                   fontWeight: FontWeight.bold),
-          //                             )),
-          //                           ),
-          //                         ],
-          //                       ),
-          //                     ),
-          //                   ),
-          //                 ],
-          //               ),
-          //             ),
-          //             Container(
-          //               decoration: const BoxDecoration(
-          //                   border: Border(
-          //                       bottom: BorderSide(
-          //                           color: Colors.black12, width: 1.5))),
-          //               child: Row(
-          //                 children: [
-          //                   Expanded(
-          //                     child: GestureDetector(
-          //                       onTap: () {
-          //                         ModuleColor moduleColor = ModuleColor(
-          //                           moduleColor: Color(int.parse(
-          //                               ColorConstant.pharmacyGreen)),
-          //                           moduleColorLight: Color(int.parse(
-          //                               ColorConstant.pharmacyGreen)),
-          //                           moduleColorDark: Color(int.parse(
-          //                               ColorConstant.pharmacyGreenDark)),
-          //                         );
-          //                         getModule(
-          //                             module: 'pharmacy',
-          //                             moduleColor: moduleColor,
-          //                             isRestaurant: false);
-          //                       },
-          //                       child: Column(
-          //                         children: [
-          //                           ListTile(
-          //                             title: Image.asset(
-          //                               'img/pharmacie.png',
-          //                               height: 80,
-          //                             ),
-          //                             subtitle: const Center(
-          //                                 child: Text(
-          //                               'Pharmacie',
-          //                               style: TextStyle(
-          //                                   fontWeight: FontWeight.bold),
-          //                             )),
-          //                           ),
-          //                         ],
-          //                       ),
-          //                     ),
-          //                   ),
-          //                   const VerticalDivider(
-          //                     thickness: 1.5,
-          //                   ),
-          //                   Expanded(
-          //                     child: GestureDetector(
-          //                       onTap: () {
-          //                         ModuleColor moduleColor = ModuleColor(
-          //                           moduleColor: Color(
-          //                               int.parse(ColorConstant.redDark)),
-          //                           moduleColorLight: Color(
-          //                               int.parse(ColorConstant.redDark)),
-          //                           moduleColorDark: Color(
-          //                               int.parse(ColorConstant.redDarker)),
-          //                         );
-          //                         getModule(
-          //                             module: 'librairie',
-          //                             moduleColor: moduleColor,
-          //                             isRestaurant: false);
-          //                       },
-          //                       child: Column(
-          //                         children: [
-          //                           ListTile(
-          //                             title: Image.asset(
-          //                               'img/librairie.jpg',
-          //                               height: 80,
-          //                             ),
-          //                             subtitle: const Center(
-          //                                 child: Text(
-          //                               'Librairie',
-          //                               style: TextStyle(
-          //                                   fontWeight: FontWeight.bold),
-          //                             )),
-          //                           ),
-          //                         ],
-          //                       ),
-          //                     ),
-          //                   ),
-          //                 ],
-          //               ),
-          //             ),
-          //             Container(
-          //               decoration: const BoxDecoration(
-          //                   border: Border(
-          //                 bottom:
-          //                     BorderSide(color: Colors.black12, width: 1.5),
-          //               )),
-          //               child: Row(
-          //                 children: [
-          //                   Expanded(
-          //                     child: InkWell(
-          //                       splashColor: Colors.black87,
-          //                       onTap: () {
-          //                         print('////');
-          //                       },
-          //                       child: Column(
-          //                         children: [
-          //                           ListTile(
-          //                             title: ColorFiltered(
-          //                               colorFilter: const ColorFilter.mode(
-          //                                 Colors.grey,
-          //                                 BlendMode.saturation,
-          //                               ),
-          //                               child: Image.asset(
-          //                                 'img/fleuriste.png',
-          //                                 height: 80,
-          //                                 fit: BoxFit.contain,
-          //                               ),
-          //                             ),
-          //                             subtitle: const Center(
-          //                                 child: Text(
-          //                               'Fleuriste',
-          //                               style: TextStyle(
-          //                                   fontWeight: FontWeight.bold),
-          //                             )),
-          //                           ),
-          //                         ],
-          //                       ),
-          //                     ),
-          //                   ),
-          //                   Expanded(
-          //                     child: GestureDetector(
-          //                       onTap: () {
-          //                         ModuleColor moduleColor = ModuleColor(
-          //                           moduleColor: Color(
-          //                               int.parse(ColorConstant.cadeauGold)),
-          //                           moduleColorLight: Color(
-          //                               int.parse(ColorConstant.cadeauGold)),
-          //                           moduleColorDark: Color(int.parse(
-          //                               ColorConstant.cadeauGoldDark)),
-          //                         );
-          //                         getModule(
-          //                             module: 'gift',
-          //                             moduleColor: moduleColor,
-          //                             isRestaurant: false);
-          //                       },
-          //                       child: Column(
-          //                         children: [
-          //                           ListTile(
-          //                             title: Image.asset(
-          //                               'img/cadeau.png',
-          //                               height: 80,
-          //                             ),
-          //                             subtitle: const Center(
-          //                                 child: Text(
-          //                               'Cadeau',
-          //                               style: TextStyle(
-          //                                   fontWeight: FontWeight.bold),
-          //                             )),
-          //                           ),
-          //                         ],
-          //                       ),
-          //                     ),
-          //                   ),
-          //                 ],
-          //               ),
-          //             ),
-          //           ],
-          //         ),
-          //       ),
-          //     ],
-          //   ),
-          // ),
         ),
       ),
-    );
-  }
-  Widget _buildBottomBar(){
-    return CustomAnimatedBottomBar(
-      containerHeight: 70,
-      selectedIndex: _currentIndex,
-      showElevation: true,
-      itemCornerRadius: 24,
-      curve: Curves.easeIn,
-      onItemSelected: (index) => setState(() => _currentIndex = index),
-      items: <BottomNavyBarItem>[
-        BottomNavyBarItem(
-          icon: const Icon(Icons.apps),
-          title: const Text('Home'),
-          activeColor: Colors.green,
-          inactiveColor: _inactiveColor,
-          textAlign: TextAlign.center,
-        ),
-        BottomNavyBarItem(
-          icon: const Icon(Icons.people),
-          title: const Text('Users'),
-          activeColor: Colors.purpleAccent,
-          inactiveColor: _inactiveColor,
-          textAlign: TextAlign.center,
-        ),
-        BottomNavyBarItem(
-          icon: const Icon(Icons.message),
-          title: const Text(
-            'Messages ',
-          ),
-          activeColor: Colors.pink,
-          inactiveColor: _inactiveColor,
-          textAlign: TextAlign.center,
-        ),
-        BottomNavyBarItem(
-          icon: const Icon(Icons.settings),
-          title: const Text('Settings'),
-          activeColor: Colors.blue,
-          inactiveColor: _inactiveColor,
-          textAlign: TextAlign.center,
-        ),
-      ],
     );
   }
   Widget item(Modules module, bool isAvailableInCity) {

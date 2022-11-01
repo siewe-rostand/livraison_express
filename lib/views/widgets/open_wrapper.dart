@@ -6,7 +6,7 @@ class OpenContainerWrapper extends StatelessWidget {
     Key? key,
     required this.closedBuilder,
     this.transitionType,
-    required this.onClosed,
+    this.onClosed,
     required this.nextPage
   }): super(key: key);
 

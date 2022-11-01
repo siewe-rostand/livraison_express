@@ -1,7 +1,5 @@
 import 'dart:convert';
-import 'dart:developer';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,18 +9,13 @@ import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:livraison_express/constant/all-constant.dart';
 import 'package:livraison_express/data/user_helper.dart';
 import 'package:livraison_express/service/api_auth_service.dart';
-import 'package:livraison_express/utils/main_utils.dart';
 import 'package:livraison_express/utils/size_config.dart';
 import 'package:livraison_express/views/login/register.dart';
 import 'package:livraison_express/views/login/verification_code.dart';
-import 'package:livraison_express/views/widgets/custom_dialog.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:livraison_express/views/widgets/social-card.dart';
 
-import '../../model/auto_gene.dart';
 import '../../model/city.dart';
 import '../../service/fire-auth.dart';
-import '../../service/main_api_call.dart';
-import '../home/home-page.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -41,53 +34,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final emailTextController = TextEditingController();
   String countryCode = '';
   List<City> cities = [];
-
-  Future<FirebaseApp> _initializeFirebase() async {
-    FirebaseApp firebaseApp = await Firebase.initializeApp();
-
-    // User? user = FirebaseAuth.instance.currentUser;
-    //
-    // if (user != null) {
-    //   List<Modules> modules = await MainApi.getModuleConfigs(city: "douala");
-    //   // user.getIdToken(true).then((value) => print(value));
-    //   Navigator.of(context).pushReplacement(
-    //     MaterialPageRoute(
-    //       builder: (context) =>  HomePage(
-    //         modules: modules,
-    //       ),
-    //     ),
-    //   );
-    // }
-
-    return firebaseApp;
-  }
-
-  void showMessage({required String message, required String title}) {
-    showDialog(
-        context: context,
-        builder: (BuildContext builderContext) {
-          return AlertDialog(
-            title: Text(title),
-            content: Text(message),
-            actions: [
-              TextButton(
-                child: const Text("Ok"),
-                onPressed: () async {
-                  Navigator.of(builderContext).pop();
-                  setState(() {
-                    _isProcessing = false;
-                  });
-                },
-              )
-            ],
-          );
-        }).then((value) {
-      setState(() {
-        _isProcessing = false;
-      });
-    });
-  }
-
   @override
   void initState() {
     _isPhone = true;
@@ -261,78 +207,22 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      InkWell(
-                        onTap: () async {
-                          await FireAuth(
-                                  progressDialog:
-                                      getProgressDialog(context: context))
-                              .signInWithGoogle(context: context);
-                        },
-                        child: CircleAvatar(
-                            backgroundColor: const Color(0xff4d000000),
-                            radius: 30.0,
-                            child: CircleAvatar(
-                              radius: 28,
-                              backgroundColor: const Color(0xffF7F7F7),
-                              child: SvgPicture.asset(
-                                'img/social/ic_google_icon.svg',
-                              ),
-                            )),
-                      ),
-                      InkWell(
-                        onTap: () async {
-                          await FireAuth(
-                                  progressDialog:
-                                      getProgressDialog(context: context))
-                              .signInWithFacebook(context: context)
-                              .then((value) {
-                            // setState(() {
-                            //   _isProcessing = true;
-                            // });
-                          }).catchError((onError) {});
-
-                          // if (user != null) {
-                          //   Navigator.of(context)
-                          //       .pushReplacement(
-                          //     MaterialPageRoute(
-                          //       builder: (context) =>
-                          //       const HomePage(),
-                          //     ),
-                          //   );
-                          // }
-                        },
-                        child: CircleAvatar(
-                          radius: 33.0,
-                          child: SvgPicture.asset(
-                            'img/social/ic_facebook_logo.svg',
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                      InkWell(
-                        onTap: () async {
-                          await FireAuth.performLogin('yahoo.com',
-                              ['openid mail-r'], {'language': 'fr'});
-                        },
-                        child: CircleAvatar(
-                            backgroundColor: Colors.black54,
-                            radius: 35.0,
-                            child: CircleAvatar(
-                              radius: 32,
-                              backgroundColor: Colors.purple.shade800,
-                              child: CircleAvatar(
-                                backgroundColor: Colors.pink,
-                                radius: 26,
-                                child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(32),
-                                    child: Image.asset(
-                                      'img/social/yahoo.png',
-                                      height: 53,
-                                      fit: BoxFit.fill,
-                                    )),
-                              ),
-                            )),
-                      ),
+                      SocialCard(icon: 'img/social/ic_google_icon.svg', press: () async {
+                        await FireAuth(
+                            progressDialog:
+                            getProgressDialog(context: context))
+                            .signInWithGoogle(context: context);
+                      }),
+                      SocialCard(icon: 'img/social/ic_facebook_logo.svg', press: () async {
+                        await FireAuth(
+                            progressDialog:
+                            getProgressDialog(context: context))
+                            .signInWithFacebook(context: context);
+                      }),
+                      SocialCard(icon: 'assets/images/ic_yahoo.svg', press: () async {
+                        await FireAuth.performLogin('yahoo.com',
+                            ['openid mail-r'], {'language': 'fr'});
+                      },)
                     ],
                   ),
                 ),

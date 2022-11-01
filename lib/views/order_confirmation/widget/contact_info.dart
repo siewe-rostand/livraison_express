@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:livraison_express/model/client.dart';
 
 import '../../../model/orders.dart';
 import '../../../utils/size_config.dart';
@@ -38,7 +39,7 @@ class ContactInfo extends StatelessWidget {
             children: [
               item(
                   label: 'Nom et prénom',
-                  value: contact.fullname!
+                  value: contact.fullName!
               ),
               item(
                   label: 'Email',

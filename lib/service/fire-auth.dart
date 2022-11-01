@@ -159,8 +159,6 @@ class FireAuth {
   static Future<void> signOutFromGoogle() async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
     preferences.clear();
-    DBHelper dbHelper = DBHelper();
-    // await dbHelper.deleteAll();
     final FirebaseAuth _auth = FirebaseAuth.instance;
     final GoogleSignIn _googleSignIn = GoogleSignIn();
     User? user = _auth.currentUser;
@@ -193,19 +191,13 @@ class FireAuth {
       UserCredential? userCredential = await FirebaseAuth.instance
           .signInWithCredential(facebookAuthCredential);
       user = userCredential.user;
-      AppUser1 appUser1 = AppUser1();
-      appUser1.email = user?.email;
-      appUser1.firstname = user?.displayName;
-      appUser1.lastname = user?.displayName;
-      // appUser1.id =user?.uid as int?;
       String? token = await user?.getIdToken();
       debugPrint('firebase token ${loginResult.accessToken}');
-      var b = await ApiAuthService(
+      await ApiAuthService(
               context: context,
               fromLogin: true,
               progressDialog: getProgressDialog(context: context))
           .getAccessToken(firebaseTokenId: token!);
-      print('/// ${b.body}');
     } on FirebaseAuthException catch (e) {
       progressDialog.hide();
       if (e.code == 'account-exists-with-different-credential') {
@@ -276,7 +268,5 @@ class FireAuth {
     preferences.clear();
     await _auth.signOut();
     await _googleSignIn.signOut();
-    DBHelper dbHelper = DBHelper();
-    // await dbHelper.deleteAll();
   }
 }

@@ -209,11 +209,7 @@ class ApiAuthService {
     );
     if (response.statusCode == 200) {
       var body = json.decode(response.body);
-      // print("body $body");
       String accessToken = body['access_token'];
-      // token = accessToken;
-      // UserHelper.token=accessToken;
-       logger.d(response.body);
       getUserProfile(accessToken);
       return response;
     } else {
@@ -524,8 +520,6 @@ class ApiAuthService {
         UserHelper.currentUser1 = appUser1;
         final userData = json.encode(appUser1);
         preferences.setString("userData", userData);
-        logger.i(
-            'user profile //${appUser1.emailVerifiedAt}//${appUser1.phoneVerifiedAt}');
         getConfigs();
       } else {
         progressDialog!.hide();

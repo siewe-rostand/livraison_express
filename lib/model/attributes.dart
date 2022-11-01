@@ -1,5 +1,4 @@
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:livraison_express/constant/some-constant.dart';
 import 'package:livraison_express/model/options.dart';
 
 class Attributes{
@@ -7,13 +6,8 @@ class Attributes{
   String? name;
   int? requiredChoiceQuota;
   List<Options>? options;
-  Attributes({this.id,this.name,this.options,this.requiredChoiceQuota});
 
-  static Map<String, dynamic> toMap(Attributes attribute) => {
-    AttributeConstant.id: attribute.id,
-    AttributeConstant.name: attribute.name,
-    AttributeConstant.requiredChoiceQuota: attribute.requiredChoiceQuota,
-  };
+  Attributes({this.id,this.name,this.options,this.requiredChoiceQuota});
 
   Attributes.fromJson(Map<String, dynamic> json) {
     id = json['id'];

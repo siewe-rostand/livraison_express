@@ -26,16 +26,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(providers: [
-      ChangeNotifierProvider(create: (context)=>Cart()),
       ChangeNotifierProvider(create: (context)=>CartProvider()),
-      ChangeNotifierProvider(create: (context)=>CartProvider1()),
       ChangeNotifierProvider(create: (context)=>QuarterProvider()),
     ],
     child: MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
-      theme: ThemeData().copyWith(
-        primaryColor:  const Color(0xff2a5ca8),
+      title: 'Livraison Express',
+      theme: ThemeData(fontFamily: 'Muli').copyWith(
+        primaryColor:  primaryColor,
         pageTransitionsTheme: const PageTransitionsTheme(
           builders: <TargetPlatform, PageTransitionsBuilder>{
             TargetPlatform.android: ZoomPageTransitionsBuilder()

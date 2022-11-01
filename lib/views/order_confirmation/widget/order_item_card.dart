@@ -108,7 +108,7 @@ class OrderItemCard extends StatelessWidget {
               children: [
                 Expanded(
                     child: Text(
-                      order.sender!.adresses![0].quarter??saveOrder.sender!.adresses![0].quarter!,
+                      order.sender!.addresses![0].quarter??saveOrder.sender!.addresses![0].quarter!,
                       textAlign: TextAlign.center,
                     )),
                 Icon(
@@ -117,7 +117,7 @@ class OrderItemCard extends StatelessWidget {
                 ),
                 Expanded(
                     child: Text(
-                      order.receiver!.adresses![0].quarter!,
+                      order.receiver!.addresses![0].quarter!,
                       textAlign: TextAlign.center,
                     )),
               ],
@@ -155,7 +155,7 @@ class OrderItemCard extends StatelessWidget {
                         Icon(Icons.monetization_on, size: getProportionateScreenWidth(15),),
                         SizedBox(width: getProportionateScreenWidth(4),),
                         Text(
-                          '${order.paiement!.montantTotal} FCFA',
+                          '${order.paiement!.totalAmount} FCFA',
                           style: TextStyle(),
                         )
                       ],

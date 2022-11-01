@@ -1,6 +1,5 @@
-import 'package:flutter/cupertino.dart';
+
 import 'package:flutter/material.dart';
-import 'package:livraison_express/model/module_color.dart';
 
 const mainColor=Color(0xff5d69b3);
 const redDark = Color(0XFFEF5350);
@@ -9,15 +8,17 @@ const gazOrange = Color(0XFFFF9B37);
 const gazOrangeDark = Color(0XFFC76C00);
 const primaryGreen = Color(0XFF83C127);
 const primaryGreenDark = Color(0XFF007100);
+const kPrimaryLightBackground = Color(0xFFD4EBF2);
 
 const darkGreen = Color(0XFF509000);
 const cadeauGold = Color(0XFFFCC201);
 const cadeauGoldDark = Color(0XFFB78628);
-const primaryColor = Color(0XFF2A5CA8);
+const primaryColor = Color(0xFF2A5CA8);
+const primaryRed = Color(0xFFB72025);
 const primaryColorDark = Color(0XFF003378);
 const primaryBleuDark = Color(0XFF003378);
-const pharmacyGreen = Color(0XFF00A117);
-const pharmacyGreenDark = Color(0XFF007100);
+const pharmacyGreen = Color(0xFF00A117);
+const pharmacyGreenDark = Color(0xFF509000);
 const grey80 = Color(0XFF37474F);
 const grey90 = Color(0XFF263238);
 const grey40 = Color(0XFF999999);
@@ -57,7 +58,7 @@ const catForeGradient = LinearGradient(
     Color.fromRGBO(161, 196, 253, 1),
   ],
 );
- LinearGradient kAppBarGradient = LinearGradient(
+ LinearGradient kAppBarGradient = const LinearGradient(
   begin: Alignment.centerLeft,
   end: Alignment.centerRight,
   colors: [

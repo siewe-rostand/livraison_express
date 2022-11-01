@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
@@ -8,9 +7,6 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/model/address-favorite.dart';
-import 'package:livraison_express/model/auto_gene.dart';
-import 'package:livraison_express/model/module_color.dart';
 import 'package:livraison_express/utils/size_config.dart';
 import 'package:livraison_express/views/MapView.dart';
 import 'package:livraison_express/views/address_detail/selected_fav_address.dart';
@@ -18,15 +14,16 @@ import 'package:livraison_express/views/restaurant/delivery_address.dart';
 import 'package:livraison_express/views/restaurant/resto_home.dart';
 import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 
-import '../../model/magasin.dart';
+import '../../model/address.dart';
+import '../../model/module.dart';
+import '../../model/shop.dart';
 import '../../service/shopService.dart';
 import '../widgets/custom_alert_dialog.dart';
 
 class Restaurant extends StatefulWidget {
   const Restaurant(
-      {Key? key, this.moduleId, })
+      {Key? key })
       : super(key: key);
-  final int? moduleId;
 
   @override
   State<Restaurant> createState() => _RestaurantState();
@@ -35,8 +32,9 @@ class Restaurant extends StatefulWidget {
 class _RestaurantState extends State<Restaurant> {
   double latitude = 0.0;
   late ProgressDialog progressDialog;
+  Modules modules =Modules();
+  bool isLoading = false;
   double longitude = 0.0;
-  bool isLoading = false, canDeliver = false;
   bool isToday = false;
   String currentText = "";
   String currentTime = '';
@@ -106,48 +104,6 @@ class _RestaurantState extends State<Restaurant> {
         desiredAccuracy: LocationAccuracy.high);
   }
 
-  bool isOpened(List<DayItem> items) {
-    bool juge = false;
-
-    if (items.isNotEmpty) {
-      for (DayItem item in items) {
-        String? openTime = item.openedAt;
-        String? closeTime = item.closedAt;
-        if (openTime != null &&
-            openTime.isNotEmpty &&
-            closeTime != null &&
-            closeTime.isNotEmpty) {
-          DateTime now = DateTime.now();
-          dateFormat = DateFormat.Hm();
-          currentTime = dateFormat.format(now);
-          try {
-            var nw1 = currentTime.substring(0, 2);
-            var a1 = currentTime.substring(3, 5);
-            var nw = openTime.substring(0, 2);
-            var a = openTime.substring(3, 5);
-            var cnm = closeTime.substring(0, 2);
-            var cla = closeTime.substring(3, 5);
-            DateTime currentTimeStamp = DateTime(
-                now.year, now.month, now.day, int.parse(nw1), int.parse(a1), 0);
-            DateTime openTimeStamp = DateTime(
-                now.year, now.month, now.day, int.parse(nw), int.parse(a), 0);
-            DateTime closeTimeStamp = DateTime(now.year, now.month, now.day,
-                int.parse(cnm), int.parse(cla), 0);
-            if (currentTimeStamp.isAtSameMomentAs(openTimeStamp) &&
-                currentTimeStamp.isAfter(openTimeStamp) &&
-                currentTimeStamp.isBefore(closeTimeStamp)) {
-              juge = true;
-              break;
-            }
-          } catch (e) {
-            debugPrint('restaurant today time exce// $e');
-          }
-        }
-      }
-    }
-    return juge;
-  }
-
   showError(String title, String message,
       {String icon = 'img/icon/svg/alert_round.svg'}) {
     UserHelper.userExitDialog(
@@ -168,20 +124,18 @@ class _RestaurantState extends State<Restaurant> {
     double latitude,
     double longitude,
   ) async {
-    await progressDialog.show();
     String city = await UserHelper.getCity();
-    List<Shops> shops = await ShopServices()
+    List<Shops> shops = await ShopServices(context: context,progressDialog: getProgressDialog(context: context))
         .getShops(
-            moduleId: widget.moduleId!,
+            moduleId: modules.id!,
             city: city,
             latitude: latitude,
             longitude: longitude,
             inner_radius: 0,
             outer_radius: 5)
         .then((value) async{
-          await progressDialog.hide();
       debugPrint('restaurant current pos// ${value[0].adresseFavorite}');
-      AddressFavorite? addressFav = value[0].adresseFavorite;
+      Adresse? addressFav = value[0].adresseFavorite;
       var avf = json.encode(addressFav);
       // MySession.saveValue('delivery_address', avf);
       return value;
@@ -192,7 +146,7 @@ class _RestaurantState extends State<Restaurant> {
     if (shops.isNotEmpty) {
       Navigator.of(context).pushReplacement(MaterialPageRoute(
           builder: (context) => DeliveryAddress(
-                moduleId: widget.moduleId!,
+                moduleId: modules.id!,
                 city: city,
                 latitude: latitude,
                 longitude: longitude,
@@ -200,42 +154,14 @@ class _RestaurantState extends State<Restaurant> {
               )));
     }
   }
-  addressOnMap()async{
-    String city =
-    await UserHelper.getCity();
-    var result =
-    await Navigator.of(context).push(
-        MaterialPageRoute(
-            builder: (context) =>
-            const MapsView()));
-    setState(() {
-      placeLon =
-          result['Longitude'] ?? 0.0;
-      placeLat =
-          result['Latitude'] ?? 0.0;
-      location = result['location'];
-      print(
-          '//received from map $placeLon / $placeLat');
-    });
-    if (placeLon != null &&
-        placeLon != 0.0 &&
-        placeLat != null &&
-        placeLat != 0.0) {
-      setState(() {
-        isLoading = !isLoading;
-        message = 'chargement ...';
-      });
-  }
-    getShops(placeLat!, placeLon!);
-  }
 
   @override
   void initState() {
     progressDialog = getProgressDialog(context: context);
     super.initState();
+    modules = UserHelper.module;
     fToast = FToast();
     fToast.init(context);
-    debugPrint('$isLoading');
     message = 'Bienvenue dans mon restaurant.'
         'Commencez par choisir une adresse de livraison.';
   }

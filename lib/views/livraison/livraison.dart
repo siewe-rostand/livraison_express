@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:livraison_express/model/auto_gene.dart';
 import 'package:livraison_express/model/module_color.dart';
 import 'package:livraison_express/views/livraison/commande-coursier.dart';
+
+import '../../model/shop.dart';
 
 class Livraison extends StatefulWidget {
   final String city;

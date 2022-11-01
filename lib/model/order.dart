@@ -1,45 +1,90 @@
-import 'package:livraison_express/model/articles.dart';
 
-class Order{
+import 'package:livraison_express/model/product.dart';
+
+
+class Orders {
+  int? idLivraison;
+  int? idAchat;
+  int? moduleId;
   String? module;
-  String? description;
-  String? promoCode;
-  String? commentaire;
   int? magasinId;
-  int? montantTotal;
+  String? magasin;
   int? montantLivraison;
-  List<Article>? articles;
+  int? montantRecuperation;
+  int? montantExpedition;
+  int? montantAchat;
+  int? montantTotal;
+  String? codePromo;
+  String? commentaire;
+  String? type;
+  String? gratuitePour;
+  String? commentaireClient;
+  String? description;
+  List<Products>? listeArticles;
 
-  Order({
-   this.magasinId,this.description,this.module,this.articles,this.commentaire,this.montantLivraison,
-   this.montantTotal,this.promoCode
-});
+  Orders(
+      {this.idLivraison,
+        this.idAchat,
+        this.moduleId,
+        this.module,
+        this.magasinId,
+        this.magasin,
+        this.montantLivraison,
+        this.montantRecuperation,
+        this.montantExpedition,
+        this.montantAchat,
+        this.montantTotal,
+        this.codePromo,
+        this.commentaire,
+        this.type,
+        this.gratuitePour,
+        this.commentaireClient,
+        this.description});
 
-  Order.fromJson(Map<String, dynamic> json) {
-    module = json['module'];
-    description = json['description'];
-    montantLivraison = json['montant_livraison'];
-    montantTotal = json['montant_total'];
-    promoCode = json['code_promo'];
-    commentaire = json['commentaire'];
-    if (json['liste_articles'] != null) {
-      articles = <Article>[];
-      json['liste_articles'].forEach((v) {
-        articles!.add(Article.fromJson(v));
-      });
-    }
+  Orders.fromJson(Map<String, dynamic> json) {
+    idLivraison = json["id_livraison"];
+    idAchat = json["id_achat"];
+    moduleId = json["module_id"];
+    module = json["module"];
+    magasinId = json["magasin_id"];
+    magasin = json["magasin"];
+    montantLivraison = json["montant_livraison"];
+    montantRecuperation = json["montant_recuperation"];
+    montantExpedition = json["montant_expedition"];
+    montantAchat = json["montant_achat"];
+    montantTotal = json["montant_total"];
+    codePromo = json["code_promo"];
+    commentaire = json["commentaire"];
+    type = json["type"];
+    gratuitePour = json["gratuite_pour"];
+    commentaireClient = json["commentaire_client"];
+    description = json["description"];
+    listeArticles = json["listeArticles"] == null
+        ? null
+        : (json["listeArticles"] as List).map((e) => Products.fromJson(e)).toList();
   }
+
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
-    data['module'] = module;
-    data['magasin_id'] = magasinId;
-    data['description'] = description;
-    data['montant_livraison'] = montantLivraison;
-    data['montant_total'] = montantTotal;
-    data['code_promo'] = promoCode;
-    data['commentaire'] = commentaire;
-    if (articles != null) {
-      data['liste_articles'] = articles!.map((v) => v.toJson()).toList();
+    data["id_livraison"] = idLivraison;
+    data["id_achat"] = idAchat;
+    data["module_id"] = moduleId;
+    data["module"] = module;
+    data["magasin_id"] = magasinId;
+    data["magasin"] = magasin;
+    data["montant_livraison"] = montantLivraison;
+    data["montant_recuperation"] = montantRecuperation;
+    data["montant_expedition"] = montantExpedition;
+    data["montant_achat"] = montantAchat;
+    data["montant_total"] = montantTotal;
+    data["code_promo"] = codePromo;
+    data["commentaire"] = commentaire;
+    data["type"] = type;
+    data["gratuite_pour"] = gratuitePour;
+    data["commentaire_client"] = commentaireClient;
+    data["description"] = description;
+    if (listeArticles != null) {
+      data["liste_articles"] = listeArticles?.map((e) => e.toJson()).toList();
     }
     return data;
   }

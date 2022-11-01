@@ -15,7 +15,7 @@ import 'api_auth_service.dart';
 
 class CourseApi {
   final logger  =Logger();
-  static Future<List<Command>> getOrders() async {
+  Future<List<Command>> getOrders() async {
     String url = '$baseUrl/user/delivery';
     Response response = await get(Uri.parse(url), headers: {
       "Authorization": 'Bearer $token',
@@ -28,11 +28,10 @@ class CourseApi {
       var res = body['data'] as List;
       List<Command> order;
       order=res.map((json) => Command.fromJson(json)).toList();
-      // log("message ${order.first.toJson()} //");
       return order;
     } else {
       var body = json.decode(response.body);
-      print(response.body);
+      logger.e(response.body);
       var message = body['message'];
       throw Exception(message);
     }
@@ -222,7 +221,7 @@ class CourseApi {
        return response;
      } else {
        var body = json.decode(response.body);
-       print(response.body);
+       logger.e(response.body);
        var message = body['message'];
        throw Exception(message);
      }

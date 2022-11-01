@@ -1,58 +1,9 @@
-import 'package:flutter/cupertino.dart';
-import 'package:livraison_express/constant/some-constant.dart';
+
+
+import 'package:livraison_express/model/image.dart';
 
 import 'attributes.dart';
 
-class Product {
-  final int id;
-  final String name;
-  final int unitPrice;
-  final String image;
-  int? quantity;
-
-  Product({
-    required this.name,
-    required this.unitPrice,
-    required this.image,
-    this.quantity,
-    required this.id,
-  });
-
-  static Map<String, dynamic> toMap(Product products) => {
-        'id': products.id,
-        'name': products.name,
-        'image': products.image,
-        'quantity': products.quantity,
-        'unitPrice': products.unitPrice,
-      };
-
-  factory Product.fromJson(Map<String, dynamic> json) {
-    return Product(
-      id: json['id'],
-      name: json['name'],
-      unitPrice: json['unitPrice'],
-      image: json['image'],
-      quantity: json['quantity'],
-    );
-  }
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-
-    data['name'] = name;
-    data['quantity'] = quantity;
-    data['unitPrice'] = unitPrice;
-    data['image'] = image;
-
-    return data;
-  }
-  //  Map<String, dynamic> toJson() => {
-  //   'id': id,
-  //   'name': name,
-  //   'image': image,
-  //   'quantity': quantity,
-  //   'unitPrice': unitPrice,
-  // };
-}
 class Products {
   int? id;
   int? magasinId;
@@ -61,10 +12,12 @@ class Products {
   int? possessionId;
   int? possessionCategorieId;
   int? categorieId;
+  int? subCategoryId;
   String? libelle;
   String? detail;
   String? slug;
   int? prixUnitaire;
+  int? subTotalAmount;
   int? quantiteDispo;
   Null? disponibiliteGeneral;
   String? brandName;
@@ -73,7 +26,7 @@ class Products {
   int? type;
   String? image;
   String? typeHuman;
-  List<Null>? images;
+  List<Image>? images;
   bool? isActive;
   Null? isAvailable;
   int? tempsPreparation;
@@ -92,6 +45,7 @@ class Products {
         this.possessionId,
         this.possessionCategorieId,
         this.categorieId,
+        this.subCategoryId,
         this.libelle,
         this.detail,
         this.slug,
@@ -116,7 +70,8 @@ class Products {
         this.updatedAt,
         this.deletedAt,
         this.extra,
-      this.totalPrice,
+        this.totalPrice,
+        this.subTotalAmount,
         this.quantity
       });
 
@@ -128,6 +83,7 @@ class Products {
     possessionId = json['possession_id'];
     possessionCategorieId = json['possession_categorie_id'];
     categorieId = json['categorie_id'];
+    subCategoryId = json['souscategorie_id'];
     libelle = json['libelle'];
     detail = json['detail'];
     slug = json['slug'];
@@ -141,16 +97,18 @@ class Products {
     typeHuman = json['type_human'];
     isActive = json['is_active'];
     isAvailable = json['is_available'];
+    subTotalAmount = json['montant_soustotal'];
     tempsPreparation = json['temps_preparation'];
     maxOption = json['max_option'];
     createdAt = json['created_at'];
     updatedAt = json['updated_at'];
     deletedAt = json['deleted_at'];
     attributes=json["attributes"]==null ? null : (json["attributes"] as List).map((e)=>Attributes.fromJson(e)).toList();
+    images=json["images"]==null ? null : (json["images"] as List).map((e)=>Image.fromJson(e)).toList();
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
+    final Map<String, dynamic> data = <String, dynamic>{};
     data['id'] = id;
     data['magasin_id'] = magasinId;
     data['prix_total'] = totalPrice;
@@ -158,7 +116,9 @@ class Products {
     data['possession_id'] = possessionId;
     data['possession_categorie_id'] = possessionCategorieId;
     data['categorie_id'] = categorieId;
+    data['souscategorie_id'] = subCategoryId;
     data['libelle'] = libelle;
+    data['montant_soustotal'] = subTotalAmount;
     data['detail'] = detail;
     data['slug'] = slug;
     data['prix_unitaire'] = prixUnitaire;
@@ -179,6 +139,9 @@ class Products {
     data['deleted_at'] = deletedAt;
     if(attributes != null) {
         data["attributes"] = attributes?.map((e)=>e.toJson()).toList();
+    }
+    if(images != null) {
+        data["images"] = images?.map((e)=>e.toJson()).toList();
     }
     return data;
   }

@@ -22,9 +22,9 @@ class CustomFloatingButton extends StatelessWidget {
           badgeColor: UserHelper.getColorDark(),
           animationType: BadgeAnimationType.scale,
           badgeContent: Consumer<CartProvider>(
-            builder: (_, cart, child) {
+            builder: (context, cart, child) {
               return Text(
-                (cart.getCounter()).toString(),
+                cart.getCounter().toString(),
                 style: const TextStyle(
                     fontWeight: FontWeight.bold, fontSize: 12,color: Colors.white),
               );

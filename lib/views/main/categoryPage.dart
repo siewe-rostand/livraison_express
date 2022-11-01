@@ -1,10 +1,7 @@
-import 'package:badges/badges.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/model/auto_gene.dart';
 import 'package:livraison_express/model/category.dart';
 import 'package:livraison_express/provider/nav_view_model.dart';
 import 'package:livraison_express/service/shopService.dart';
@@ -12,14 +9,11 @@ import 'package:livraison_express/utils/size_config.dart';
 import 'package:livraison_express/views/main/product_page.dart';
 import 'package:livraison_express/views/main/sub_category.dart';
 import 'package:livraison_express/views/widgets/floating_action_button.dart';
-import 'package:livraison_express/views/widgets/search_Text_field.dart';
-import 'package:provider/provider.dart';
 
 import '../../constant/color-constant.dart';
-import '../../model/module_color.dart';
+import '../../model/shop.dart';
 import '../../utils/main_utils.dart';
 import '../custom-container.dart';
-import '../super-market/cart-provider.dart';
 import '../super-market/cart.dart';
 import '../widgets/open_wrapper.dart';
 
@@ -186,8 +180,8 @@ class _CategoryPageState extends State<CategoryPage> {
                 future: ShopServices.getCategories(shopId: shops.id!),
                 builder: (context,snapshot){
                   if(snapshot.hasData){
+                    fromCategory = true;
                      categories =snapshot.data!;
-                     fromCategory =true;
                     return Container(
                       color: Colors.white,
                       child: SingleChildScrollView(
@@ -262,8 +256,11 @@ class _CategoryPageState extends State<CategoryPage> {
                       ),
                     );
                   }else{
-                    return const Center(
-                      child: CircularProgressIndicator(),
+                    return Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(UserHelper.getColorDark()),
+                        strokeWidth: 2.5,
+                      ),
                     );
                   }
                 },
@@ -273,7 +270,7 @@ class _CategoryPageState extends State<CategoryPage> {
               closedBuilder: (BuildContext c, VoidCallback openContainer){
                 return CustomFloatingButton(onTap: openContainer,);
               },
-              nextPage: CartPage(),
+              nextPage: const CartPage(),
               onClosed:  (v) async => Future.delayed(
                   const Duration(milliseconds: 500)),
             ),

@@ -12,11 +12,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../constant/color-constant.dart';
 import '../../data/local_db/db-helper.dart';
 import '../../data/user_helper.dart';
-import '../../model/auto_gene.dart';
 import '../../model/city.dart';
 import '../../model/day_item.dart';
 import '../../model/horaire.dart';
+import '../../model/module.dart';
 import '../../model/module_color.dart';
+import '../../model/shop.dart';
 import '../../service/api_auth_service.dart';
 import '../../utils/size_config.dart';
 import '../expand-fab.dart';
@@ -141,9 +142,7 @@ class _ModuleCardState extends State<ModuleCard> {
             // categoryList = await ShopServices.getCategories(shopId: shopsList![0].id!);
             var moduleId = modul.id;
             Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => Restaurant(
-                  moduleId: moduleId,
-                )));
+                builder: (context) => const Restaurant()));
           } else {
             try {
               if (shopsList!.isNotEmpty) {
@@ -207,7 +206,7 @@ class _ModuleCardState extends State<ModuleCard> {
     modules.clear();
     pref.remove('cart_item');
     pref.remove('total_price');
-    dbHelper.deleteAlls();
+    dbHelper.deleteAll();
     String url = "$baseUrl/modules?city=$cityString";
     final response = await get(Uri.parse(url)).catchError((e) {
       print(e.toString());

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:http/http.dart';
 import 'package:livraison_express/model/product.dart';
@@ -128,6 +129,7 @@ class ProductService {
     );
     if (response.statusCode == 200) {
       // print('main ${stores[0]}');
+      log("message${response.body}");
       return response;
     } else {
       print('errr ${response.body}');
