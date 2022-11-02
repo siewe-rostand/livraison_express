@@ -36,7 +36,7 @@ class ProductPage extends StatefulWidget {
 
 class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin {
   late AnimationController animationController;
-  DBHelper? dbHelper = DBHelper();
+  DBHelper1? dbHelper = DBHelper1();
   final logger = Logger();
   TextEditingController controller = TextEditingController();
   List<Products> products = [];
@@ -151,13 +151,13 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
     json.decode(userString!);
     AppUser1 user = AppUser1.fromJson(extractedUserData);
 
-    dbHelper!
-        .insert(CartItem1(
+    dbHelper
+        ?.insert(CartItem(
         id: index,
         title: products[
         index]
             .libelle!,
-        quantity: ValueNotifier(1),
+        quantity: 1,
         price: products[
         index]
             .prixUnitaire!,
@@ -195,31 +195,17 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
           .addCounter();
       Navigator.of(context)
           .pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content:Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(25.0),
-                color: UserHelper.getColor(),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children:  [
-                  const Icon(Icons.check),
-                  SizedBox(
-                    width: getProportionateScreenWidth(12.0),
-                  ),
-                  Flexible(child: Text("${products[index].libelle!} a ete ajouter au panier")),
-                ],
-              ),
-            ),
-            duration: const Duration(seconds: 2),
-            backgroundColor: Colors.transparent,
-          ));
+      const snackBar = SnackBar(backgroundColor: Colors.green,content: Text('Product is added to cart'), duration: Duration(seconds: 1),);
+
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }).onError((error,
         stackTrace) {
+      _show = false;
+      showFab=true;
       logger.e(' ---- ${error.toString()}');
+      const snackBar = SnackBar(backgroundColor: Colors.red ,content: Text('Product is already added in cart'), duration: Duration(seconds: 1));
+
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
     });
 
   }

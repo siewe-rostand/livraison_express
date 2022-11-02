@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:livraison_express/constant/all-constant.dart';
 import 'package:livraison_express/model/category.dart';
@@ -88,18 +89,9 @@ showToast(
     {required BuildContext context,
     required String text,
     required IconData iconData,
+      ToastGravity? gravity,
     required Color color}) {
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-    content: SizedBox(
-      width: double.infinity,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [Icon(iconData), Expanded(child: Text(text))],
-      ),
-    ),
-    backgroundColor: color,
-    duration: const Duration(milliseconds: 750),
-  ));
+  Fluttertoast.showToast(msg: text,backgroundColor: color,gravity:gravity ?? ToastGravity.BOTTOM);
 }
 
 errorDialog({required BuildContext context,required String title,required String message,required Function() onTap}){

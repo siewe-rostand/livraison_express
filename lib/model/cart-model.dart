@@ -99,20 +99,20 @@ class CartItem1 {
 }
 
 class CartItem {
- late final int? id;
- final String? title;
- final int? quantity;
- final int? price;
- final int? unitPrice;
- final int? quantityMax;
- final int? totalPrice;
- final int? productId;
- final int? categoryId;
- final int? userId;
- final String image;
- final String? complement;
- final int? preparationTime;
- final String? moduleSlug;
+  int? id;
+  String? title;
+  int? quantity;
+  int? price;
+  int? unitPrice;
+  int? quantityMax;
+  int? totalPrice;
+  int? productId;
+  int? categoryId;
+  int? userId;
+  String image;
+  String? complement;
+  int? preparationTime;
+  String? moduleSlug;
 
   CartItem(
       {required this.id,

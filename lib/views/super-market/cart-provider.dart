@@ -18,9 +18,9 @@ class CartProvider with ChangeNotifier {
   double _totalPrice = 0.0;
   double get totalPrice => _totalPrice;
 
-  List<CartItem1> cart = [];
+  List<CartItem> cart = [];
 
-  Future<List<CartItem1>> getData() async {
+  Future<List<CartItem>> getData() async {
     cart = await dbHelper.getCartList();
     notifyListeners();
     return cart;
@@ -71,24 +71,24 @@ class CartProvider with ChangeNotifier {
     return _counter;
   }
 
-  void addQuantity(int id) {
-    final index = cart.indexWhere((element) => element.id == id);
-    cart[index].quantity!.value = cart[index].quantity!.value + 1;
-    _setPrefsItems();
-    notifyListeners();
-  }
+  // void addQuantity(int id) {
+  //   final index = cart.indexWhere((element) => element.id == id);
+  //   cart[index].quantity = cart[index].quantity!.value + 1;
+  //   _setPrefsItems();
+  //   notifyListeners();
+  // }
 
-  void deleteQuantity(int id) {
-    final index = cart.indexWhere((element) => element.id == id);
-    final currentQuantity = cart[index].quantity!.value;
-    if (currentQuantity <= 1) {
-      currentQuantity == 1;
-    } else {
-      cart[index].quantity!.value = currentQuantity - 1;
-    }
-    _setPrefsItems();
-    notifyListeners();
-  }
+  // void deleteQuantity(int id) {
+  //   final index = cart.indexWhere((element) => element.id == id);
+  //   final currentQuantity = cart[index].quantity!.value;
+  //   if (currentQuantity <= 1) {
+  //     currentQuantity == 1;
+  //   } else {
+  //     cart[index].quantity!.value = currentQuantity - 1;
+  //   }
+  //   _setPrefsItems();
+  //   notifyListeners();
+  // }
 
   void removeItem(int id) {
     final index = cart.indexWhere((element) => element.id == id);

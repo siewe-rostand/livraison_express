@@ -114,17 +114,17 @@ class DBHelper1 {
          $maxQtyCol INTEGER, $pIdCol INTEGER UNIQUE,$idCatCol INTEGER , $uIdCol INTEGER, $comCol TEXT, $moduleCol TEXT,  $prepTimeCol INTEGER)''');
   }
 
-  Future<CartItem1> insert(CartItem1 cart)async{
+  Future<CartItem> insert(CartItem cart)async{
     print(cart.toMap());
     var dbClient = await db ;
     await dbClient.insert(tableName, cart.toMap());
     return cart ;
   }
 
-  Future<List<CartItem1>> getCartList()async{
+  Future<List<CartItem>> getCartList()async{
     var dbClient = await db ;
     final List<Map<String , Object?>> queryResult =  await dbClient.query(tableName);
-    return queryResult.map((e) => CartItem1.fromMap(e)).toList();
+    return queryResult.map((e) => CartItem.fromMap(e)).toList();
 
   }
 
@@ -137,7 +137,7 @@ class DBHelper1 {
     );
   }
 
-  Future<int> updateQuantity(CartItem1 cart)async{
+  Future<int> updateQuantity(CartItem cart)async{
     var dbClient = await db ;
     return await dbClient.update(
         tableName,

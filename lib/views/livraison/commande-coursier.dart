@@ -31,6 +31,7 @@ import '../../model/horaire.dart';
 import '../../model/order.dart';
 import '../../model/quartier.dart';
 import '../../model/shop.dart';
+import '../home/home-page.dart';
 import '../widgets/custom_alert_dialog.dart';
 
 enum DeliveryType { express, heure_livraison }
@@ -178,6 +179,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
     shops = UserHelper.shops;
     city =  UserHelper.city.name;
     cityId =  UserHelper.city.id;
+    isOpened(UserHelper.shops.horaires!);
     setState(() {
       cityDepartTextController = TextEditingController(text: city);
       cityDestinationTextController = TextEditingController(text: city);
@@ -517,75 +519,15 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
   }
 
 
-  Future<List<Contact>> getContacts(String query) async {
-    //We already have permissions for contact when we get to this page, so we
-    // are now just retrieving it
-    final PermissionStatus permission = await Permission.contacts.status;
-    if (permission == PermissionStatus.granted) {
-      return await ContactsService.getContacts(
-          query: query, withThumbnails: false, photoHighResolution: false);
-    } else {
-      await Permission.contacts.request().then((value) {
-        if (value == PermissionStatus.granted) {
-          getContacts(query);
-        }
-      });
-      throw Exception('error');
-    }
-  }
-
-  autoComplete() {
-    return TypeAheadField(
-      getImmediateSuggestions: true,
-      textFieldConfiguration: TextFieldConfiguration(
-        decoration: const InputDecoration(labelText: 'Nom et prenom *'),
-        controller: _typeAheadController,
-      ),
-      suggestionsCallback: (pattern) {
-        // call the function to get suggestions based on text entered
-        return getContacts(pattern);
-      },
-      itemBuilder: (context, Contact suggestion) {
-        // show suggection list
-        suggestion.phones?.forEach((element) {
-          telephone = element.value!;
-        });
-        return ListTile(
-          title: Text(suggestion.displayName!),
-          subtitle: Text(
-            telephone,
-          ),
-        );
-      },
-      onSuggestionSelected: (Contact suggestion) {
-        suggestion.phones?.forEach((element) {
-          telephone = element.value!;
-        });
-        _typeAheadController.text = suggestion.displayName!;
-        phoneDepartTextController.text = telephone;
-      },
-      hideOnEmpty: true,
-      autoFlipDirection: true,
-    );
-  }
-
   setSender() {
     var providerName = "livraison-express";
-    // sender.fullName = nomDepartTextController.text;
-    // sender.telephone = phoneDepartTextController.text;
-    // sender.telephoneAlt = phone2DepartTextController.text;
-    // sender.email = emailDepartTextController.text;
-    // senderAddress.nom = location;
-    // senderAddress.quarter = quartierDepart;
-    // senderAddress.description = descDepartTextController.text;
-    // senderAddress.latitude = placeLatDepart.toString();
-    // senderAddress.longitude = placeLonDepart.toString();
+    var city = UserHelper.city;
     senderAddress.latLng =
         senderAddress.latitude! + ',' + senderAddress.longitude!;
 
     senderAddress.providerName = providerName;
-    senderAddress.villeId = cityId;
-    senderAddress.ville = city;
+    senderAddress.villeId = city.id;
+    senderAddress.ville = city.name;
     senderAddress.pays = "Cameroun";
     // debugPrint("${sender.toJson()} ${senderAddress.providerId}");
     List<Address> addresses = [];
@@ -601,27 +543,13 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
   }
 
   setReceiver() async {
-    /*receiver.fullName = nomDestinationTextController.text;
-    receiver.telephone = phoneDestinationTextController.text;
-    receiver.telephoneAlt = phoneDestinationTextController.text;
-    receiver.email = emailDestinationTextController.text;
-    receiver.providerName = receiverAddress.nom = locationDestination;
-    receiverAddress.quarter = quartierDestination;
-    receiverAddress.description = descDestinationTextController.text;*/
-    // print('//$location');
-    // receiverAddress.latitude = placeLatDestination.toString();
-    // receiverAddress.longitude = placeLonDestination.toString();
     receiverAddress.latLng =
         receiverAddress.latitude! + ',' + receiverAddress.longitude!;
-    // String? latLong = receiver.addresses![0].latLng;
-    // receiverAddress.providerName = "livraison-express";
     receiverAddress.id = null;
     receiverAddress.providerId = null;
     receiverAddress.villeId = cityId;
     receiverAddress.ville = city;
     receiverAddress.pays = "Cameroun";
-
-
 
     List<Address> addresses = [];
     addresses.add(receiverAddress);
@@ -677,7 +605,8 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
         PaymentApi(context: context).makePayment(amount: amt);
       }
     } else {
-      Fluttertoast.showToast(msg: "Veuillez choisir un moyen de paiement");
+      showToast(context: context, text: "Veuillez choisir un moyen de paiement", iconData: Icons.check, color: UserHelper.getColor());
+      // Fluttertoast.showToast(msg: "Veuillez choisir un moyen de paiement");
     }
   }
 
@@ -722,12 +651,6 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
       "orders": order,
       "paiement": payment,
     };
-    /*
-    debugPrint('infos ${info.toJson()}');
-    debugPrint('client ${client.toJson()}');
-    logger.i('receiver ${receiver.toJson()}');
-    debugPrint('sender ${sender.toJson()}');
-    debugPrint('orders ${order.toJson()}');*/
     await CourseApi().commnander(data: data).then((response) async {
       isLoading=false;
       var body = json.decode(response.body);
@@ -740,12 +663,9 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
         message: "Felicitation, Commande enregistrée avec succès\nN° commande ${ord.infos?.ref} ",
         positiveText: "OK",
         onContinue:(){
-          // Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context)=>const HomePage()));
+          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context)=>const HomePage()));
         },
       ));
-      // Navigator.of(context).pushReplacement(
-      //     MaterialPageRoute(builder: (context) => const OrderConfirmation()));
-      // AppUser appUsers=AppUser.fromJson(res);
     }).catchError((onError) {
       // log(onError);
     });
@@ -863,17 +783,6 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
       }
     }
     return juge;
-  }
-
-  bool isFavoriteAddress(Adresse addressFavorite, Address address) {
-    if (addressFavorite.toString().isEmpty) {
-      return false;
-    }
-    return addressFavorite.quartier == address.quarter &&
-        addressFavorite.description == address.description &&
-        addressFavorite.latitude == address.latitude &&
-        addressFavorite.longitude == address.longitude &&
-        addressFavorite.nom == address.address;
   }
 
   @override

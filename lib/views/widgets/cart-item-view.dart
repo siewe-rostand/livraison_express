@@ -11,7 +11,7 @@ import '../../data/local_db/db-helper.dart';
 
 class CartItemView extends StatefulWidget {
   final int id;
-  final ValueNotifier<int> quantity;
+  final int quantity;
   final int price;
   final String image;
   final String title;
@@ -30,32 +30,22 @@ class CartItemView extends StatefulWidget {
 
 class _CartItemViewState extends State<CartItemView> {
   final logger = Logger();
-  DBHelper? dbHelper = DBHelper();
+  DBHelper1? dbHelper = DBHelper1();
   @override
   Widget build(BuildContext context) {
-    final cart = Provider.of<CartProvider>(context);
-    return Column(
+    final cartProvider = Provider.of<CartProvider>(context);
+    return  Column(
       children: [
         Row(
           children: [
             Expanded(
               child: Container(
-                width: getProportionateScreenWidth(90),
-                height: getProportionateScreenHeight(90),
+                width: 90,
+                height: 90,
                 color: Colors.white38,
                 child: SizedBox(
-                    height: getProportionateScreenHeight(85),
-                    child: Image.network(
-                      widget.image,
-                      errorBuilder: (BuildContext context, Object exception,
-                          StackTrace? stackTrace) {
-                        return CircleAvatar(
-                            radius: 34,
-                            child: Container(
-                              color: Colors.grey,
-                            ));
-                      },
-                    )),
+                    height: 85,
+                    child:Image.network(widget.image)),
               ),
               flex: 2,
             ),
@@ -65,69 +55,85 @@ class _CartItemViewState extends State<CartItemView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(widget.title),
-                  Row(
-                    children: [
-                      ValueListenableBuilder<int>(
-                          valueListenable: widget.quantity,
-                          builder: (context, val, child) {
-                            return PlusMinusButtons(
-                                addQuantity: () {
-                                  cart.addQuantity(widget.id);
-                                  dbHelper!
-                                      .updateQuantity(CartItem1(
-                                    id: widget.id,
-                                    quantity:
-                                        ValueNotifier(widget.quantity.value),
-                                    price: widget.price,
-                                    title: widget.title,
-                                    image: widget.image,
-                                  ))
-                                      .then((value) {
-                                    setState(() {
-                                      cart.addTotalPrice(double.parse(
-                                          widget.price.toString()));
-                                    });
-                                  }).catchError((onError){
-                                    logger.e("onError $onError");
-                                  });
-                                },
-                                deleteQuantity: () {
-                                  cart.deleteQuantity(widget.id);
-                                  cart.removeTotalPrice(
-                                      double.parse(widget.price.toString()));
-                                },
-                                text: val.toString());
-                          }),
-                    ],
-                  ),
+                  Text( widget.title),
+                  PlusMinusButtons(
+                      addQuantity:  () {
+                        int qty =  widget.quantity ;
+                        int px = widget.price;
+                        qty++;
+                        int? newPrice = px * qty;
+                        dbHelper!.updateQuantity(
+                            CartItem(
+                                id: widget.id,
+                                quantity:qty,
+                                price:newPrice,
+                                title: widget.title,
+                                image: widget.image,
+                                unitPrice: widget.price
+                            )
+                        ).then((value) {
+                          newPrice =0;
+                          qty=0;
+                          cartProvider.addTotalPrice(double.parse(widget.price.toString()));
+
+                          print('///');
+                        }).onError((error, stackTrace) {
+                          logger.e('error message',
+                              error);
+                        });
+                      },
+                      deleteQuantity:  () {
+                        int qty = widget.quantity;
+                        int px = widget.price;
+                        qty--;
+                        int total = qty*px;
+                        if(qty>0){
+                          dbHelper!.updateQuantity(
+                              CartItem(
+                                  id: widget.id,
+                                  quantity:qty,
+                                  price: widget.price,
+                                  title:widget.title,
+                                  image: widget.image,
+                                  totalPrice: total
+                              )
+                          ).then((value) {
+                            total =0;
+                            qty=0;
+                            print('-----');
+                            cartProvider.removeTotalPrice(double.parse(widget.price.toString()));
+
+                          }).onError((error, stackTrace) {
+                            logger.e(error);
+                          });
+                        }
+                      },
+                      text: widget.quantity.toString()),
                   Align(
                       alignment: Alignment.bottomRight,
-                      child: Text(
-                        widget.price.toString() + ' FCFA',
-                        style: const TextStyle(fontWeight: FontWeight.w500),
+                      child: Text(widget.price.toString() +
+                          ' FCFA',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold),
                       )),
                 ],
               ),
             ),
           ],
         ),
-        Consumer<CartProvider>(builder: (context, value, child) {
-          return Align(
-            alignment: Alignment.bottomRight,
-            child: IconButton(
-              onPressed: () async {
-                dbHelper!.deleteCartItem(widget.id);
-                value.removeItem(widget.id);
-                value.removeCounter();
-              },
-              icon: Icon(
-                  Icons.delete_outline_sharp,
-                color: Colors.grey[600],
-              ),
-            ),
-          );
-        }),
+        Align(
+          alignment: Alignment.bottomRight,
+          child:IconButton(
+            onPressed: () async{
+              print(widget.id);
+              dbHelper!.delete(widget.id);
+              cartProvider.removeTotalPrice(widget.price.toDouble());
+              cartProvider.removeCounter();
+            },
+            icon: const Icon(Icons.delete_rounded),
+          ),
+
+        ),
         const Divider(
           thickness: 1.5,
         ),

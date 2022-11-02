@@ -27,29 +27,12 @@ class CartPage extends StatefulWidget {
 
 class _CartPageState extends State<CartPage> with SingleTickerProviderStateMixin{
   TextEditingController controller = TextEditingController();
-  late AnimationController animationController;
   final logger = Logger();
   bool isClick = false;
   bool isButtonActive=false;
   double amount = 0.0;
   bool listen = false;
   Map<String, dynamic>? paymentIntentData;
-  @override
-  void initState() {
-    isClick = false;
-    isButtonActive=false;
-    animationController=BottomSheet.createAnimationController(this);
-    animationController.duration=const Duration(seconds: 1);
-    animationController.reverseDuration=const Duration(seconds: 1);
-    context.read<CartProvider>().getData();
-    super.initState();
-  }
-  @override
-  void dispose() {
-    animationController.dispose();
-    // TODO: implement dispose
-    super.dispose();
-  }
   @override
   Widget build(BuildContext context) {
     final cartProvider = Provider.of<CartProvider>(context);
@@ -82,35 +65,38 @@ class _CartPageState extends State<CartPage> with SingleTickerProviderStateMixin
               )),
         ],
       ),
-      body:Column(
-        children: [
-          Expanded(
-            child: Consumer<CartProvider>(
-                builder: (BuildContext context,provider,_){
-                  if(provider.cart.isEmpty){
-                    return Container(
-                      alignment: Alignment.center,
-                      margin: const EdgeInsets.only(top: 40),
-                      child: Column(
-                        children: [
-                          const Image(
-                            image: AssetImage('img/empty_cart.png'),
-                          ),
-                          const SizedBox(height: 20,),
-                          Text('Votre panier est vide 😌' ,style: Theme.of(context).textTheme.headline5),
-                          const SizedBox(height: 20,),
-                          Text('Explore products and shop your\nfavourite items' , textAlign: TextAlign.center ,style: Theme.of(context).textTheme.subtitle2)
+      body:  FutureBuilder(
+        future: cartProvider.getData(),
+        builder: (context ,AsyncSnapshot<List<CartItem>> snapshot){
+          if(snapshot.hasData){
+            if(snapshot.data!.isEmpty){
+              return Container(
+                alignment: Alignment.center,
+                margin: const EdgeInsets.only(top: 40),
+                child: Column(
+                  children: [
+                    const Image(
+                      image: AssetImage('img/empty_cart.png'),
+                    ),
+                    const SizedBox(height: 20,),
+                    Text('Votre panier est vide 😌' ,style: Theme.of(context).textTheme.headline5),
+                    const SizedBox(height: 20,),
+                    Text('Explore products and shop your\nfavourite items' , textAlign: TextAlign.center ,style: Theme.of(context).textTheme.subtitle2)
 
-                        ],
-                      ),
-                    );
-                  }else{
-                    return
-                      ListView.builder(
+                  ],
+                ),
+              );
+            }else{
+              return Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: ListView.builder(
                           shrinkWrap: true,
-                          itemCount:provider.cart.length + 1,
+                          itemCount:snapshot.data!.length + 1,
                           itemBuilder: (context, index) {
-                            if (index == provider.cart.length) {
+                            if (index == snapshot.data!.length) {
                               return Column(
                                 children: [
                                   Row(
@@ -122,7 +108,7 @@ class _CartPageState extends State<CartPage> with SingleTickerProviderStateMixin
                                               isClick = true;
                                             });
                                           },
-                                          child:  Text('Ajouter une instruction',style: TextStyle(color: UserHelper.getColorDark()),))
+                                          child: const Text('Ajouter une instruction',style: TextStyle(color: Color(0xff00a117)),))
                                     ],
                                   ),
                                   Visibility(
@@ -153,76 +139,77 @@ class _CartPageState extends State<CartPage> with SingleTickerProviderStateMixin
                             }
                             return
                               CartItemView(
-                                id: provider.cart[index].id!,
-                                title: provider.cart[index].title!,
-                                image: provider.cart[index].image,
-                                quantity: provider.cart[index].quantity!,
-                                price: provider.cart[index].price!,
-                              );
-                          });
-                  }
-                }),
-          ),
-          Consumer<CartProvider>(
-            builder: (BuildContext context, value, Widget? child) {
-              final ValueNotifier<int?> totalPrice = ValueNotifier(null);
-              for (var element in value.cart) {
-                totalPrice.value =
-                    (element.unitPrice! * element.quantity!.value) +
-                        (totalPrice.value ?? 0);
-              }
-              return Column(
-                children: [
-                  ValueListenableBuilder<int?>(
-                      valueListenable: totalPrice,
-                      builder: (context, val, child) {
-                        amount =double.parse(val.toString());
-                        return ReusableWidget(
-                            title: 'Prix total:',
-                            value: r'$' + (val?.toStringAsFixed(2) ?? '0'));
-                      }),
-                ],
+                                id: snapshot.data![index].id!,
+                                title: snapshot.data![index].title!,
+                                image: snapshot.data![index].image,
+                                quantity: snapshot.data![index].quantity!,
+                                price: snapshot.data![index].price!,
+                                );
+                          }),
+                    ),
+                  ],
+                ),
               );
-            },
-          )
-        ],
+            }
+          }
+          return const Text('') ;
+        },
       ),
 
-      bottomNavigationBar: Padding(
+      bottomNavigationBar:  Padding(
         padding: const EdgeInsets.all(8.0),
-        child: SizedBox(
-          width: double.infinity,
-          child:
-          MaterialButton(
-              height: getProportionateScreenHeight(45),
-              color: UserHelper.getColor(),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)
-              ),
-              onPressed: () async{
-                List cartList=await cartProvider.getData();
-                // await ApiAuthService.getUser();
-                String text ='Veuillez remplir votre panier avant de le valider';
-                bool cartLength=cartList.isEmpty;
-                !cartLength?Navigator.of(context).pushReplacement(MaterialPageRoute(
-                    builder: (BuildContext context) =>
-                        ValiderPanier(
-                          totalAmount: amount,
-                        ))):ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    backgroundColor: Colors.red,
-                    content:
-                    Text(text),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Prix total:',style: TextStyle(color: Colors.grey.withOpacity(0.86),fontSize: 20),),
+                Consumer<CartProvider>(builder: (context,cartProvide,child){
+                  amount =cartProvide.getTotalPrice();
+                  return Text(cartProvider.getTotalPrice().toStringAsFixed(0)+' FCFA',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 18),
+                  );
+                },)
+                ,
+              ],
+            ),
+            SizedBox(
+              width: double.infinity,
+              child:
+              MaterialButton(
+                  height: getProportionateScreenHeight(45),
+                  color: UserHelper.getColorDark(),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)
                   ),
-                );
-              },
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
-                  Text('VALIDER LE PANIER',style: TextStyle(color: Colors.white,fontSize: 18),),
-                  Icon(Icons.shopping_cart_checkout,color: Colors.white,size: 23,)
-                ],
-              )),
+                  onPressed: () async{
+                    List cartList=await cartProvider.getData();
+                    // await ApiAuthService.getUser();
+                    String text ='Veuillez remplir votre panier avant de le valider';
+                    bool cartLength=cartList.isEmpty;
+                    !cartLength?Navigator.of(context).pushReplacement(MaterialPageRoute(
+                        builder: (BuildContext context) =>
+                            ValiderPanier(
+                              totalAmount: amount,
+                            ))):ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        backgroundColor: Colors.red,
+                        content:
+                        Text(text),
+                      ),
+                    );
+                  },
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: const [
+                      Text('VALIDER LE PANIER',style: TextStyle(color: Colors.white,fontSize: 18),),
+                      Icon(Icons.shopping_cart_checkout,color: Colors.white,size: 23,)
+                    ],
+                  )),
+            )
+          ],
         ),
       ),
     ) ;

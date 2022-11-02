@@ -32,6 +32,7 @@ class PaymentApi{
             merchantDisplayName: 'ROSTAND',
             customerId: paymentIntentData!['customer'],
             customerEphemeralKeySecret: paymentIntentData!['ephemeralKey'],)).then((value){
+
       });
 
 

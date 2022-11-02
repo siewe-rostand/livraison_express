@@ -207,7 +207,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
     senderAddress.providerName = shops.adresse?.providerName;
     senderAddress.nom=shops.slug;
 
-    logger.d('4${receiverClient.toJson()}');
+    // logger.d('4${receiverClient.toJson()}');
     if (mounted) {
       setState(() {
         _currentStep++;
@@ -430,7 +430,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
                 now.day, int.parse(nw!), int.parse(a!), 0);
             DateTime closeTimeStamp = DateTime(now.year, now.month,
                 now.day, int.parse(cnm!), int.parse(cla!), 0);
-            debugPrint('close time // $closeTimeStamp');
+            // debugPrint('close time // $closeTimeStamp');
             if ((now.isAtSameMomentAs(openTimeStamp) ||
                 now.isAfter(openTimeStamp)) &&
                 now.isBefore(closeTimeStamp)) {
@@ -507,8 +507,6 @@ class _ValiderPanierState extends State<ValiderPanier> {
                               var amount= amt.toString();
                               PaymentApi(context: context).makePayment(amount: amount).then((value){
                                 logger.e('_ValiderPanierState.build');
-                                // saveOrder('card', '', '', '');
-                                // log("message $value");
                               });
                             }else{
                               Fluttertoast.showToast(msg: "Veuillez choisir un moyen de paiement");
