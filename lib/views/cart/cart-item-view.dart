@@ -75,8 +75,6 @@ class _CartItemViewState extends State<CartItemView> {
                           newPrice =0;
                           qty=0;
                           cartProvider.addTotalPrice(double.parse(widget.price.toString()));
-
-                          print('///');
                         }).onError((error, stackTrace) {
                           logger.e('error message',
                               error);
@@ -100,7 +98,6 @@ class _CartItemViewState extends State<CartItemView> {
                           ).then((value) {
                             total =0;
                             qty=0;
-                            print('-----');
                             cartProvider.removeTotalPrice(double.parse(widget.price.toString()));
 
                           }).onError((error, stackTrace) {
@@ -125,7 +122,6 @@ class _CartItemViewState extends State<CartItemView> {
           alignment: Alignment.bottomRight,
           child:IconButton(
             onPressed: () async{
-              print(widget.id);
               dbHelper!.delete(widget.id);
               cartProvider.removeTotalPrice(widget.price.toDouble());
               cartProvider.removeCounter();

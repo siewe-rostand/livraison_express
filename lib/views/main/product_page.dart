@@ -22,7 +22,7 @@ import '../../model/product.dart';
 import '../../model/shop.dart';
 import '../../provider/nav_view_model.dart';
 import '../super-market/cart-provider.dart';
-import '../super-market/cart.dart';
+import '../cart/cart.dart';
 import '../widgets/custom_alert_dialog.dart';
 
 class ProductPage extends StatefulWidget {
@@ -186,7 +186,6 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
         userId: user.id
     ))
         .then((value) {
-      // logger.i(value.toMap());
       Provider.of<CartProvider>(context, listen: false)
           .addTotalPrice(products[
       index]
@@ -195,9 +194,10 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
           .addCounter();
       Navigator.of(context)
           .pop();
-      const snackBar = SnackBar(backgroundColor: Colors.green,content: Text('Product is added to cart'), duration: Duration(seconds: 1),);
+      showToast(context: context, text: "${products[index].libelle} a ete bien ajouter au panier", iconData: Icons.check, color: Colors.green);
 
-      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      // const snackBar = SnackBar(backgroundColor: Colors.green,content: Text('Product is added to cart'), duration: Duration(seconds: 1),);
+      // ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }).onError((error,
         stackTrace) {
       _show = false;
@@ -288,7 +288,6 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
                         _show = false;
                         showFab=true;
                         setState(() {
-
                           addToCart(index);
                         });
 
@@ -358,7 +357,7 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
           preferredSize: const Size.fromHeight(65),
           child: AppBar(
             elevation: 0,
-            backgroundColor: UserHelper.getColor(),
+            backgroundColor: colorFromHex(UserHelper.module.moduleColor!),
             title: Container(
               margin: const EdgeInsets.only(
                 top: 2,

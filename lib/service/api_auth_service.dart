@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart';
 import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/model/module_color.dart';
 import 'package:livraison_express/model/user.dart';
 import 'package:livraison_express/utils/main_utils.dart';
 import 'package:livraison_express/views/home/home-page.dart';
@@ -19,15 +18,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../views/widgets/custom_alert_dialog.dart';
 import '../views/widgets/custom_dialog.dart';
 
+// String baseUrl = 'https://api.test.livraison-express.net/api/v1.1';
 String baseUrl = 'https://api.staging.livraison-express.net/api/v1.1';
 String origin = 'https://livraison-express.net';
 String devBaseUrl = 'http://192.168.137.194:8002/api/';
 String token = '';
 
-// String token =
-//     'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIxIiwianRpIjoiMDUzNzkwY2JhMTNmYjM0OTIyZTAxNTIxMWNhZTU0MDI0Njg5ZGEzN2IyN2U3NGIzZGMzNGI2NDAwZDkyNjk0MDY2MTJlYjMwZWY5MGVjZDkiLCJpYXQiOjE2NTE4MzMyNjksIm5iZiI6MTY1MTgzMzI2OSwiZXhwIjoxNjgyOTM3MjY5LCJzdWIiOiI0OTYyMSIsInNjb3BlcyI6WyJ1c2VyIiwidXNlci1wcm9maWxlIl19.KXj-zpOxjdrio1Q1tUl9QXJApax41STH3IGlkpRqnPgIz_uLmJusFmR0p3yGxEyK19MIvNiVcpRETFGfOBVcPvHRaoXK5jc6Bwk5lhEjluxJBVu0MOV3Plv5Sxf5FoLDFEsq113jH7S96GZl6Zt7BFRqVEmi28nFX1UalOSzpmdWkecqIuu5hgnRVHO6GNuLrfqQ29JMAzt_CnmNncSY_5Ge5YtOk4Y9KIqyYe9BPBSnQaioNSY9sVBP06GkfR7GfkIXW5DwxhDTITBWT5fL8ApjZLBwPnW6wD_xCgidxNAwcCTdTgwvQld_A7YBfVsZGv2HRZQUN7TpMZmShNihklFpndxBTH_LkzAMgx8E4PrvN-Nxe_dsDrN-zR6Y8FXtrW8Il40t63hTgIpwGgWrVC0Ht-PqGnuv4UOHFeLPXhGWIsgFfpXrBt6pGDAoQ879SolfEXyhB2zR0awd-VNGgZSSmxTPbbWcIHa16CL2rjEUL2bq5HBtvWRE6a-GDMVhS7pd5RNGHxyeIPeic3uYGdlJovfHgeVeSXy1xD3C2YIwXEyWrckVJ3gDOcw8IezJ9Ux6QALWMfyWbxkluHvE0lymCAbkhkE-ep7sufnP6LA27OfY8XV1sJM-GhAb3Yj_JRQ7OGJXUKdiqeN55ICwFJdUrZLrmCsfQUvuqeq_JoA';
 class ApiAuthService {
-  ModuleColor moduleColor = ModuleColor();
   final logger = Logger();
   final BuildContext context;
   final ProgressDialog? progressDialog;
@@ -51,13 +48,7 @@ class ApiAuthService {
       // logger.i('get token inside get access token /// ${response.body}');
       var body = json.decode(response.body);
       String accessToken = body['access_token'];
-      // // print("body access $accessToken");
-      // token = accessToken;
-      // UserHelper.token=accessToken;
       UserHelper.currentUser1?.token=accessToken;
-      var exTime=body['expires_in'];
-      var a =DateTime.parse(exTime.toString());
-      print('/// time $a');
       getUserProfile(accessToken);
     } else {
       logger.e('get error token insider /// ${response.body}');
@@ -83,12 +74,6 @@ class ApiAuthService {
       "Accept": "application/json",
     });
     if (response.statusCode == 200) {
-      // var body = json.decode(response.body);
-      // var res = body['data'];
-      // AppUser1 appUsers=AppUser1.fromJson(res);
-      //
-      //
-      // print('user body ${appUsers.telephone}');
       return response;
     } else {
       print(response.body);
@@ -149,7 +134,7 @@ class ApiAuthService {
   }) async {
     progressDialog!.show();
     String url =
-        'https://api.staging.livraison-express.net/api/v1.1/register/firebase';
+        '$baseUrl/register/firebase';
     Response response = await post(
       Uri.parse(url),
       headers: <String, String>{
@@ -308,8 +293,10 @@ class ApiAuthService {
         User? user = result.user;
         if (user != null) {
           final idToken = await user.getIdToken();
+          log("token id: $idToken");
           getAccessToken(firebaseTokenId: idToken);
         } else {
+          logger.e("${user?.email}");
           showGenDialog(
               context,
               true,
@@ -327,6 +314,7 @@ class ApiAuthService {
       }
     } on FirebaseAuthException catch (e) {
       progressDialog!.hide();
+      logger.e("message${e.message}");
       if (e.code == "wrong-password") {
         showGenDialog(
             context,

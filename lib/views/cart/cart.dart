@@ -1,14 +1,10 @@
 
 
 import 'package:flutter/material.dart';
-import 'package:livraison_express/model/module_color.dart';
 import 'package:livraison_express/utils/size_config.dart';
-import 'package:livraison_express/views/main/product_page.dart';
 import 'package:livraison_express/views/super-market/cart-provider.dart';
-import 'package:livraison_express/data/local_db/db-helper.dart';
 import 'package:livraison_express/views/super-market/valider-panier.dart';
-import 'package:livraison_express/views/widgets/cart-item-view.dart';
-import 'package:livraison_express/views/widgets/reusable-widget.dart';
+import 'package:livraison_express/views/cart/cart-item-view.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 

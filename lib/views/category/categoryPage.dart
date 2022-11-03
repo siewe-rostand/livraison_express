@@ -7,14 +7,15 @@ import 'package:livraison_express/provider/nav_view_model.dart';
 import 'package:livraison_express/service/shopService.dart';
 import 'package:livraison_express/utils/size_config.dart';
 import 'package:livraison_express/views/main/product_page.dart';
-import 'package:livraison_express/views/main/sub_category.dart';
+import 'package:livraison_express/views/category/sub_category.dart';
+import 'package:livraison_express/views/widgets/custom_sliver_app_bar.dart';
 import 'package:livraison_express/views/widgets/floating_action_button.dart';
 
 import '../../constant/color-constant.dart';
 import '../../model/shop.dart';
 import '../../utils/main_utils.dart';
 import '../custom-container.dart';
-import '../super-market/cart.dart';
+import '../cart/cart.dart';
 import '../widgets/open_wrapper.dart';
 
 class CategoryPage extends StatefulWidget {
@@ -125,55 +126,7 @@ class _CategoryPageState extends State<CategoryPage> {
             body: NestedScrollView(
               headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
                 return [
-                  SliverAppBar(
-                    elevation: 0,
-                    backgroundColor: UserHelper.getColor(),
-                    automaticallyImplyLeading: false,
-                    floating: true,
-                    expandedHeight: 70,
-                    flexibleSpace: FlexibleSpaceBar(
-                      centerTitle: true,
-                      background: Stack(
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              CustomContainer(
-                                progress: 0.5,
-                                size: 70,
-                                backgroundColor: UserHelper.getColor(),
-                                progressColor: Colors.white,
-                              ),
-                            ],
-                          ),
-                          Positioned(
-                            top: isVisible == true ? null : -10,
-                            left: 20,
-                            right: 20,
-                            child: SizedBox(
-                              height: 70,
-                              child: Card(
-                                elevation: 10,
-                                child: ElevatedButton(
-                                  child: Text(
-                                    shops.nom!,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                  onPressed: null,
-                                  style: ButtonStyle(
-                                    backgroundColor:
-                                    MaterialStateProperty.all(Colors.white),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
-                  )
+                  CustomSliverAppBar(title: shops.nom!)
                 ];
               },
               body: FutureBuilder<List<Category>>(

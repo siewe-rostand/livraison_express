@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:livraison_express/constant/all-constant.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/user_helper.dart';
@@ -38,26 +39,37 @@ class _SelectCityState extends State<SelectCity> {
       },
       child: Padding(
         padding:  EdgeInsets.symmetric(horizontal: getProportionateScreenWidth(5)),
-        child: Row(
+        child:
+        Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Text(
+              'Services disponible à',
+              style: TextStyle(
+                  color: Colors.grey[800],
+                  fontWeight: FontWeight.bold,
+                  fontSize: getProportionateScreenWidth(15)),
+            ),
             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Container(
-                  margin:  EdgeInsets.only(top: getProportionateScreenHeight(6)),
-                  child:  Icon(Icons.location_on_rounded,size: getProportionateScreenHeight(40),color: Colors.black45,),
-                ),
+                SizedBox(width: getProportionateScreenWidth(30),),
                 Text(
                   city.toUpperCase(),
                   style: TextStyle(
-                      color: Colors.black45,
+                      color: primaryColor,
                       fontSize: getProportionateScreenWidth(16),
                       fontWeight: FontWeight.w800
                   ),
                 ),
+                IconButton(
+                    icon: const Icon(Icons.arrow_drop_down, color: primaryColor,),
+                    onPressed: (){
+                      if(widget.cities.isNotEmpty)_showMenu();
+                    }
+                )
               ],
             ),
-            const Spacer(),
-            const Icon(Icons.arrow_drop_down, color: Colors.black45,),
           ],
         ),
       ),

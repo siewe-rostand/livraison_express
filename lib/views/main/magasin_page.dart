@@ -5,7 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/views/main/categoryPage.dart';
+import 'package:livraison_express/views/category/categoryPage.dart';
 import 'package:logger/logger.dart';
 
 import '../../constant/color-constant.dart';

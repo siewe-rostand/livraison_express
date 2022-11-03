@@ -1,5 +1,6 @@
 
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
@@ -34,11 +35,9 @@ class PaymentApi{
             customerEphemeralKeySecret: paymentIntentData!['ephemeralKey'],)).then((value){
 
       });
-
-
       ///now finally display payment sheeet
       displayPaymentSheet();
-      logger.w(paymentIntentData);
+      log("$paymentIntentData");
 
     } catch (e, s) {
       print('exception:$e$s');
@@ -60,7 +59,7 @@ class PaymentApi{
           content: Text("Paiement reussir"),
           backgroundColor: Colors.green,
         ));
-
+        logger.e(paymentIntentData!['amount']);
         paymentIntentData = null;
 
       }).onError((error, stackTrace){

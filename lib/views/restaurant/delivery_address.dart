@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:livraison_express/constant/all-constant.dart';
 import 'package:livraison_express/service/shopService.dart';
-import 'package:livraison_express/views/main/categoryPage.dart';
+import 'package:livraison_express/views/category/categoryPage.dart';
 
 import '../../data/user_helper.dart';
 import '../../model/category.dart';

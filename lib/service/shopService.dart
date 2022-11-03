@@ -50,12 +50,9 @@ class ShopServices{
     if(response.statusCode == 200){
       var body=json.decode(response.body);
       var rest = body['data'] as List;
-      // print("rest only  ");
-      // debugPrint('category ${rest}');
       List<Category> categories;
 
       categories = rest.map<Category>((json) =>Category.fromJson(json)).toList();
-      // print('main ${stores[0]}');
       return categories;
     }else{
       throw Exception('error loading module data');
@@ -73,11 +70,9 @@ class ShopServices{
       print('module App Start loading data retrieved successfully');
       var body=json.decode(response.body);
       var rest = body['data'] as List;
-      // print('restq ${rest}');
       List<Category> categories;
 
       categories = rest.map<Category>((json) =>Category.fromJson(json)).toList();
-      // print('main ${stores[0]}');
       return categories;
     }else{
       throw Exception('error loading module data from getSubCategoriesFromShopAndCategory');

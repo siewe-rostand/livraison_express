@@ -23,7 +23,7 @@ import '../../utils/size_config.dart';
 import '../expand-fab.dart';
 import '../livraison/commande-coursier.dart';
 import 'home-page.dart';
-import '../main/categoryPage.dart';
+import '../category/categoryPage.dart';
 import '../main/magasin_page.dart';
 import '../restaurant/restaurant.dart';
 

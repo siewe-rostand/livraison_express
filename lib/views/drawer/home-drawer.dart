@@ -6,7 +6,6 @@ import 'package:livraison_express/service/course_service.dart';
 import 'package:livraison_express/service/fire-auth.dart';
 import 'package:livraison_express/utils/size_config.dart';
 import 'package:livraison_express/views/order_confirmation/command_history.dart';
-import 'package:livraison_express/views/home/home-page.dart';
 import 'package:livraison_express/views/main/about.dart';
 import 'package:livraison_express/views/login/login.dart';
 import 'package:livraison_express/views/main/profil.dart';
@@ -29,8 +28,6 @@ class MyHomeDrawer extends StatefulWidget {
 }
 
 class _MyHomeDrawerState extends State<MyHomeDrawer> {
-
-  ModuleColor moduleColor=ModuleColor();
   late SharedPreferences sharedPreferences;
   String name= '', tel1= '',email='';
 

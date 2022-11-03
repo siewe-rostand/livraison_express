@@ -37,7 +37,7 @@ import '../../model/order.dart';
 import '../../model/shop.dart';
 import '../../service/course_service.dart';
 import 'cart-provider.dart';
-import 'cart.dart';
+import '../cart/cart.dart';
 
 enum DeliveryType { express, heure_livraison }
 
@@ -53,6 +53,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
   MainUtils mainUtils =MainUtils();
 
   final logger = Logger();
+  Map<String, dynamic>? paymentIntentData;
   int radioSelected = 1;
   DeliveryType? _deliveryType;
   int _currentStep = 0;
@@ -152,13 +153,54 @@ class _ValiderPanierState extends State<ValiderPanier> {
     isOpened(UserHelper.shops.horaires!);
   }
 
+  displayPaymentSheet() async {
+
+    try {
+      await stripe.Stripe.instance.presentPaymentSheet().then((newValue){
+
+
+        print('payment intent'+paymentIntentData!['id'].toString());
+        logger.v('payment intent'+paymentIntentData!['client_secret'].toString());
+        print('payment intent'+paymentIntentData!['amount'].toString());
+        print('payment intent'+paymentIntentData.toString());
+        //orderPlaceApi(paymentIntentData!['id'].toString());
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text("Paiement reussir"),
+          backgroundColor: Colors.green,
+        ));
+        logger.e(paymentIntentData!['amount']);
+        // saveOrder('card', paymentIntentData!['id'].toString(), 'OK', paymentIntentData!['object']);
+        paymentIntentData = null;
+
+      }).onError((error, stackTrace){
+        log('Exception/DISPLAYPAYMENTSHEET==> $error $stackTrace');
+      });
+
+
+    } on stripe.StripeException catch (e) {
+      log('Exception/DISPLAYPAYMENTSHEET==> $e');
+      showDialog(
+          context: context,
+          builder: (_) => const AlertDialog(
+            content: Text("Cancelled "),
+          ));
+    } catch (e) {
+      log('$e');
+    }
+  }
 
    makePayment({required String amount, required BuildContext context}) async {
     try {
+      SharedPreferences sharedPreferences =
+      await SharedPreferences.getInstance();
+      String? userString =
+      sharedPreferences.getString("userData");
+      final extractedUserData =
+      json.decode(userString!);
+      AppUser1 appUser1 = AppUser1.fromJson(extractedUserData);
 
-      var paymentIntentData =
-      await PaymentApi(context: context).createPaymentIntent(amount, 'XAF'); //json.decode(response.body);
-      // print('Response body==>${response.body.toString()}');
+      paymentIntentData =
+      await PaymentApi(context: context).createPaymentIntent(amount, 'XAF');
       await stripe.Stripe.instance.initPaymentSheet(
           paymentSheetParameters: stripe.SetupPaymentSheetParameters(
             paymentIntentClientSecret: paymentIntentData!['client_secret'],
@@ -167,15 +209,14 @@ class _ValiderPanierState extends State<ValiderPanier> {
             testEnv: true,
             style: ThemeMode.dark,
             merchantCountryCode: 'US',
-            merchantDisplayName: 'ROSTAND',
+            merchantDisplayName: appUser1.fullname ?? appUser1.firstname,
             customerId: paymentIntentData!['customer'],
             customerEphemeralKeySecret: paymentIntentData!['ephemeralKey'],)).then((value){
+        print('0000000000000000000000');
       });
 
-
       ///now finally display payment sheeet
-      PaymentApi(context: context).displayPaymentSheet();
-
+      displayPaymentSheet();
     } catch (e, s) {
       print('exception:$e$s');
     }
@@ -312,7 +353,6 @@ class _ValiderPanierState extends State<ValiderPanier> {
     sharedPreferences.getString("userData");
     final extractedUserData =
     json.decode(userString!);
-    var av = sharedPreferences.getString('city');
 
 
     AppUser1 appUser1 = AppUser1.fromJson(extractedUserData);
@@ -371,7 +411,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
     info.dateChargement = currentDate;
     info.heureLivraison = currentTime;
     info.jourLivraison=currentDate;
-    info.villeLivraison=av;
+    info.villeLivraison=city;
     info.duration = duration;
     info.distance = distance;
     info.durationText=durationText;
@@ -488,7 +528,9 @@ class _ValiderPanierState extends State<ValiderPanier> {
               data: ThemeData(
                   colorScheme: Theme.of(context)
                       .colorScheme
-                      .copyWith(primary: UserHelper.getColor())),
+                      .copyWith(primary: UserHelper.getColor()),
+                focusColor: UserHelper.getColorDark(),
+              ),
               child: Stepper(
                 controlsBuilder:
                     (BuildContext context, ControlsDetails detail) {
@@ -497,7 +539,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
                           style: ButtonStyle(
                               backgroundColor: MaterialStateProperty.all(
                                   UserHelper.getColor())),
-                          onPressed: () {
+                          onPressed: () async{
                             debugPrint('////');
                             if(payMode == "cash"){
                               debugPrint('////');
@@ -505,9 +547,8 @@ class _ValiderPanierState extends State<ValiderPanier> {
                             }else if(payMode == "card"){
                               var amt=cartProvider.totalPrice +deliveryPrice;
                               var amount= amt.toString();
-                              PaymentApi(context: context).makePayment(amount: amount).then((value){
-                                logger.e('_ValiderPanierState.build');
-                              });
+                              await stripe.Stripe.instance.presentPaymentSheet();
+                              // makePayment(amount: amount, context: context);
                             }else{
                               Fluttertoast.showToast(msg: "Veuillez choisir un moyen de paiement");
                             }
@@ -588,6 +629,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                   children: [
                                     Radio<DeliveryType>(
                                       activeColor: UserHelper.getColorDark(),
+                                      focusColor: UserHelper.getColorDark(),
                                       value: DeliveryType.express,
                                       groupValue: _deliveryType,
                                       onChanged:!isTodayOpened && isTomorrowOpened?null: (DeliveryType? value) {
@@ -620,6 +662,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                   children: [
                                     Radio<DeliveryType>(
                                       activeColor: UserHelper.getColorDark(),
+                                      focusColor: UserHelper.getColorDark(),
                                       value: DeliveryType.heure_livraison,
                                       groupValue: _deliveryType,
                                       onChanged: (DeliveryType? value) {
@@ -789,6 +832,8 @@ class _ValiderPanierState extends State<ValiderPanier> {
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             Radio(
+                                activeColor: UserHelper.getColorDark(),
+                                focusColor: UserHelper.getColorDark(),
                                 value: 0,
                                 groupValue: payOption,
                                 onChanged: (int? value) {
@@ -808,6 +853,8 @@ class _ValiderPanierState extends State<ValiderPanier> {
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             Radio(
+                                activeColor: UserHelper.getColorDark(),
+                                focusColor: UserHelper.getColorDark(),
                                 value: 1,
                                 groupValue: payOption,
                                 onChanged: (int? value) {
