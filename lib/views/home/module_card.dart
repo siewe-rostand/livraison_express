@@ -18,7 +18,7 @@ import '../../model/horaire.dart';
 import '../../model/module.dart';
 import '../../model/module_color.dart';
 import '../../model/shop.dart';
-import '../../service/api_auth_service.dart';
+import '../../service/auth_service.dart';
 import '../../utils/size_config.dart';
 import '../expand-fab.dart';
 import '../livraison/commande-coursier.dart';

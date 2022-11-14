@@ -7,7 +7,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:livraison_express/constant/all-constant.dart';
 import 'package:livraison_express/data/user_helper.dart';
 import 'package:livraison_express/model/user.dart';
-import 'package:livraison_express/service/api_auth_service.dart';
+import 'package:livraison_express/service/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../login/login.dart';

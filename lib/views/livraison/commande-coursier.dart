@@ -21,6 +21,7 @@ import 'package:livraison_express/service/paymentApi.dart';
 import 'package:livraison_express/utils/size_config.dart';
 import 'package:livraison_express/views/livraison/step1.dart';
 import 'package:livraison_express/views/livraison/step2.dart';
+import 'package:livraison_express/views/widgets/select_time.dart';
 import 'package:logger/logger.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -582,8 +583,6 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
         isLoading = true;
         _currentStep++;
       });
-
-      print(deliveryPrice);
       showToast(context: context, text: message, iconData: Icons.check, color: UserHelper.getColor());
     }).catchError((onError) {
       print('eroo/');
@@ -942,138 +941,11 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                     showDialog<void>(
                                         context: context,
                                         builder: (context) {
-                                          return Center(
-                                            child: Dialog(
-                                              shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          16.0)),
-                                              elevation: 0.0,
-                                              child: Stack(
-                                                children: [
-                                                  Column(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    children: [
-                                                      Container(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                    .only(
-                                                                top: 10,
-                                                                left: 6),
-                                                        height: 35,
-                                                        width: double.infinity,
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          borderRadius:
-                                                              const BorderRadius
-                                                                      .only(
-                                                                  topLeft: Radius
-                                                                      .circular(
-                                                                          10),
-                                                                  topRight: Radius
-                                                                      .circular(
-                                                                          5)),
-                                                          color:
-                                                          UserHelper.getColorDark(),
-                                                        ),
-                                                        child: const Text(
-                                                          'Quand souhaitez vous etre livre ?',
-                                                          style: TextStyle(
-                                                              color:
-                                                                  Colors.white),
-                                                        ),
-                                                      ),
-                                                      /**
-                                                       * Today
-                                                       */
-                                                      ElevatedButton(
-                                                        style: ButtonStyle(
-                                                            backgroundColor:
-                                                                MaterialStateProperty
-                                                                    .all(
-                                                                  UserHelper.getColorDark(),)),
-                                                        onPressed: () {
-                                                          if (!isTodayOpened &&
-                                                              isTomorrowOpened) {
-                                                            Fluttertoast.showToast(
-                                                                msg:
-                                                                    "Service Momentanement indisponible");
-                                                          } else {
-                                                            print(
-                                                                "isTodayOpened/...$isTodayOpened...$isTomorrowOpened ");
-                                                            showToday();
-                                                          }
-                                                        },
-                                                        child: const Text(
-                                                          "AUJOUD'HUI",
-                                                          style: TextStyle(
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold),
-                                                        ),
-                                                      ),
-                                                      Row(
-                                                        children: const [
-                                                          Expanded(
-                                                              child: Divider()),
-                                                          Padding(
-                                                            padding:
-                                                                EdgeInsets.all(
-                                                                    8.0),
-                                                            child: Text('Ou'),
-                                                          ),
-                                                          Expanded(
-                                                              child: Divider()),
-                                                        ],
-                                                      ),
-                                                      /**
-                                                       * tomorrow
-                                                       */
-                                                      ElevatedButton(
-                                                          style: ButtonStyle(
-                                                              backgroundColor:
-                                                                  MaterialStateProperty
-                                                                      .all(
-                                                                    UserHelper.getColorDark(),)),
-                                                          onPressed: () {
-                                                            showTomorrow();
-                                                          },
-                                                          child: const Text(
-                                                            "DEMAIN",
-                                                            style: TextStyle(
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold),
-                                                          )),
-                                                    ],
-                                                  ),
-                                                  Positioned(
-                                                    right: 0.0,
-                                                    child: GestureDetector(
-                                                      onTap: () {
-                                                        Navigator.of(context)
-                                                            .pop();
-                                                      },
-                                                      child: Align(
-                                                        alignment:
-                                                            Alignment.topRight,
-                                                        child: CircleAvatar(
-                                                          radius: 14.0,
-                                                          backgroundColor:
-                                                          UserHelper.getColorDark(),
-                                                          child: const Icon(
-                                                              Icons.close,
-                                                              color:
-                                                                  Colors.white),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  )
-                                                ],
-                                              ),
-                                            ),
-                                          );
+                                          return SelectTime(onSelectedDate: (onSelectedDate){
+                                            setState(() {
+                                              chooseTime = onSelectedDate;
+                                            });
+                                          });
                                         });
                                   },
                                   child: Row(

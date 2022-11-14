@@ -143,8 +143,7 @@ class _DeliveryAddressState extends State<DeliveryAddress> {
                     categoryList =
                         await ShopServices.getCategories(shopId: shopId!);
                     Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) => CategoryPage(
-                            )));
+                        builder: (context) => CategoryPage()));
                   },
                   child: Stack(
                     children: [

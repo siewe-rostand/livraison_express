@@ -4,7 +4,7 @@ import 'dart:developer';
 import 'package:http/http.dart';
 import 'package:livraison_express/model/product.dart';
 
-import 'api_auth_service.dart';
+import 'auth_service.dart';
 
 class ProductService {
   static Future<Map<String, dynamic>> getProducts(

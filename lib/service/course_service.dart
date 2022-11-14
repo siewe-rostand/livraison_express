@@ -11,7 +11,7 @@ import 'package:logger/logger.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../utils/main_utils.dart';
-import 'api_auth_service.dart';
+import 'auth_service.dart';
 
 class CourseApi {
   final logger  =Logger();
@@ -135,6 +135,49 @@ class CourseApi {
     }
   }
 
+   Future<Response> validatePromoCode({
+    required String code,
+    required int magasin_id,
+    required int amount,
+    required int delivery_amount,
+  }) async {
+    String url = '$baseUrl/promotions/validate';
+    Response response = await post(
+      Uri.parse(url),
+      headers: <String, String>{
+        "Authorization": 'Bearer $token',
+        "Accept": "application/json",
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(<String, String>{
+        'code_promo': code,
+        'magasin_id': magasin_id.toString(),
+        'delivery_id': delivery_amount.toString(),
+        'cart_amount': amount.toString(),
+      }),
+    );
+    if (response.statusCode == 200) {
+      var body = json.decode(response.body);
+      // var res = body['data'];
+      // AppUser appUsers=AppUser.fromJson(res);
+      return response;
+    } else {
+      var body = json.decode(response.body);
+      logger.e("+++${response.body}");
+      var mes = body['message'];
+      if (response.statusCode == 401) {
+        throw onFailureMessage;
+      } else if (response.statusCode == 404 ||
+          response.statusCode == 422 ||
+          response.statusCode == 400 ||
+          response.statusCode == 499) {
+        throw onFailureMessage;
+      }
+      debugPrint('ERROR MESSAGE ${body['message']}');
+      throw (onErrorMessage);
+    }
+  }
+
   Future<Response> commnander({
     required Map data
   }) async {
@@ -187,16 +230,13 @@ class CourseApi {
       body: jsonEncode(data),
     );
     if (response.statusCode == 200) {
-      var body = json.decode(response.body);
-      // var res = body['data'];
-      // AppUser appUsers=AppUser.fromJson(res);
       return response;
     } else {
       var body = json.decode(response.body);
       var mes = body['message'];
       var rw = body['data'];
       // logger.e("+++ ${response.body}+ ${response.statusCode}");
-     log("message ${rw} //");
+     log("message ${response.body} //");
       if (response.statusCode == 401 || response.statusCode ==400) {
         throw (onErrorMessage);
       } else if (response.statusCode == 404 ||

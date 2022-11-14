@@ -1,6 +1,7 @@
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:livraison_express/constant/all-constant.dart';
 import 'package:livraison_express/model/quartier.dart';
@@ -11,6 +12,10 @@ import 'package:provider/provider.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown
+  ]);
   await Firebase.initializeApp();
   Stripe.publishableKey = stripePublishableKey;
 

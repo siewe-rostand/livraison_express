@@ -3,7 +3,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/service/api_auth_service.dart';
+import 'package:livraison_express/service/auth_service.dart';
 import 'package:livraison_express/utils/size_config.dart';
 import 'package:livraison_express/views/home/home-page.dart';
 import 'package:livraison_express/views/login/login.dart';

@@ -8,7 +8,7 @@ import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/user_helper.dart';
-import '../service/api_auth_service.dart';
+import '../service/auth_service.dart';
 import '../utils/main_utils.dart';
 import '../views/widgets/custom_dialog.dart';
 

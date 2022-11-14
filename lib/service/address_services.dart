@@ -4,7 +4,7 @@ import 'package:http/http.dart';
 import 'package:livraison_express/model/address.dart';
 import 'package:logger/logger.dart';
 
-import 'api_auth_service.dart';
+import 'auth_service.dart';
 
 class AddressService{
   final logger = Logger();

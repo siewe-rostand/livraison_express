@@ -1,16 +1,18 @@
 
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart';
 import 'package:livraison_express/model/category.dart';
+import 'package:livraison_express/utils/handle_exception.dart';
 import 'package:livraison_express/utils/main_utils.dart';
 import 'package:logger/logger.dart';
 import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 
 import '../data/user_helper.dart';
 import '../model/shop.dart';
-import 'api_auth_service.dart';
+import 'auth_service.dart';
 
 class ShopServices{
   final logger = Logger();
@@ -42,20 +44,24 @@ class ShopServices{
 
   static Future<List<Category>> getCategories({required int shopId})async{
     String url = "$baseUrl/magasins/$shopId/categories";
-    Response response = await get(Uri.parse(url),headers: {
-      "Accept":"application/json",
-      "Content-Type":"application/json",
-      "Origin":origin
-    });
-    if(response.statusCode == 200){
-      var body=json.decode(response.body);
-      var rest = body['data'] as List;
-      List<Category> categories;
+    try {
+      Response response = await get(Uri.parse(url),headers: {
+        "Accept":"application/json",
+        "Content-Type":"application/json",
+        "Origin":origin
+      });
+      if(response.statusCode == 200){
+        var body=json.decode(response.body);
+        var rest = body['data'] as List;
+        List<Category> categories;
 
-      categories = rest.map<Category>((json) =>Category.fromJson(json)).toList();
-      return categories;
-    }else{
-      throw Exception('error loading module data');
+        categories = rest.map<Category>((json) =>Category.fromJson(json)).toList();
+        return categories;
+      }else{
+        throw Exception('error loading module data');
+      }
+    } catch ( e) {
+      throw handleException(e);
     }
   }
   static Future<List<Category>> getSubCategoriesFromShopAndCategory({required int shopId,required int categoryId}) async{

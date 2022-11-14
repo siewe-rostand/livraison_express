@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:livraison_express/data/user_helper.dart';
 import 'package:livraison_express/utils/size_config.dart';
 import 'dart:io';
 
@@ -137,7 +138,9 @@ class _FancyFabState extends State<FancyFab>
       child: FloatingActionButton(
         backgroundColor: Colors.white,
         heroTag: 'messenger',
-        onPressed: null,
+        onPressed: (){
+          showToast(context: context, text: "Messenger n'est pas disponible", iconData: Icons.check, color: Colors.red);
+        },
         tooltip: 'Messenger',
         child: SvgPicture.asset('img/icon/svg/ic_messenger.svg',height: getProportionateScreenHeight(25),),
       ),
@@ -150,7 +153,7 @@ class _FancyFabState extends State<FancyFab>
         backgroundColor: Colors.white,
         heroTag: 'phone',
         onPressed: (){
-          launchUrl(Uri.parse('tel:+237655418165'));
+          launchUrl(Uri.parse('tel:+237695461461'));
         },
         tooltip: 'phone',
         child: SvgPicture.asset('img/icon/svg/ic_phone_call.svg',height: getProportionateScreenHeight(25),),
@@ -184,8 +187,8 @@ class _FancyFabState extends State<FancyFab>
       }
     }
 
-    if (await canLaunch(url())) {
-      await launch(url());
+    if (await canLaunchUrl(Uri.parse(url()))) {
+      await launchUrl(Uri.parse(url()));
     } else {
       throw 'Could not launch ${url()}';
     }
@@ -209,8 +212,8 @@ class _FancyFabState extends State<FancyFab>
       }
     }
 
-    if (await canLaunch(_textMe())) {
-      await launch(_textMe());
+    if (await canLaunchUrl(Uri.parse(_textMe()))) {
+      await launchUrl(Uri.parse(_textMe()));
     } else {
       throw 'Could not launch ${_textMe()}';
     }

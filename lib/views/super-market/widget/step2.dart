@@ -84,7 +84,6 @@ class _Step2State extends State<Step2> {
                                 widget.addressReceiver.longitude=s.longitude;
                                 widget.addressReceiver.latLng=s.latLng;
                               });
-                              print(s.toJson());
                               },),
                           );
                         });
@@ -103,6 +102,7 @@ class _Step2State extends State<Step2> {
             onSaved: (value)=>widget.addressReceiver.nom=value,
           ),
           TypeAheadFormField<String>(
+            autovalidateMode: AutovalidateMode.onUserInteraction,
             textFieldConfiguration:  TextFieldConfiguration(
               controller: quarterTextController,
               decoration: const InputDecoration(
@@ -131,6 +131,16 @@ class _Step2State extends State<Step2> {
               quarterTextController.text = suggestion;
             },
             onSaved: (value)=>widget.addressReceiver.quarter=value,
+            validator: (value) {
+              List<String> douala = city=='Douala'|| city == "DOUALA"? quarter.quarterDouala:quarter.quarterYaounde;
+              if (value!.isEmpty) {
+                return "Veuillez remplir ce champ";
+              }
+              if (!(douala.contains(value))) {
+                return "Veuillez Choisir une ville svp";
+              }
+              return null;
+            },
             autoFlipDirection: true,
             hideOnEmpty: true,
           ),

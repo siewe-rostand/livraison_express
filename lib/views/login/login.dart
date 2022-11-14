@@ -8,7 +8,7 @@ import 'package:intl_phone_field/country_picker_dialog.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:livraison_express/constant/all-constant.dart';
 import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/service/api_auth_service.dart';
+import 'package:livraison_express/service/auth_service.dart';
 import 'package:livraison_express/utils/size_config.dart';
 import 'package:livraison_express/views/login/register.dart';
 import 'package:livraison_express/views/login/verification_code.dart';
@@ -211,7 +211,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         await FireAuth(
                             progressDialog:
                             getProgressDialog(context: context))
-                            .signInWithGoogle(context: context);
+                            .signInwithGoogle(context: context);
                       }),
                       SocialCard(icon: 'img/social/ic_facebook_logo.svg', press: () async {
                         await FireAuth(

@@ -83,7 +83,6 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
   }
 
   getProduct() async {
-    print("$_loading $lastPage");
     _loading = page == 1;
     if (fromCategory == true) {
       await ProductService.getProducts(
@@ -95,8 +94,6 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
           lastPage = response['last_page'];
           products.addAll(response['products']);
         });
-        // print("total $lastPage");
-        // logger.d("rest only from get product $_loading");
       }).catchError((onError){
         UserHelper.userExitDialog(context, false, CustomAlertDialog(
           svgIcon: "assets/images/smiley_sad.svg",
@@ -120,11 +117,8 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
             page: page).then((response){
           var body = json.decode(response.body);
           var rest = body['data'] as List;
-
           products =
               rest.map<Products>((json) => Products.fromJson(json)).toList();
-          print("rest only from get product from sub category  ");
-          // print('main ${stores[0]}');
         });
       } else {
         await ProductService.getProductsWithSubSubCat(
@@ -394,7 +388,7 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
                     controller: _controller,
                     itemCount: products.length,
                     itemBuilder: (context, index) {
-                      return Material(
+                            return Material(
                         shadowColor: Colors.grey,
                         child: InkWell(
                           autofocus: true,
@@ -427,15 +421,6 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
                                           return Container();
                                         },
                                       )
-                                    // Image.network(
-                                    //   products[index].image!,
-                                    //   errorBuilder: (BuildContext context,
-                                    //       Object exception,
-                                    //       StackTrace? stackTrace) {
-                                    //     return Image.asset(
-                                    //         'img/no_image.png');
-                                    //   },
-                                    // ),
                                   ),
                                 ),
                               ),
@@ -495,7 +480,8 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
                           ),
                         ),
                       );
-                    })),
+                    })
+            ),
             loader()
           ],
         ),

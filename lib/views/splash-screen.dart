@@ -6,7 +6,7 @@ import 'package:livraison_express/views/login/login.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/user_helper.dart';
-import '../service/api_auth_service.dart';
+import '../service/auth_service.dart';
 import '../utils/size_config.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -20,18 +20,6 @@ class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
   late AnimationController animationController;
   late Animation<double> fadeInFadeOut;
-  getUserInfo(bool fromFb) async {
-    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    AppUser1 appUser1 = await ApiAuthService.getUser();
-    debugPrint("login user ${appUser1.emailVerifiedAt}");
-    String fullName = appUser1.fullname ?? '';
-    String phone = appUser1.telephone ?? '';
-    String? phoneVerifiedAt =appUser1.phoneVerifiedAt;
-    String? emailVerifiedAt =appUser1.emailVerifiedAt;
-    if(!fromFb && phoneVerifiedAt!.isNotEmpty && emailVerifiedAt!.isNotEmpty){
-
-    }
-    }
   fetchConnectionState(BuildContext context) async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
     final token = preferences.getString(UserHelper.token);

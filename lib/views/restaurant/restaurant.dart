@@ -7,9 +7,11 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:livraison_express/data/user_helper.dart';
+import 'package:livraison_express/model/city.dart';
 import 'package:livraison_express/utils/size_config.dart';
 import 'package:livraison_express/views/MapView.dart';
 import 'package:livraison_express/views/address_detail/selected_fav_address.dart';
+import 'package:livraison_express/views/main/magasin_page.dart';
 import 'package:livraison_express/views/restaurant/delivery_address.dart';
 import 'package:livraison_express/views/restaurant/resto_home.dart';
 import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
@@ -18,6 +20,7 @@ import '../../model/address.dart';
 import '../../model/module.dart';
 import '../../model/shop.dart';
 import '../../service/shopService.dart';
+import '../../utils/main_utils.dart';
 import '../widgets/custom_alert_dialog.dart';
 
 class Restaurant extends StatefulWidget {
@@ -31,7 +34,6 @@ class Restaurant extends StatefulWidget {
 
 class _RestaurantState extends State<Restaurant> {
   double latitude = 0.0;
-  late ProgressDialog progressDialog;
   Modules modules =Modules();
   bool isLoading = false;
   double longitude = 0.0;
@@ -124,40 +126,33 @@ class _RestaurantState extends State<Restaurant> {
     double latitude,
     double longitude,
   ) async {
-    String city = await UserHelper.getCity();
-    List<Shops> shops = await ShopServices(context: context,progressDialog: getProgressDialog(context: context))
+    City city = UserHelper.city;
+    await ShopServices(context: context,progressDialog: getProgressDialog(context: context))
         .getShops(
             moduleId: modules.id!,
-            city: city,
+            city: city.name!,
             latitude: latitude,
             longitude: longitude,
             inner_radius: 0,
             outer_radius: 5)
-        .then((value) async{
-      debugPrint('restaurant current pos// ${value[0].adresseFavorite}');
-      Adresse? addressFav = value[0].adresseFavorite;
-      var avf = json.encode(addressFav);
-      // MySession.saveValue('delivery_address', avf);
-      return value;
+        .then((value) {
+       // UserHelper.shops =value;
+       UserHelper.module.shops = value;
+       if(value.isNotEmpty) {
+         Navigator.of(context).pushReplacement(MaterialPageRoute(
+          builder: (context) => const MagasinPage()));
+       }else{
+
+         showError("Oops!!", "Désolé nous ne livrons pas encore dans cette zone.");
+       }
     }).catchError((onError) {
       debugPrint('///$onError');
-      showError("Oops!!", "Désolé nous ne livrons pas encore dans cette zone.");
+      showError("Oops!!", onErrorMessage);
     });
-    if (shops.isNotEmpty) {
-      Navigator.of(context).pushReplacement(MaterialPageRoute(
-          builder: (context) => DeliveryAddress(
-                moduleId: modules.id!,
-                city: city,
-                latitude: latitude,
-                longitude: longitude,
-                shops: shops,
-              )));
-    }
   }
 
   @override
   void initState() {
-    progressDialog = getProgressDialog(context: context);
     super.initState();
     modules = UserHelper.module;
     fToast = FToast();
@@ -211,6 +206,7 @@ class _RestaurantState extends State<Restaurant> {
                   await _determinePosition().then((pos) async {
                     latitude = pos.latitude;
                     longitude = pos.longitude;
+                    print('${pos.latitude}  $longitude');
                     getShops(latitude, longitude);
                   }).catchError((onError) {
                     showError("Alerte",
@@ -243,6 +239,7 @@ class _RestaurantState extends State<Restaurant> {
                     placeLat = result['Latitude'] ?? 0.0;
                     location = result['location'];
                     getShops(placeLat!, placeLon!);
+                    print('_RestaurantState.build$placeLon');
                     print(placeLon);
                   }).catchError((onError){
                     showError("Nous N'avons pas pu avoir votre localisation", message);

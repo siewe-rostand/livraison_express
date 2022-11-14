@@ -1,4 +1,3 @@
-import 'dart:developer';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_auth_oauth/firebase_auth_oauth.dart';
@@ -7,14 +6,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:livraison_express/model/user.dart';
+import 'package:livraison_express/utils/main_utils.dart';
 import 'package:logger/logger.dart';
 import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../data/local_db/db-helper.dart';
 import '../data/user_helper.dart';
-import 'api_auth_service.dart';
+import 'auth_service.dart';
 
 class FireAuth {
   final logger = Logger();
@@ -39,7 +37,6 @@ class FireAuth {
       final AuthCredential credential = GoogleAuthProvider.credential(
         idToken: googleSignInAuthentication.idToken,
       );
-
       try {
         final UserCredential userCredential =
             await auth.signInWithCredential(credential);
@@ -54,9 +51,6 @@ class FireAuth {
               .getAccessToken(firebaseTokenId: idToken).catchError((onError){
 
           });
-          // if (kDebugMode) {
-          //   log("$idToken ???");
-          // }
         } else {
           ApiAuthService(
                   context: context,
@@ -65,18 +59,76 @@ class FireAuth {
         }
       } catch (e) {
         progressDialog.hide();
-        e is FirebaseException
-            ? ApiAuthService(
-                    context: context,
-                    progressDialog: getProgressDialog(context: context))
-                .unAuthenticated(message: e.message)
-            : ApiAuthService(
-                    context: context,
-                    progressDialog: getProgressDialog(context: context))
-                .unAuthenticated();
+        if(e is FirebaseException){
+          ApiAuthService(
+              context: context,
+              progressDialog: getProgressDialog(context: context))
+              .unAuthenticated(message: e.message);
+        }
+        if(e is PlatformException){
+          ApiAuthService(
+              context: context,
+              progressDialog: getProgressDialog(context: context))
+              .unAuthenticated(message: onErrorMessage);
+        }
       }
     }
 
+    return user;
+  }
+  Future<User?> signInwithGoogle({required BuildContext context}) async {
+    progressDialog.show();
+    FirebaseAuth auth = FirebaseAuth.instance;
+    User? user;
+
+    final GoogleSignIn googleSignIn = GoogleSignIn();
+    try {
+      final GoogleSignInAccount? googleSignInAccount =
+      await googleSignIn.signIn();
+      final GoogleSignInAuthentication googleSignInAuthentication =
+      await googleSignInAccount!.authentication;
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleSignInAuthentication.accessToken,
+        idToken: googleSignInAuthentication.idToken,
+      );
+      final UserCredential userCredential =
+      await auth.signInWithCredential(credential);
+      user = userCredential.user;
+      if (user != null) {
+        final idToken = await user.getIdToken();
+        ApiAuthService(
+            context: context,
+            fromLogin: true,
+            progressDialog: getProgressDialog(context: context))
+            .getAccessToken(firebaseTokenId: idToken).catchError((onError){
+
+        });
+      } else {
+        ApiAuthService(
+            context: context,
+            progressDialog: getProgressDialog(context: context))
+            .unAuthenticated();
+      }
+    } on FirebaseAuthException catch (e) {
+      progressDialog.hide();
+      if (e.code == 'account-exists-with-different-credential') {
+        ApiAuthService(
+            context: context,
+            progressDialog: getProgressDialog(context: context))
+            .unAuthenticated(message: "le compte existe déjà avec des informations d'identification différentes");
+      } else if (e.code == 'invalid-credential') {
+        ApiAuthService(
+            context: context,
+            progressDialog: getProgressDialog(context: context))
+            .unAuthenticated(message: onErrorMessage);
+      }
+    }on PlatformException {
+      progressDialog.hide();
+      ApiAuthService(
+          context: context,
+          progressDialog: getProgressDialog(context: context))
+          .unAuthenticated(message: onFailureMessage);
+    }
     return user;
   }
 

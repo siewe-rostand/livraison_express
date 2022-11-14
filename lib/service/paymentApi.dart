@@ -9,7 +9,7 @@ import 'package:logger/logger.dart';
 
 import '../constant/app-constant.dart';
 import '../data/user_helper.dart';
-import 'api_auth_service.dart';
+import 'auth_service.dart';
 
 class PaymentApi{
   Map<String, dynamic>? paymentIntentData;

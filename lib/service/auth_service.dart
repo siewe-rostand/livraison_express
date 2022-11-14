@@ -101,25 +101,6 @@ class ApiAuthService {
     }
   }
 
-  static Future<AppUser1> getUser() async {
-    String url = '$baseUrl/user';
-    Response response = await get(Uri.parse(url), headers: {
-      "Authorization": 'Bearer $token',
-      "Accept": "application/json",
-    });
-    if (response.statusCode == 200) {
-      var body = json.decode(response.body);
-      var res = body['data'];
-      AppUser1 appUsers = AppUser1.fromJson(res);
-
-      print('user body ${appUsers.telephone}');
-      return appUsers;
-    } else {
-      print(response.body);
-      throw Exception('Error in loading user data');
-    }
-  }
-
   Future<Response> register({
     required String username,
     required String firstName,
@@ -485,7 +466,6 @@ class ApiAuthService {
               Navigator.pop(context);
             },
           ));
-      print('///|||');
     }
   }
 

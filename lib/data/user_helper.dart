@@ -18,7 +18,7 @@ import '../model/shop.dart';
     return showModal(
       context: context,
       configuration: const FadeScaleTransitionConfiguration(),
-      builder: (BuildContext context) {
+      builder: (context) {
         return child;
       },
     );
@@ -160,6 +160,7 @@ class UserHelper {
       context: context,
       barrierDismissible: dismissible,
       builder: (context) => dialog);
+
   static clear() {
     module = Modules();
     shops = Shops();

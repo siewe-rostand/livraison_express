@@ -52,6 +52,7 @@ class ValiderPanier extends StatefulWidget {
 class _ValiderPanierState extends State<ValiderPanier> {
   MainUtils mainUtils =MainUtils();
 
+  DBHelper1 dbHelper = DBHelper1();
   final logger = Logger();
   Map<String, dynamic>? paymentIntentData;
   int radioSelected = 1;
@@ -78,7 +79,6 @@ class _ValiderPanierState extends State<ValiderPanier> {
     GlobalKey<FormState>(),
     GlobalKey<FormState>()
   ];
-  DBHelper dbHelper =DBHelper();
 
   //some variables
   String fullName = '';
@@ -109,31 +109,15 @@ class _ValiderPanierState extends State<ValiderPanier> {
   Client receiverClient = Client();
   Address senderAddress = Address();
   Address addressReceiver = Address();
-  Adresse selectedFavoriteAddress = Adresse();
-  TextEditingController quarterTextController = TextEditingController();
-  TextEditingController nameTextController = TextEditingController();
-  TextEditingController phoneTextController = TextEditingController();
-  TextEditingController phone2DepartTextController = TextEditingController();
-  TextEditingController emailTextController = TextEditingController();
-  TextEditingController addressTextController = TextEditingController();
-  TextEditingController descTextController = TextEditingController();
   TextEditingController cityDepartTextController = TextEditingController();
   TextEditingController titleTextController = TextEditingController();
   Adresse selectedAddressDepart = Adresse();
-  double? placeLat;
-  double? placeLon;
-  String? location;
   String? city;
   int? cityId;
   String? slug;
-  String? moduleSlug,paymentIntentClientSecret;
   int? idChargement;
   List<Products> productList =[];
-  List<Contact> contacts=[];
   bool isTodayOpened=false,isTomorrowOpened=false;
-
-  TextEditingController controller = TextEditingController();
-  final TextEditingController _typeAheadController = TextEditingController();
 
   @override
   void initState() {
@@ -328,9 +312,9 @@ class _ValiderPanierState extends State<ValiderPanier> {
     return deliveryTime;
   }
   setCartItems()async {
-    List<CartItem1> cartList =await dbHelper.getCartList();
+    List<CartItem> cartList =await dbHelper.getCartList();
     for(int i=0; i<cartList.length;i++){
-      CartItem1 cartItem = cartList[i];
+      CartItem cartItem = cartList[i];
       Products article =Products();
       article.id=cartItem.id;
       article.libelle=cartItem.title;
@@ -339,7 +323,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
       article.categorieId=cartItem.categoryId;
       article.subCategoryId=cartItem.categoryId;
       article.totalPrice = widget.totalAmount.toInt();
-      article.quantity =cartItem.quantity?.value;
+      article.quantity =cartItem.quantity;
       article.subTotalAmount =Provider.of<CartProvider>(context).getTotalPrice().toInt();
 
       productList.add(article);
@@ -356,21 +340,21 @@ class _ValiderPanierState extends State<ValiderPanier> {
 
 
     AppUser1 appUser1 = AppUser1.fromJson(extractedUserData);
-    List<CartItem1> cartList =await dbHelper.getCartList();
+    List<CartItem> cartList =await dbHelper.getCartList();
     for(int i=0; i<cartList.length;i++){
-      CartItem1 cartItem = cartList[i];
+      CartItem cartItem = cartList[i];
       Products article =Products();
       article.id=cartItem.productId;
       article.libelle=cartItem.title;
       article.prixUnitaire=cartItem.price;
       article.totalPrice=cartItem.totalPrice;
       article.totalPrice = widget.totalAmount.toInt();
-      article.quantity =cartItem.quantity?.value;
+      article.quantity =cartItem.quantity;
       article.subTotalAmount =Provider.of<CartProvider>(context,listen: false).getTotalPrice().toInt();
       article.magasinId=shops.id;
       productList.add(article);
-      // logger.wtf(cartItem.id);
     }
+    logger.wtf(cartList.length);
 
     List<Address> addressSender = [];
     List<Address>  receiverAddress = [];
@@ -403,6 +387,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
     payment.paymentMode = modePaiement;
     payment.status = status;
     payment.paymentIntent = pi;
+    log("Orders ${productList.length}");
 
     Infos info = Infos();
     info.origin ="Livraison express";
@@ -653,10 +638,16 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                   showDialog<void>(
                                       context: context,
                                       builder: (context) {
-                                        return const Center(
-                                          child: SelectTime(),
+                                        return  Center(
+                                          child: SelectTime(onSelectedDate: (selectedDate){
+                                            setState(() {
+                                              chooseTime=selectedDate;
+                                            });
+                                            },),
                                         );
                                       });
+                                  setState(() {
+                                  });
                                 },
                                 child: Row(
                                   children: [
@@ -675,7 +666,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                   ],
                                 ),
                               ),
-                              Text(UserHelper.chooseTime),
+                              Text(chooseTime),
                             ],
                           ),
                         ],

@@ -8,6 +8,7 @@ import 'package:livraison_express/service/shopService.dart';
 import 'package:livraison_express/utils/size_config.dart';
 import 'package:livraison_express/views/main/product_page.dart';
 import 'package:livraison_express/views/category/sub_category.dart';
+import 'package:livraison_express/views/widgets/custom_dialog.dart';
 import 'package:livraison_express/views/widgets/custom_sliver_app_bar.dart';
 import 'package:livraison_express/views/widgets/floating_action_button.dart';
 
@@ -19,9 +20,9 @@ import '../cart/cart.dart';
 import '../widgets/open_wrapper.dart';
 
 class CategoryPage extends StatefulWidget {
-  const CategoryPage(
-      {Key? key,})
-      : super(key: key);
+  const CategoryPage({
+    Key? key,
+  }) : super(key: key);
 
   @override
   State<CategoryPage> createState() => _CategoryPageState();
@@ -29,9 +30,9 @@ class CategoryPage extends StatefulWidget {
 
 class _CategoryPageState extends State<CategoryPage> {
   TextEditingController controller = TextEditingController();
-  List<Category> categories=[];
-  final List<Category> _searchResult=[];
-  FocusNode focusNode=FocusNode();
+  List<Category> categories = [];
+  final List<Category> _searchResult = [];
+  FocusNode focusNode = FocusNode();
   late Shops shops;
   bool? hasChildren;
   bool isVisible = true;
@@ -40,20 +41,20 @@ class _CategoryPageState extends State<CategoryPage> {
   void initState() {
     super.initState();
     isVisible = true;
-    shops=UserHelper.shops;
+    shops = UserHelper.shops;
     controller.addListener(() {
       setState(() {});
     });
     focusNode.addListener(() {
-      setState(() {
-
-      });
+      setState(() {});
     });
   }
+
   getCategories() async {
     await ShopServices.getCategoriesFromShop(shopId: shops.id);
   }
-  onSearchTextChanged(String text){
+
+  onSearchTextChanged(String text) {
     _searchResult.clear();
     if (text.isEmpty) {
       setState(() {});
@@ -61,7 +62,8 @@ class _CategoryPageState extends State<CategoryPage> {
     }
 
     for (var productDetail in categories) {
-      if (productDetail.libelle!.contains(text)) _searchResult.add(productDetail);
+      if (productDetail.libelle!.contains(text))
+        _searchResult.add(productDetail);
     }
   }
 
@@ -72,180 +74,219 @@ class _CategoryPageState extends State<CategoryPage> {
     controller.dispose();
     focusNode.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion(
-      value:
-          SystemUiOverlayStyle(statusBarColor: UserHelper.getColor()),
+      value: SystemUiOverlayStyle(statusBarColor: UserHelper.getColor()),
       child: SafeArea(
         child: Scaffold(
-            appBar: PreferredSize(
-              preferredSize: const Size.fromHeight(75),
-              child: AppBar(
-                elevation: 0,
-                backgroundColor: UserHelper.getColor(),
-                title: Container(
-                  margin: const EdgeInsets.only(
-                    top: 10,
-                  ),
-                  height: getProportionateScreenHeight(40),
-                  child: TextFormField(
-                    focusNode: focusNode,
-                    controller: controller,
-                    decoration: InputDecoration(
-                        floatingLabelBehavior: FloatingLabelBehavior.auto,
-                        fillColor: Colors.white,
-                        filled: true,
-                        hintText: 'Rechercher',
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(32),
-                            borderSide: BorderSide.none),
-                        prefixIcon: IconButton(
-                          icon: Icon(
-                            Icons.search,
-                            color: focusNode.hasFocus?UserHelper.getColor():null,
-                          ),
-                          onPressed: () {
-                            onSearchTextChanged('');
-                          },
+          appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(75),
+            child: AppBar(
+              elevation: 0,
+              backgroundColor: UserHelper.getColor(),
+              title: Container(
+                margin: const EdgeInsets.only(
+                  top: 10,
+                ),
+                height: getProportionateScreenHeight(40),
+                child: TextFormField(
+                  focusNode: focusNode,
+                  controller: controller,
+                  decoration: InputDecoration(
+                      floatingLabelBehavior: FloatingLabelBehavior.auto,
+                      fillColor: Colors.white,
+                      filled: true,
+                      hintText: 'Rechercher',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(32),
+                          borderSide: BorderSide.none),
+                      prefixIcon: IconButton(
+                        icon: Icon(
+                          Icons.search,
+                          color:
+                              focusNode.hasFocus ? UserHelper.getColor() : null,
                         ),
-                        suffixIcon: controller.text.isNotEmpty
-                            ? IconButton(
-                            color: UserHelper.getColor(),
-                            onPressed: (){
-                              controller.clear();
-                              MainUtils.hideKeyBoard(context);
-                            },
-                            icon: const Icon(Icons.clear))
-                            : null),
-                    onChanged: onSearchTextChanged,
-                  ),
+                        onPressed: () {
+                          onSearchTextChanged('');
+                        },
+                      ),
+                      suffixIcon: controller.text.isNotEmpty
+                          ? IconButton(
+                              color: UserHelper.getColor(),
+                              onPressed: () {
+                                controller.clear();
+                                MainUtils.hideKeyBoard(context);
+                              },
+                              icon: const Icon(Icons.clear))
+                          : null),
+                  onChanged: onSearchTextChanged,
                 ),
               ),
             ),
-            body: NestedScrollView(
-              headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
-                return [
-                  CustomSliverAppBar(title: shops.nom!)
-                ];
-              },
-              body: FutureBuilder<List<Category>>(
-                future: ShopServices.getCategories(shopId: shops.id!),
-                builder: (context,snapshot){
-                  if(snapshot.hasData){
-                    fromCategory = true;
-                     categories =snapshot.data!;
-                    return Container(
-                      color: Colors.white,
-                      child: SingleChildScrollView(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-
-                            Container(
-                              margin: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 5),
-                              color: categories.isNotEmpty?const Color(0xffF2F2F2):Colors.white,
-                              child:  _searchResult.isNotEmpty || controller.text.isNotEmpty?
-                              GridView.builder(
-                                shrinkWrap: true,
-                                gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 2),
-                                itemCount:_searchResult.length,
-                                physics: const ScrollPhysics(),
-                                itemBuilder: (context, index) {
-                                  print('_CategoryPageState.build');
-                                      return
-                                    OpenContainerWrapper(
-                                        closedBuilder:(BuildContext c, openContainer){
-                                          return InkWellOverlay(
-                                            onTap:(){
-                                              UserHelper.category=categories[index];
-                                              openContainer();
-                                            },
-                                            child: items(category: categories[index]),
-                                          );
-                                        },
-                                        onClosed: (v) async => Future.delayed(
-                                            const Duration(milliseconds: 500)),
-                                        nextPage: categories[index].hasChildren==true?SubCategory(
-                                          shopId: shops.id!,
-                                          categoryId: categories[index].id!,
-                                          title: shops.slug!,
-                                        ):const ProductPage());
-                                },
-                              ):
-                              GridView.builder(
-                                shrinkWrap: true,
-                                gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 2),
-                                itemCount:categories.length,
-                                physics: const ScrollPhysics(),
-                                itemBuilder: (context, index) {
-                                  return OpenContainerWrapper(
-                                      closedBuilder:(BuildContext c, openContainer){
-                                        return InkWell(
-                                          onTap:(){
-                                            UserHelper.category=categories[index];
-                                            openContainer();
+          ),
+          body: NestedScrollView(
+            headerSliverBuilder:
+                (BuildContext context, bool innerBoxIsScrolled) {
+              return [CustomSliverAppBar(title: shops.nom!)];
+            },
+            body: FutureBuilder<List<Category>>(
+              future: ShopServices.getCategories(shopId: shops.id!),
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  fromCategory = true;
+                  categories = snapshot.data!;
+                  return categories.isEmpty
+                      ? const Center(
+                          child: Text(
+                          "stock épuisé dans cette ville ",
+                          style: TextStyle(fontSize: 22, color: Colors.black38),
+                        ))
+                      : Container(
+                          color: Colors.white,
+                          child: SingleChildScrollView(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  margin: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 5),
+                                  color: categories.isNotEmpty
+                                      ? const Color(0xffF2F2F2)
+                                      : Colors.white,
+                                  child: _searchResult.isNotEmpty ||
+                                          controller.text.isNotEmpty
+                                      ? GridView.builder(
+                                          shrinkWrap: true,
+                                          gridDelegate:
+                                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                                  crossAxisCount: 2),
+                                          itemCount: _searchResult.length,
+                                          physics: const ScrollPhysics(),
+                                          itemBuilder: (context, index) {
+                                            return OpenContainerWrapper(
+                                                closedBuilder: (BuildContext c,
+                                                    openContainer) {
+                                                  return InkWellOverlay(
+                                                    onTap: () {
+                                                      UserHelper.category =
+                                                          categories[index];
+                                                      openContainer();
+                                                    },
+                                                    child: items(
+                                                        category:
+                                                            categories[index]),
+                                                  );
+                                                },
+                                                onClosed: (v) async =>
+                                                    Future.delayed(
+                                                        const Duration(
+                                                            milliseconds: 500)),
+                                                nextPage: categories[index]
+                                                            .hasChildren ==
+                                                        true
+                                                    ? SubCategory(
+                                                        shopId: shops.id!,
+                                                        categoryId:
+                                                            categories[index]
+                                                                .id!,
+                                                        title: shops.slug!,
+                                                      )
+                                                    : const ProductPage());
                                           },
-                                          child: items(category: categories[index]),
-                                        );
-                                      },
-                                      onClosed: (v) async => Future.delayed(
-                                          const Duration(milliseconds: 500)),
-                                      nextPage: categories[index].hasChildren==true?SubCategory(
-                                        shopId: shops.id!,
-                                        categoryId: categories[index].id!,
-                                        title: shops.slug!,
-                                      ):const ProductPage());
-                                },
-                              ),
-                            )
-                          ],
-                        ),
-                      ),
-                    );
-                  }else{
-                    return Center(
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(UserHelper.getColorDark()),
-                        strokeWidth: 2.5,
-                      ),
-                    );
-                  }
-                },
-              ),
-            ),
-            floatingActionButton: OpenContainerWrapper(
-              closedBuilder: (BuildContext c, VoidCallback openContainer){
-                return CustomFloatingButton(onTap: openContainer,);
+                                        )
+                                      : GridView.builder(
+                                          shrinkWrap: true,
+                                          gridDelegate:
+                                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                                  crossAxisCount: 2),
+                                          itemCount: categories.length,
+                                          physics: const ScrollPhysics(),
+                                          itemBuilder: (context, index) {
+                                            return OpenContainerWrapper(
+                                                closedBuilder: (BuildContext c,
+                                                    openContainer) {
+                                                  return InkWell(
+                                                    onTap: () {
+                                                      UserHelper.category =
+                                                          categories[index];
+                                                      openContainer();
+                                                    },
+                                                    child: items(
+                                                        category:
+                                                            categories[index]),
+                                                  );
+                                                },
+                                                onClosed: (v) async =>
+                                                    Future.delayed(
+                                                        const Duration(
+                                                            milliseconds: 500)),
+                                                nextPage: categories[index]
+                                                            .hasChildren ==
+                                                        true
+                                                    ? SubCategory(
+                                                        shopId: shops.id!,
+                                                        categoryId:
+                                                            categories[index]
+                                                                .id!,
+                                                        title: shops.slug!,
+                                                      )
+                                                    : const ProductPage());
+                                          },
+                                        ),
+                                )
+                              ],
+                            ),
+                          ),
+                        );
+                }
+                if (snapshot.hasError) {
+                  showGenDialog(
+                      context,
+                      false,
+                      CustomDialog(
+                          title: "ERROR!",
+                          content: snapshot.error.toString(),
+                          positiveBtnText: "OK",
+                          positiveBtnPressed: () {
+                            Navigator.of(context).pop();
+                          }));
+                }
+                return Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                        UserHelper.getColorDark()),
+                    strokeWidth: 2.5,
+                  ),
+                );
               },
-              nextPage: const CartPage(),
-              onClosed:  (v) async => Future.delayed(
-                  const Duration(milliseconds: 500)),
             ),
-            ),
+          ),
+          floatingActionButton: OpenContainerWrapper(
+            closedBuilder: (BuildContext c, VoidCallback openContainer) {
+              return CustomFloatingButton(
+                onTap: openContainer,
+              );
+            },
+            nextPage: const CartPage(),
+            onClosed: (v) async =>
+                Future.delayed(const Duration(milliseconds: 500)),
+          ),
+        ),
       ),
     );
   }
-  items({required Category category}){
+
+  items({required Category category}) {
     return Card(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10)
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         elevation: 8,
         child: Container(
           decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
               image: DecorationImage(
-                  image: CachedNetworkImageProvider(
-                      category.image!
-                  )
-              )
-          ),
+                  image: CachedNetworkImageProvider(category.image!))),
           child: Container(
             width: double.infinity,
             decoration: BoxDecoration(
@@ -253,8 +294,7 @@ class _CategoryPageState extends State<CategoryPage> {
                 gradient: kShopForegroundGradient1),
             child: Padding(
               padding: EdgeInsets.symmetric(
-                  horizontal:
-                  getProportionateScreenWidth(8)),
+                  horizontal: getProportionateScreenWidth(8)),
               child: Column(
                 children: [
                   const Expanded(
@@ -265,19 +305,15 @@ class _CategoryPageState extends State<CategoryPage> {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                         color: Colors.white,
-                        fontSize:
-                        getProportionateScreenWidth(
-                            20)),
+                        fontSize: getProportionateScreenWidth(20)),
                   ),
                   SizedBox(
-                    height:
-                    getProportionateScreenHeight(10),
+                    height: getProportionateScreenHeight(10),
                   )
                 ],
               ),
             ),
           ),
-        )
-    );
+        ));
   }
 }

@@ -100,7 +100,7 @@ class _MagasinPageState extends State<MagasinPage> {
               }
             }
             return OpenContainerWrapper(
-              transitionType: ContainerTransitionType.fade,
+              transitionType: ContainerTransitionType.fadeThrough,
               nextPage: const CategoryPage(),
               closedBuilder: (BuildContext _, VoidCallback openContainer){
                 return InkWellOverlay(
@@ -201,6 +201,9 @@ class _MagasinPageState extends State<MagasinPage> {
                   children: [
                     const Spacer(),
                     ElevatedButton(
+                      style: ButtonStyle(
+                        backgroundColor: MaterialStateProperty.all(UserHelper.getColorDark())
+                      ),
                       onPressed: (){
                         UserHelper.shops = shop;
                         Navigator.of(context).push(MaterialPageRoute(builder: (context) => const CategoryPage()));

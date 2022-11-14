@@ -40,15 +40,16 @@ class _CartItemViewState extends State<CartItemView> {
           children: [
             Expanded(
               child: Container(
-                width: 90,
-                height: 90,
+                width: getProportionateScreenWidth(90),
+                height: getProportionateScreenHeight(90),
                 color: Colors.white38,
                 child: SizedBox(
-                    height: 85,
+                    height: getProportionateScreenHeight(85),
                     child:Image.network(widget.image)),
               ),
               flex: 2,
             ),
+            const SizedBox(width: 10,),
             // Padding(padding: EdgeInsets.all(4)),
             Expanded(
               flex: 8,

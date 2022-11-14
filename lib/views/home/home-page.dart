@@ -11,7 +11,7 @@ import 'package:livraison_express/constant/all-constant.dart';
 import 'package:livraison_express/data/user_helper.dart';
 import 'package:livraison_express/model/horaire.dart';
 import 'package:livraison_express/model/user.dart';
-import 'package:livraison_express/service/api_auth_service.dart';
+import 'package:livraison_express/service/auth_service.dart';
 import 'package:livraison_express/utils/main_utils.dart';
 import 'package:livraison_express/utils/size_config.dart';
 import 'package:livraison_express/views/drawer/home-drawer.dart';
@@ -152,7 +152,7 @@ class _HomePageState extends State<HomePage> {
     Future.delayed(Duration.zero,()=>_showDialog(context));
     cities.clear();
     modules.clear();
-    Provider.of<CartProvider>(context).clears();
+    Provider.of<CartProvider>(context,listen: false).clears();
     String url = "$baseUrl/modules?city=$cityString";
     final response = await get(Uri.parse(url)).catchError((e) {
       logger.e(e.toString());
@@ -341,7 +341,6 @@ class _HomePageState extends State<HomePage> {
                       ),
                       child: Column(
                         children: [
-
                           SelectCity(
                             cities: cities,
                             citySelected: (city) {
@@ -437,7 +436,8 @@ class _HomePageState extends State<HomePage> {
       decoration: const BoxDecoration(
         border: Border(
           right: BorderSide(color: grey40),
-          bottom: BorderSide(color: grey40)
+          bottom: BorderSide(color: grey40),
+          top: BorderSide(color: grey40)
         )
       ),
       child: Column(
