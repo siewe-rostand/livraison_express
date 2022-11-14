@@ -687,8 +687,6 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
       phone2DepartTextController.text = telephone1;
       phoneDepartTextController.text = telephone;
       emailDepartTextController.text = email;
-      // sender.id = int.parse(id);
-      print("${id.runtimeType}");
       sender.providerName = radioSelected == 0
           ? extractedUserData['provider_name']
           : 'livraison-express';
@@ -1108,7 +1106,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                       'img/icon/svg/ic_link_black.svg',
                                       color: grey40,
                                     )),
-                                Text(
+                                const Text(
                                   'Ajouter un code promo',
                                   style: TextStyle(color: primaryColor),
                                 ),

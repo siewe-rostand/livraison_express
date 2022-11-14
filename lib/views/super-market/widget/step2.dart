@@ -205,8 +205,6 @@ class _Step2State extends State<Step2> {
                       titleTextController.text;
                 }
               });
-              print(isFavoriteAddress(selectedFavouriteAddress, senderAddress));
-              print('///');
             },
             controlAffinity: ListTileControlAffinity.leading,
           )

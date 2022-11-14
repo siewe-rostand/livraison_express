@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:contacts_service/contacts_service.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart' as stripe;
 import 'package:flutter_svg/svg.dart';
@@ -18,6 +19,7 @@ import 'package:livraison_express/model/payment.dart';
 import 'package:livraison_express/model/product.dart';
 import 'package:livraison_express/model/user.dart';
 import 'package:livraison_express/service/paymentApi.dart';
+import 'package:livraison_express/utils/app_extension.dart';
 import 'package:livraison_express/utils/main_utils.dart';
 import 'package:livraison_express/utils/size_config.dart';
 import 'package:livraison_express/views/super-market/widget/step1.dart';
@@ -247,9 +249,6 @@ class _ValiderPanierState extends State<ValiderPanier> {
     addressReceiver.ville=city;
     addressReceiver.villeId=cityId;
     addressReceiver.pays="Cameroun";
-    // print(';;;${isFavoriteAddress(selectedFavoriteAddress, addressReceiver) }${selectedFavoriteAddress.toString().length}');
-    log("message ${addressReceiver.toJson()}");
-    // log("message ${UserHelper.chooseTime}");
     calculateDistance();
   }
 
@@ -289,7 +288,6 @@ class _ValiderPanierState extends State<ValiderPanier> {
               _currentStep++;
             });
           }
-          log("message${distanceMatrix.toJson()}");
     }).catchError((onError) {
       logger.e(onError);
       var message ="Une erreur est survenue lors du calcul de la distance. Veuillez vérifier vos informations puis réessayez.";
@@ -354,7 +352,6 @@ class _ValiderPanierState extends State<ValiderPanier> {
       article.magasinId=shops.id;
       productList.add(article);
     }
-    logger.wtf(cartList.length);
 
     List<Address> addressSender = [];
     List<Address>  receiverAddress = [];
@@ -362,6 +359,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
     receiverAddress.add(addressReceiver);
     senderClient.addresses =addressSender;
     receiverClient.addresses=receiverAddress;
+
     receiverClient.providerName=appUser1.providerName;
 
     // originalClient.id=appUser1.providerId;
@@ -387,7 +385,6 @@ class _ValiderPanierState extends State<ValiderPanier> {
     payment.paymentMode = modePaiement;
     payment.status = status;
     payment.paymentIntent = pi;
-    log("Orders ${productList.length}");
 
     Infos info = Infos();
     info.origin ="Livraison express";
@@ -421,8 +418,8 @@ class _ValiderPanierState extends State<ValiderPanier> {
           positiveText: "OK",
           onContinue:(){
             Navigator.of(context).pop();
-            Provider.of<CartProvider>(context,listen: false).clears();
-            Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context)=>const CartPage()));
+            // Provider.of<CartProvider>(context,listen: false).clears();
+            // Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context)=>const CartPage()));
           },
           ));
     }).catchError((onError){
@@ -520,28 +517,36 @@ class _ValiderPanierState extends State<ValiderPanier> {
                 controlsBuilder:
                     (BuildContext context, ControlsDetails detail) {
                   return isLoading==true?const CircularProgressIndicator(): _currentStep >= 3
-                      ? ElevatedButton(
-                          style: ButtonStyle(
-                              backgroundColor: MaterialStateProperty.all(
-                                  UserHelper.getColor())),
-                          onPressed: () async{
-                            debugPrint('////');
-                            if(payMode == "cash"){
-                              debugPrint('////');
-                              saveOrder("cash", '', '', '');
-                            }else if(payMode == "card"){
-                              var amt=cartProvider.totalPrice +deliveryPrice;
-                              var amount= amt.toString();
-                              await stripe.Stripe.instance.presentPaymentSheet();
-                              // makePayment(amount: amount, context: context);
-                            }else{
-                              Fluttertoast.showToast(msg: "Veuillez choisir un moyen de paiement");
-                            }
-                          },
-                          child: const Text(
-                            "COMMANDER",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ))
+                      ? InkWell(
+                    onTap: ()async{
+                      setState(() {
+                        isLoading=true;
+                      });
+                      if(payMode == "cash"){
+                        saveOrder("cash", '', '', '');
+                      }else if(payMode == "card"){
+                        var amt=cartProvider.totalPrice +deliveryPrice;
+                        var amount= amt.toString();
+                        await stripe.Stripe.instance.presentPaymentSheet();
+                        PaymentApi(context: context).makePayment(amount: amount);
+                      }else{
+                        Fluttertoast.showToast(msg: "Veuillez choisir un moyen de paiement");
+                      }
+                    },
+                    child: Container(
+                        height: 60.H,
+                        decoration: BoxDecoration(
+                            color: UserHelper.getColor(),
+                            border: Border.all(color: UserHelper.getColorDark(), width: 1.5),
+                            borderRadius: BorderRadius.circular(6.H)
+                        ),
+                        child: Center(
+                            child: (isLoading == false)
+                                ? Text("COMMANDER", style: boldTextStyle(16, color: Colors.white))
+                                : CupertinoActivityIndicator(radius: 15.SP, animating: (isLoading == true))
+                        )
+                    ),
+                  )
                       : Container(
                     padding: const EdgeInsets.only(top: 10),
                         child: MaterialButton(
@@ -905,6 +910,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
             dateFormat=DateFormat.Hms();
             currentTime=dateFormat.format(now);
             currentDate =DateFormat("yyyy-MM-dd").format(now);
+            log("${addressReceiver.toJson()}");
             if(UserHelper.chooseTime.isEmpty) {
               Fluttertoast.showToast(msg: "Veuillez choisir une heure de livraison");
             }else {

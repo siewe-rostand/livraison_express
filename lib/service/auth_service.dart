@@ -270,14 +270,12 @@ class ApiAuthService {
       UserCredential result = await _auth.signInWithEmailAndPassword(
           email: email, password: password);
       if (result.toString().isNotEmpty) {
-        progressDialog!.hide();
         User? user = result.user;
         if (user != null) {
           final idToken = await user.getIdToken();
-          log("token id: $idToken");
           getAccessToken(firebaseTokenId: idToken);
         } else {
-          logger.e("${user?.email}");
+          progressDialog!.hide();
           showGenDialog(
               context,
               true,

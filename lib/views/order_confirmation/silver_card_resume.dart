@@ -98,7 +98,7 @@ class SliverCardResume extends StatelessWidget {
                             children: [
                               const Text('Paiement: '),
                               Text(command.paiement!.paymentMode == 'cash'? "A la livraison $mode" : "Carte bancaire $mode",
-                                style: TextStyle(color: command.paiement!.paymentMode == null? primaryRed:primaryGreenDark),)
+                                style: TextStyle(color: mode == "(Non Payée)"? primaryRed:primaryGreenDark),)
                             ],
                           )
                         ],

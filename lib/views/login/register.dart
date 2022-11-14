@@ -1,16 +1,18 @@
 import 'dart:convert';
 
+import 'package:country_picker/country_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:livraison_express/service/auth_service.dart';
 import 'package:livraison_express/views/login/verification_code.dart';
-import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../constant/app-constant.dart';
 import '../../data/user_helper.dart';
+import '../../utils/size_config.dart';
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({Key? key}) : super(key: key);
@@ -34,13 +36,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
   final confirmPasswordTextController = TextEditingController();
   final verificationCodeTextController = TextEditingController();
   String phoneNo = '';
-  late String smsOTP;
-  late String verificationId;
   String errorMessage = '';
-  final FirebaseAuth _auth = FirebaseAuth.instance;
   bool isLoading = false;
   bool isClicked = false;
-  String countryCode='';
+  String countryCode='',code='237';
   bool isEmpty =true;
   getPhone()async{
     SharedPreferences preferences = await SharedPreferences.getInstance();
@@ -112,15 +111,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
                                            errorMessage: "Le donner existe deja", context: bContext,negativeText: "OK");
 
                                      });
-                                     // setState(() {
-                                     //   isLoading=false;
-                                     // });
-                                      // await phoneSignIn(
-                                      //         phoneNumber:
-                                      //             _phone2TextController
-                                      //                 .text)
-                                      //     .then((value) =>
-                                      //         debugPrint('success'));
                                     } else {
                                       debugPrint('error');
                                     }
@@ -156,91 +146,118 @@ class _RegistrationPageState extends State<RegistrationPage> {
                               state: _currentStep > 0
                                   ? StepState.complete
                                   : StepState.indexed,
-                              content: Column(
-                                children: [
-                                  TextFormField(
-                                    keyboardType: TextInputType.name,
-                                    decoration:  InputDecoration(
-                                        hintText: 'Nom ',
-                                      suffixIcon:isEmpty==false ?IconButton(onPressed:(){
-                                        print('veuillez remplir ce champs');
-                                          setState(() {
-                                            isClicked =true;
-                                          });
-                                      }, icon: const Icon(Icons.error,color: Colors.red,)):null
+                              content: Form(
+                                key: _formKeys[0],
+                                child: Column(
+                                  children: [
+                                    TextFormField(
+                                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                                      keyboardType: TextInputType.name,
+                                      decoration:  InputDecoration(
+                                          hintText: 'Nom ',
+                                        suffixIcon:isEmpty==false ?IconButton(onPressed:(){
+                                            setState(() {
+                                              isClicked =true;
+                                            });
+                                        }, icon: const Icon(Icons.error,color: Colors.red,)):null
+                                      ),
+                                      controller: nameTextController,
+                                      validator: (value){
+                                        if(value!.isEmpty){
+                                          return'veuillez remplir ce champs';
+                                        }
+                                        return null;
+                                      },
                                     ),
-                                    controller: nameTextController,
-                                    validator: (value){
-                                      if(value!.isEmpty){
-                                        return'veuillez remplir ce champs';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  TextFormField(
-                                    decoration: const InputDecoration(
-                                        hintText: 'Prenom '),
-                                    controller: surnameTextController,
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.allow(
-                                        RegExp(r"[a-zA-Z]+|\s"),
-                                      )
-                                    ],
-                                    validator: (value){
-                                      if(value!.isEmpty){
-                                        return'veuillez remplir ce champs';
-                                      }else if( value.length<4){
-                                        return 'minimum 4 lettres svp!';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  TextFormField(
-                                    keyboardType: TextInputType.emailAddress,
-                                    decoration: const InputDecoration(
-                                        hintText: 'Email '),
-                                    controller: emailTextController,
-                                    validator: (val){
-                                      if(!val!.isValidEmail){
-                                        return 'veuillez remplir ce champs';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  IntlPhoneField(
-                                    keyboardType: TextInputType.phone,
-                                    controller: _phoneTextController,
-                                    showCountryFlag: false,
-                                    dropdownIconPosition:
-                                        IconPosition.trailing,
-                                    decoration: const InputDecoration(
-                                      hintText: 'Telephone 1',
+                                    TextFormField(
+                                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                                      decoration: const InputDecoration(
+                                          hintText: 'Prenom '),
+                                      controller: surnameTextController,
+                                      inputFormatters: [
+                                        FilteringTextInputFormatter.allow(
+                                          RegExp(r"[a-zA-Z]+|\s"),
+                                        )
+                                      ],
+                                      validator: (value){
+                                        if(value!.isEmpty){
+                                          return'veuillez remplir ce champs';
+                                        }else if( value.length<4){
+                                          return 'minimum 4 lettres svp!';
+                                        }
+                                        return null;
+                                      },
                                     ),
-                                    onChanged: (phone) {
-                                      // print(phone.completeNumber);
-                                      phoneNo=phone.number;
-                                      countryCode =phone.countryCode;
-                                    },
-                                    initialCountryCode: 'CM',
-                                    invalidNumberMessage:
-                                        invalid_phone,
-                                  ),
-                                  IntlPhoneField(
-                                    showCountryFlag: false,
-                                    autovalidateMode: AutovalidateMode.disabled,
-                                    dropdownIconPosition:
-                                        IconPosition.trailing,
-                                    decoration: const InputDecoration(
-                                      hintText: 'Telephone 2',
+                                    TextFormField(
+                                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                                      keyboardType: TextInputType.emailAddress,
+                                      decoration: const InputDecoration(
+                                          hintText: 'Email '),
+                                      controller: emailTextController,
+                                      validator: (val){
+                                        if(!val!.isValidEmail){
+                                          return 'veuillez remplir ce champs';
+                                        }
+                                        return null;
+                                      },
                                     ),
-                                    onChanged: (phone) {
-                                      // print(phone.completeNumber);
-                                    },
-                                    initialCountryCode: 'CM',
-                                    invalidNumberMessage:
-                                      invalid_phone,
-                                  ),
-                                ],
+                                    IntlPhoneField(
+                                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                                      keyboardType: TextInputType.phone,
+                                      controller: _phoneTextController,
+                                      showCountryFlag: false,
+                                      dropdownIconPosition:
+                                          IconPosition.trailing,
+                                      decoration: const InputDecoration(
+                                        hintText: 'Telephone 1',
+                                      ),
+                                      onChanged: (phone) {
+                                        phoneNo=phone.number;
+                                        countryCode =phone.countryCode;
+                                      },
+                                      initialCountryCode: 'CM',
+                                      invalidNumberMessage:
+                                          invalid_phone,
+                                    ),
+                                    Container(
+                                      decoration: const BoxDecoration(
+                                        border: Border(
+                                          bottom: BorderSide(width: 1,color: Colors.black45)
+                                        )
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Row(children: [
+                                            Text("+$code"),
+                                            IconButton(
+                                                onPressed: (){
+                                                  showCountryPicker(context: context, onSelect:(val){
+                                                    setState(() {
+                                                      code = val.phoneCode;
+                                                    });
+                                                  });
+                                                },
+                                                icon: const Icon(Icons.arrow_drop_down,color: Colors.black45,)
+                                            )
+                                          ],),
+                                          Expanded(
+                                            child: TextFormField(
+                                              controller: _phone2TextController,
+                                              keyboardType: TextInputType.emailAddress,
+                                              decoration: const InputDecoration(
+                                                  hintText: 'Telephone 2 ',
+                                                border: InputBorder.none
+                                              ),
+                                            ),
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      height: getProportionateScreenHeight(30),
+                                    )
+                                  ],
+                                ),
                               )),
                           Step(
                               title: const Text('Authentification'),
@@ -248,47 +265,50 @@ class _RegistrationPageState extends State<RegistrationPage> {
                               state: _currentStep > 1
                                   ? StepState.complete
                                   : StepState.indexed,
-                              content: Column(
-                                children: [
-                                  TextFormField(
-                                    decoration: const InputDecoration(
-                                        labelText: 'Telephone '),
-                                    enabled: false,
-                                    controller: TextEditingController(text: _phoneTextController.text),
-                                  ),
-                                  TextFormField(
-                                    keyboardType: TextInputType.visiblePassword,
-                                    decoration: const InputDecoration(
-                                        hintText: 'Mot de passe '),
-                                    controller: passwordTextController,
-                                    autovalidateMode: AutovalidateMode.onUserInteraction,
-                                    validator: (val){
-                                      if(val!.isEmpty){
-                                        return "Veuillez remplir ce champ";
-                                      } else if(val.length<8){
-                                        return 'Le mot de passe doit contenir aumoins 8 caractères';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  TextFormField(
-                                    keyboardType: TextInputType.visiblePassword,
-                                    decoration: const InputDecoration(
-                                        hintText:
-                                            'Confirmer le mot de passe'),
-                                    controller:
-                                        confirmPasswordTextController,
-                                    autovalidateMode: AutovalidateMode.onUserInteraction,
-                                    validator: (val){
-                                      if(val!.isEmpty){
-                                        return "Veuillez remplir ce champ";
-                                      } else if(passwordTextController.text != confirmPasswordTextController.text){
-                                        return 'Contenu incorrect';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                ],
+                              content: Form(
+                                key: _formKeys[1],
+                                child: Column(
+                                  children: [
+                                    TextFormField(
+                                      decoration: const InputDecoration(
+                                          labelText: 'Telephone '),
+                                      enabled: false,
+                                      controller: TextEditingController(text: _phoneTextController.text),
+                                    ),
+                                    TextFormField(
+                                      keyboardType: TextInputType.visiblePassword,
+                                      decoration: const InputDecoration(
+                                          hintText: 'Mot de passe '),
+                                      controller: passwordTextController,
+                                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                                      validator: (val){
+                                        if(val!.isEmpty){
+                                          return "Veuillez remplir ce champ";
+                                        } else if(val.length<8){
+                                          return 'Le mot de passe doit contenir au moins 8 caractères';
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                    TextFormField(
+                                      keyboardType: TextInputType.visiblePassword,
+                                      decoration: const InputDecoration(
+                                          hintText:
+                                              'Confirmer le mot de passe'),
+                                      controller:
+                                          confirmPasswordTextController,
+                                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                                      validator: (val){
+                                        if(val!.isEmpty){
+                                          return "Veuillez remplir ce champ";
+                                        } else if(passwordTextController.text != confirmPasswordTextController.text){
+                                          return 'Contenu incorrect';
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                  ],
+                                ),
                               ))
                         ])
                     : const CircularProgressIndicator()
@@ -305,8 +325,16 @@ class _RegistrationPageState extends State<RegistrationPage> {
   }
 
   continued() async {
-    _currentStep < 3 ? setState(() => _currentStep += 1) : null;
-
+    // _currentStep < 3 ? setState(() => _currentStep += 1) : null;
+    if(_formKeys[_currentStep].currentState!.validate()){
+      switch (_currentStep){
+        case 0:
+          setState(() => _currentStep += 1);
+          break;
+        default:
+          break;
+      }
+    }
   }
 
 

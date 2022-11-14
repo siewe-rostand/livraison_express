@@ -52,11 +52,9 @@ class _AddressDialogItemsState extends State<AddressDialogItems> {
                 child: PopupMenuButton<Menu>(
                     onSelected: (Menu item){
                       if(item.name == "edit"){
-                        print(widget.address.toJson());
                         showGenDialog(context, false, AddressDialog(address: widget.address,buttonText: "ENREGISTRER",readOnly: false, title: "Modifier",));
                       }
                       if(item.name == "detail"){
-                        // print(fav[index].toJson());
                         showGenDialog(context, false, AddressDialog(address: widget.address,color: Colors.white,));
                       }
                       if(item.name =='delete'){

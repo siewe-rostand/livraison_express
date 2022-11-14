@@ -113,6 +113,7 @@ class _CommandListsState extends State<CommandLists> {
               itemBuilder: (context, index) {
                 prefs.getString('orders');
                 Command order =command[index];
+                log("${order.sender!.toJson()}");
                 return OpenContainerWrapper(
                   transitionType: ContainerTransitionType.fade,
                   nextPage: OrderDetailScreen(order),

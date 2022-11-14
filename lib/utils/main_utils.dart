@@ -15,6 +15,31 @@ ThemeData theme(){
     appBarTheme: appBarTheme(),
   );
 }
+/// Bold text style - w700
+TextStyle boldTextStyle(
+    double size, {
+      Color? color,
+      double? height,
+      String? fontFamily,
+    }) =>
+    thinTextStyle(size, color: color, height: height).copyWith(
+      fontWeight: FontWeight.bold,
+      fontFamily: fontFamily,
+    );
+/// Thin text style - w100
+TextStyle thinTextStyle(
+    double size, {
+      Color? color,
+      double? height,
+      String? fontFamily,
+    }) =>
+    TextStyle(
+      fontSize: size,
+      fontWeight: FontWeight.w100,
+      fontFamily: fontFamily,
+      color: color,
+      height: height,
+    );
 
 AppBarTheme appBarTheme(){
   return const AppBarTheme(
