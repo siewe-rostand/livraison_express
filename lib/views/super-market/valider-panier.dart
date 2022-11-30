@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:contacts_service/contacts_service.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart' as stripe;
 import 'package:flutter_svg/svg.dart';
@@ -18,6 +19,7 @@ import 'package:livraison_express/model/payment.dart';
 import 'package:livraison_express/model/product.dart';
 import 'package:livraison_express/model/user.dart';
 import 'package:livraison_express/service/paymentApi.dart';
+import 'package:livraison_express/utils/app_extension.dart';
 import 'package:livraison_express/utils/main_utils.dart';
 import 'package:livraison_express/utils/size_config.dart';
 import 'package:livraison_express/views/super-market/widget/step1.dart';
@@ -63,6 +65,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
   bool isChecked = false;
   bool isChecked1 = false;
   bool isLoading=false;
+  bool isLoading1=false;
   bool isToday = false;
   String chooseTime = '';
   List<String> timeSlots = [];
@@ -110,7 +113,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
   Address senderAddress = Address();
   Address addressReceiver = Address();
   TextEditingController cityDepartTextController = TextEditingController();
-  TextEditingController titleTextController = TextEditingController();
+  TextEditingController promoTextController = TextEditingController();
   Adresse selectedAddressDepart = Adresse();
   String? city;
   int? cityId;
@@ -247,15 +250,14 @@ class _ValiderPanierState extends State<ValiderPanier> {
     addressReceiver.ville=city;
     addressReceiver.villeId=cityId;
     addressReceiver.pays="Cameroun";
-    // print(';;;${isFavoriteAddress(selectedFavoriteAddress, addressReceiver) }${selectedFavoriteAddress.toString().length}');
-    log("message ${addressReceiver.toJson()}");
-    // log("message ${UserHelper.chooseTime}");
     calculateDistance();
   }
 
 
   calculateDistance() async {
-
+    setState(() {
+      isLoading1 = true;
+    });
     Shops shops=UserHelper.shops;
     String slug = shops.slug!;
     String module = shops.slug!;
@@ -263,7 +265,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
     String origin = senderAddress.latitude! + "," + senderAddress.longitude!;
     String destination =
         addressReceiver.latitude! + "," + addressReceiver.longitude!;
-    await CourseApi().calculateOrderDistance(
+    await CourseApi(context: context).calculateOrderDistance(
         origin: origin,
         destination: destination,
         module: module,
@@ -285,12 +287,16 @@ class _ValiderPanierState extends State<ValiderPanier> {
               initialDeliveryPrice = distanceMatrix.prix!;
               express =distanceMatrix.durationText!;
 
+              isLoading1 =false;
               UserHelper.chooseTime='';
               _currentStep++;
             });
           }
           log("message${distanceMatrix.toJson()}");
     }).catchError((onError) {
+      setState(() {
+        isLoading1 =false;
+      });
       logger.e(onError);
       var message ="Une erreur est survenue lors du calcul de la distance. Veuillez vérifier vos informations puis réessayez.";
       showGenDialog(context,true,CustomDialog(title: "Alert", content: message, positiveBtnText: "OK", positiveBtnPressed: (){
@@ -354,10 +360,10 @@ class _ValiderPanierState extends State<ValiderPanier> {
       article.magasinId=shops.id;
       productList.add(article);
     }
-    logger.wtf(cartList.length);
 
     List<Address> addressSender = [];
     List<Address>  receiverAddress = [];
+    addressReceiver.clientId = appUser1.id;
     addressSender.add(senderAddress);
     receiverAddress.add(addressReceiver);
     senderClient.addresses =addressSender;
@@ -380,6 +386,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
     order.commentaire ='';
     order.montantLivraison =initialDeliveryPrice;
     order.magasinId=shops.id;
+    order.listeArticles = productList;
     var total=Provider.of<CartProvider>(context,listen: false).getTotalPrice() +deliveryPrice;
     Payment payment =Payment();
     payment.totalAmount = total.toInt();
@@ -387,7 +394,6 @@ class _ValiderPanierState extends State<ValiderPanier> {
     payment.paymentMode = modePaiement;
     payment.status = status;
     payment.paymentIntent = pi;
-    log("Orders ${productList.length}");
 
     Infos info = Infos();
     info.origin ="Livraison express";
@@ -411,7 +417,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
       "paiement":payment,
     };
 
-    await CourseApi().commnander2( data: data).then((response) {
+    await CourseApi(context: context).commnander2( data: data).then((response) {
       var body = json.decode(response.body);
       var com = body['data'];
       command.Command ord =command.Command.fromJson(com);
@@ -420,12 +426,18 @@ class _ValiderPanierState extends State<ValiderPanier> {
           message: "Felicitation, Commande enregistrée avec succès\nN° commande ${ord.infos?.ref} ",
           positiveText: "OK",
           onContinue:(){
+            setState(() {
+              isLoading1=false;
+            });
             Navigator.of(context).pop();
             Provider.of<CartProvider>(context,listen: false).clears();
             Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context)=>const CartPage()));
           },
           ));
     }).catchError((onError){
+      setState(() {
+        isLoading1=false;
+      });
       logger.e(onError);
       UserHelper.userExitDialog(context, true,  CustomAlertDialog(
           svgIcon: "img/icon/svg/smiley_cry.svg", title: "Desole",
@@ -520,28 +532,36 @@ class _ValiderPanierState extends State<ValiderPanier> {
                 controlsBuilder:
                     (BuildContext context, ControlsDetails detail) {
                   return isLoading==true?const CircularProgressIndicator(): _currentStep >= 3
-                      ? ElevatedButton(
-                          style: ButtonStyle(
-                              backgroundColor: MaterialStateProperty.all(
-                                  UserHelper.getColor())),
-                          onPressed: () async{
-                            debugPrint('////');
-                            if(payMode == "cash"){
-                              debugPrint('////');
-                              saveOrder("cash", '', '', '');
-                            }else if(payMode == "card"){
-                              var amt=cartProvider.totalPrice +deliveryPrice;
-                              var amount= amt.toString();
-                              await stripe.Stripe.instance.presentPaymentSheet();
-                              // makePayment(amount: amount, context: context);
-                            }else{
-                              Fluttertoast.showToast(msg: "Veuillez choisir un moyen de paiement");
-                            }
-                          },
-                          child: const Text(
-                            "COMMANDER",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ))
+                      ? InkWell(
+                    onTap:(isLoading1 == false)? ()async{
+                      setState(() {
+                        isLoading1=true;
+                      });
+                      if(payMode == "cash"){
+                        saveOrder("cash", '', '', '');
+                      }else if(payMode == "card"){
+                        var amt=cartProvider.totalPrice +deliveryPrice;
+                        var amount= amt.toString();
+                        await stripe.Stripe.instance.presentPaymentSheet();
+                        PaymentApi(context: context).makePayment(amount: amount);
+                      }else{
+                        Fluttertoast.showToast(msg: "Veuillez choisir un moyen de paiement");
+                      }
+                    }:null,
+                    child: Container(
+                        height: getProportionateScreenHeight(50),
+                        decoration: BoxDecoration(
+                            color: UserHelper.getColor(),
+                            border: Border.all(color: UserHelper.getColorDark(), width: 1.5),
+                            borderRadius: BorderRadius.circular(getProportionateScreenHeight(6))
+                        ),
+                        child: Center(
+                            child: (isLoading1 == false)
+                                ? Text("COMMANDER", style: boldTextStyle(16, color: Colors.white))
+                                : CupertinoActivityIndicator(radius: 15, animating: (isLoading1 == true))
+                        )
+                    ),
+                  )
                       : Container(
                     padding: const EdgeInsets.only(top: 10),
                         child: MaterialButton(
@@ -551,13 +571,14 @@ class _ValiderPanierState extends State<ValiderPanier> {
                             borderRadius: BorderRadius.circular(10)
                         ),
                         onPressed: detail.onStepContinue,
-                        child: Row(
+                        child:(isLoading1 == false)? Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: const [
                             Text('CONTINUER',style: TextStyle(color: Colors.white,fontSize: 18),),
                             Icon(Icons.arrow_forward,color: Colors.white,size: 23,)
                           ],
-                        )),
+                        ): CupertinoActivityIndicator(radius: 15, animating: (isLoading1 == true))
+                        ),
                       );
 
 
@@ -634,6 +655,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                 onTap: () {
                                   setState(() {
                                     _deliveryType = DeliveryType.heure_livraison;
+                                    chooseTime='';
                                   });
                                   showDialog<void>(
                                       context: context,
@@ -646,8 +668,6 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                             },),
                                         );
                                       });
-                                  setState(() {
-                                  });
                                 },
                                 child: Row(
                                   children: [
@@ -659,6 +679,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                       onChanged: (DeliveryType? value) {
                                         setState(() {
                                           _deliveryType = value;
+                                          chooseTime='';
                                         });
                                       },
                                     ),
@@ -752,6 +773,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                           TextFormField(
                                             decoration: const InputDecoration(
                                                 labelText: 'Code Promo'),
+                                            controller: promoTextController,
                                           ),
                                           Row(
                                             mainAxisAlignment:
@@ -784,6 +806,14 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                                           .white)),
                                                   onPressed: () {
                                                     Navigator.of(context).pop();
+                                                    var amount = cartProvider.getTotalPrice();
+                                                    CourseApi(context: context).validatePromoCode(
+                                                        code: promoTextController.text,
+                                                        magasin_id: UserHelper.shops.id!,
+                                                        amount: amount.toInt(),
+                                                        delivery_amount: deliveryPrice).onError((error, stackTrace){
+                                                       return  showToast(context: context, text: "Code non valide ou expirer");
+                                                    });
                                                   },
                                                   child: const Text(
                                                     'Valider',
@@ -884,7 +914,11 @@ class _ValiderPanierState extends State<ValiderPanier> {
   }
 
   tapped(int step) {
-    setState(() => _currentStep = step);
+    if(step <= _currentStep) {
+      setState(() => _currentStep = step);
+    }else{
+      showToast(context: context, text: 'Veuillez clicker le button');
+    }
   }
 
   continued() async {
@@ -901,16 +935,16 @@ class _ValiderPanierState extends State<ValiderPanier> {
           break;
         case 2:
           if(mounted) {
-            setState(() {
+            if(chooseTime.isNotEmpty) {
+              setState(() {
             dateFormat=DateFormat.Hms();
             currentTime=dateFormat.format(now);
             currentDate =DateFormat("yyyy-MM-dd").format(now);
-            if(UserHelper.chooseTime.isEmpty) {
-              Fluttertoast.showToast(msg: "Veuillez choisir une heure de livraison");
-            }else {
-              _currentStep++;
-            }
+            _currentStep++;
           });
+            }else{
+              showToast(context: context, text: "Veuillez choisir l'heure de livraison");
+            }
           }
           break;
       }

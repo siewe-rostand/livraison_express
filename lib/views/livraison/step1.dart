@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:contacts_service/contacts_service.dart';
 import 'package:flutter/material.dart';
@@ -64,7 +65,6 @@ class _Step1State extends State<Step1> {
       cityDepartTextController = TextEditingController(text: city);
     });
     sender =widget.sender;
-    print('city uuuu....$city');
   }
 
   autoComplete(){

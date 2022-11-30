@@ -68,7 +68,7 @@ class _MyHomeDrawerState extends State<MyHomeDrawer> {
   }
 
   getOrders() async {
-    await CourseApi().getOrders().then((value) {
+    await CourseApi(context: context).getOrders().then((value) {
     }).catchError((onError) {
       showMessage(message: onError.toString(), title: 'Alerte');
     });

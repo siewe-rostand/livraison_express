@@ -15,7 +15,6 @@ import 'package:livraison_express/views/widgets/floating_action_button.dart';
 import '../../constant/color-constant.dart';
 import '../../model/shop.dart';
 import '../../utils/main_utils.dart';
-import '../custom-container.dart';
 import '../cart/cart.dart';
 import '../widgets/open_wrapper.dart';
 
@@ -62,8 +61,9 @@ class _CategoryPageState extends State<CategoryPage> {
     }
 
     for (var productDetail in categories) {
-      if (productDetail.libelle!.contains(text))
+      if (productDetail.libelle!.toLowerCase().contains(text.toLowerCase())) {
         _searchResult.add(productDetail);
+      }
     }
   }
 

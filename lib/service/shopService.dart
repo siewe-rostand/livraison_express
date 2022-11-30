@@ -1,5 +1,6 @@
 
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
@@ -135,11 +136,14 @@ class ShopServices{
       progressDialog!.hide();
       var body=jsonDecode(response.body);
       var rest = body['data'];
+      log("message$body");
       List<Shops> magasins;
       magasins =rest.map<Shops>((json) =>Shops.fromJson(json)).toList();
       return magasins;
     }else{
       progressDialog!.hide();
+      var body=jsonDecode(response.body);
+      logger.e("message${response.body}");
       if (response.statusCode == 401) {
         throw (onErrorMessage);
       } else if (response.statusCode == 404 ||response.statusCode == 408||

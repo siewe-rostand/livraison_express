@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 
 import '../../data/user_helper.dart';
 import '../super-market/cart-provider.dart';
-import '../cart/cart.dart';
 
 class CustomFloatingButton extends StatelessWidget {
   const CustomFloatingButton({Key? key, required this.onTap}) : super(key: key);

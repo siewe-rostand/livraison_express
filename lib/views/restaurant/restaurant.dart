@@ -1,4 +1,3 @@
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,13 +11,9 @@ import 'package:livraison_express/utils/size_config.dart';
 import 'package:livraison_express/views/MapView.dart';
 import 'package:livraison_express/views/address_detail/selected_fav_address.dart';
 import 'package:livraison_express/views/main/magasin_page.dart';
-import 'package:livraison_express/views/restaurant/delivery_address.dart';
 import 'package:livraison_express/views/restaurant/resto_home.dart';
-import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 
-import '../../model/address.dart';
 import '../../model/module.dart';
-import '../../model/shop.dart';
 import '../../service/shopService.dart';
 import '../../utils/main_utils.dart';
 import '../widgets/custom_alert_dialog.dart';
@@ -106,22 +101,6 @@ class _RestaurantState extends State<Restaurant> {
         desiredAccuracy: LocationAccuracy.high);
   }
 
-  showError(String title, String message,
-      {String icon = 'img/icon/svg/alert_round.svg'}) {
-    UserHelper.userExitDialog(
-        context,
-        false,
-        CustomAlertDialog(
-          title: title,
-          message: message,
-          svgIcon: icon,
-          positiveText: 'Fermer',
-          onContinue: () {
-            Navigator.pop(context);
-          },
-        ));
-  }
-
   getShops(
     double latitude,
     double longitude,
@@ -142,12 +121,12 @@ class _RestaurantState extends State<Restaurant> {
          Navigator.of(context).pushReplacement(MaterialPageRoute(
           builder: (context) => const MagasinPage()));
        }else{
-
-         showError("Oops!!", "Désolé nous ne livrons pas encore dans cette zone.");
+         debugPrint("$value");
+         showError(title: "Oops!!", message: "Désolé nous ne livrons pas encore dans cette zone.",context: context);
        }
     }).catchError((onError) {
       debugPrint('///$onError');
-      showError("Oops!!", onErrorMessage);
+      showError(title: "Oops!!", message: onErrorMessage,context: context);
     });
   }
 
@@ -209,8 +188,7 @@ class _RestaurantState extends State<Restaurant> {
                     print('${pos.latitude}  $longitude');
                     getShops(latitude, longitude);
                   }).catchError((onError) {
-                    showError("Alerte",
-                        "Nous n'avons pas pu récupérer votre position. Veuillez nous accorder l'accès a votre position puis réessayez.");
+                    showError(title: "Alerte!!", message: "Nous n'avons pas pu récupérer votre position. Veuillez nous accorder l'accès a votre position puis réessayez.",context: context);
                   });
                   break;
                 case 1:
@@ -242,7 +220,8 @@ class _RestaurantState extends State<Restaurant> {
                     print('_RestaurantState.build$placeLon');
                     print(placeLon);
                   }).catchError((onError){
-                    showError("Nous N'avons pas pu avoir votre localisation", message);
+                    showError(title: "Oops!!", message: "Nous N'avons pas pu avoir votre localisation",context: context);
+
                   });
               }
             }),

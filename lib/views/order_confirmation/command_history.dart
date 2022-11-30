@@ -4,12 +4,11 @@ import 'dart:developer';
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/model/order.dart';
 import 'package:livraison_express/model/order_status.dart';
 import 'package:livraison_express/service/course_service.dart';
-import 'package:livraison_express/views/home/home-page.dart';
 import 'package:livraison_express/views/order_confirmation/order_status_dialog.dart';
 import 'package:livraison_express/views/order_confirmation/widget/order_detail.dart';
+import 'package:livraison_express/views/order_confirmation/widget/order_item_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -38,14 +37,14 @@ class _CommandListsState extends State<CommandLists> {
       url,
       mode: LaunchMode.externalApplication,
     )) {
-      throw 'Could not launch bill';
+      showToast(context: context, text: "Impossible de télécharger cette facture.");
     }
   }
 
 
   getCourse() async{
     prefs =await SharedPreferences.getInstance();
-    await CourseApi().getOrders().
+    await CourseApi(context: context).getOrders().
     then((value) {
       if (mounted) {
         setState(() {
@@ -71,14 +70,33 @@ class _CommandListsState extends State<CommandLists> {
   }
 
   getCourseStatus(int id){
-    CourseApi().getOrderStatusHistory(orderId: id).then((value){
+    CourseApi(context: context).getOrderStatusHistory(orderId: id).then((value){
       var body = json.decode(value.body);
       var res = body['data'] as List;
       List<OrderStatus> or;
       or= res.map((e) =>OrderStatus.fromJson(e)).toList();
     }).catchError((onError){
-      log("on error $onError");
+      debugPrint("on error $onError");
     });
+  }
+
+  getModuleColor(String slug){
+    if(slug.isNotEmpty){
+      switch(slug){
+        case "restaurant":
+          return redDarker;
+        case "gas":
+          return gazOrangeDark;
+        case "market":
+          return darkGreen;
+        case "pharmacy":
+          return primaryGreenDark;
+        case "gift":
+          return gazOrangeDark;
+        default:
+          return primaryColor;
+      }
+    }
   }
   @override
   void initState() {
@@ -113,13 +131,14 @@ class _CommandListsState extends State<CommandLists> {
               itemBuilder: (context, index) {
                 prefs.getString('orders');
                 Command order =command[index];
+
                 return OpenContainerWrapper(
                   transitionType: ContainerTransitionType.fade,
                   nextPage: OrderDetailScreen(order),
                   closedBuilder: (BuildContext _, VoidCallback openContainer){
                     return InkWellOverlay(
                       onTap: openContainer,
-                      child: items(order: order),
+                      child: _items(order: order,),
                     );
                   },
                 );
@@ -127,9 +146,9 @@ class _CommandListsState extends State<CommandLists> {
     );
   }
 
-  items({required Command order}){
+  _items({required Command order}){
     return Card(
-      elevation: 5,
+      elevation: 4.0,
       child: Column(
         children: [
           Row(
@@ -140,7 +159,7 @@ class _CommandListsState extends State<CommandLists> {
                 width: getProportionateScreenWidth(30),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(30),
-                  color:UserHelper.kPrimaryColor,
+                  color:getModuleColor(order.orders!.module!),
                 ),
               ),
               Text(order.infos!.ref!),
@@ -233,7 +252,7 @@ class _CommandListsState extends State<CommandLists> {
             height: getProportionateScreenHeight(4),
           ),
           Container(
-            margin: const EdgeInsets.only(bottom: 2),
+            margin: const EdgeInsets.only(bottom: 2,left: 6),
             child: Row(
               children: [
                 Expanded(
@@ -242,7 +261,7 @@ class _CommandListsState extends State<CommandLists> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         SizedBox(width: getProportionateScreenWidth(2),),
-                        Icon(Icons.calendar_today, size: getProportionateScreenWidth(12),),
+                        Icon(Icons.today_outlined, size: getProportionateScreenWidth(12),),
                         SizedBox(width: getProportionateScreenWidth(4),),
                         Expanded(
                           child: Text(

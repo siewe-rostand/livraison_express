@@ -186,10 +186,8 @@ class FireAuth {
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
         showMessage(e, context);
-        print('No user found for that email.');
       } else if (e.code == 'wrong-password') {
         showMessage(e, context);
-        print('Wrong password provided.');
       }
     } catch (e) {
       print(e);

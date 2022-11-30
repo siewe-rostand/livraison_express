@@ -4,17 +4,17 @@ import 'dart:io';
 
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart';
-import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/model/order.dart';
 import 'package:livraison_express/model/orders.dart';
 import 'package:logger/logger.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import '../utils/main_utils.dart';
 import 'auth_service.dart';
 
 class CourseApi {
   final logger  =Logger();
+  final BuildContext context;
+  CourseApi({required this.context});
+
   Future<List<Command>> getOrders() async {
     String url = '$baseUrl/user/delivery';
     Response response = await get(Uri.parse(url), headers: {
@@ -114,9 +114,6 @@ class CourseApi {
       }),
     );
     if (response.statusCode == 200) {
-      var body = json.decode(response.body);
-      // var res = body['data'];
-      // AppUser appUsers=AppUser.fromJson(res);
       return response;
     } else {
       var body = json.decode(response.body);

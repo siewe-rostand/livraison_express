@@ -72,6 +72,7 @@ class _Step2State extends State<Step2> {
       TypeAheadField(
         getImmediateSuggestions: true,
         textFieldConfiguration:  TextFieldConfiguration(
+          scrollPadding: EdgeInsets.zero,
           decoration: const InputDecoration(labelText: 'Nom et prenom *'),
           controller: _typeAheadController,
         ),

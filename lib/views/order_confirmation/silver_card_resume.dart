@@ -1,5 +1,4 @@
 
-import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -15,7 +14,6 @@ class SliverCardResume extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     double height = getProportionateScreenHeight(140);
-    log("message ${command.paiement!.toJson()}");
     command.paiement!.datePayment = null;
     String mode = command.paiement!.datePayment == null? " (Non Payée)": " (Payée)";
     return SliverAppBar(
@@ -98,7 +96,7 @@ class SliverCardResume extends StatelessWidget {
                             children: [
                               const Text('Paiement: '),
                               Text(command.paiement!.paymentMode == 'cash'? "A la livraison $mode" : "Carte bancaire $mode",
-                                style: TextStyle(color: command.paiement!.paymentMode == null? primaryRed:primaryGreenDark),)
+                                style: TextStyle(color: command.paiement!.datePayment == null? primaryRed:primaryGreenDark),)
                             ],
                           )
                         ],

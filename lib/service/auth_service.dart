@@ -1,3 +1,4 @@
+
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
@@ -15,11 +16,13 @@ import 'package:logger/logger.dart';
 import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../views/login/reset_password.dart';
+import '../views/login/verification_code.dart';
 import '../views/widgets/custom_alert_dialog.dart';
 import '../views/widgets/custom_dialog.dart';
 
-// String baseUrl = 'https://api.test.livraison-express.net/api/v1.1';
-String baseUrl = 'https://api.staging.livraison-express.net/api/v1.1';
+String baseUrl = 'https://api.test.livraison-express.net/api/v1.1';
+// String baseUrl = 'https://api.staging.livraison-express.net/api/v1.1';
 String origin = 'https://livraison-express.net';
 String devBaseUrl = 'http://192.168.137.194:8002/api/';
 String token = '';
@@ -33,25 +36,40 @@ class ApiAuthService {
 
   Future getAccessToken({required String firebaseTokenId}) async {
     String url = '$baseUrl/login/firebase';
-    Response response = await post(
-      Uri.parse(url),
-      headers: <String, String>{
-        'Content-Type': 'application/json',
-        "Accept": "application/json",
-        'Origin': origin
-      },
-      body: jsonEncode(<String, String>{
-        'firebaseTokenId': firebaseTokenId,
-      }),
-    );
-    if (response.statusCode == 200) {
-      // logger.i('get token inside get access token /// ${response.body}');
-      var body = json.decode(response.body);
-      String accessToken = body['access_token'];
-      UserHelper.currentUser1?.token=accessToken;
-      getUserProfile(accessToken);
-    } else {
-      logger.e('get error token insider /// ${response.body}');
+    try {
+      Response response = await post(
+        Uri.parse(url),
+        headers: <String, String>{
+          'Content-Type': 'application/json',
+          "Accept": "application/json",
+          'Origin': origin
+        },
+        body: jsonEncode(<String, String>{
+          'firebaseTokenId': firebaseTokenId,
+        }),
+      );
+      if (response.statusCode == 200) {
+        // logger.i('get token inside get access token /// ${response.body}');
+        var body = json.decode(response.body);
+        String accessToken = body['access_token'];
+        UserHelper.currentUser1?.token=accessToken;
+        getUserProfile(accessToken);
+      } else {
+        logger.e('get error token insider /// ${response.body}');
+        progressDialog!.hide();
+        showGenDialog(
+            context,
+            true,
+            CustomDialog(
+                title: 'Ooooops',
+                content: onErrorMessage,
+                positiveBtnText: "OK",
+                positiveBtnPressed: () {
+                  Navigator.of(context).pop();
+                }));
+        throw ('failed to load data');
+      }
+    } on SocketException catch (_) {
       progressDialog!.hide();
       showGenDialog(
           context,
@@ -63,7 +81,47 @@ class ApiAuthService {
               positiveBtnPressed: () {
                 Navigator.of(context).pop();
               }));
-      throw ('failed to load data');
+      print('socket error');
+    } on HttpException catch (_) {
+      progressDialog!.hide();
+      showGenDialog(
+          context,
+          true,
+          CustomDialog(
+              title: 'Ooooops',
+              content: onErrorMessage,
+              positiveBtnText: "OK",
+              positiveBtnPressed: () {
+                Navigator.of(context).pop();
+              }));
+      print('http error');
+    } on FormatException catch (e) {
+      progressDialog!.hide();
+      showGenDialog(
+          context,
+          true,
+          CustomDialog(
+              title: 'Ooooops',
+              content: onErrorMessage,
+              positiveBtnText: "OK",
+              positiveBtnPressed: () {
+                Navigator.of(context).pop();
+              }));
+      logger.e("message$e");
+      print('format error');
+    } catch (e) {
+      progressDialog!.hide();
+      showGenDialog(
+          context,
+          true,
+          CustomDialog(
+              title: 'Ooooops',
+              content: onErrorMessage,
+              positiveBtnText: "OK",
+              positiveBtnPressed: () {
+                Navigator.of(context).pop();
+              }));
+      logger.e('eer error');
     }
   }
 
@@ -90,9 +148,6 @@ class ApiAuthService {
       "Accept": "application/json",
     });
     if (response.statusCode == 200) {
-      var body = json.decode(response.body);
-
-      logger.i(body);
       return response;
     } else {
       var body = json.decode(response.body);
@@ -101,7 +156,7 @@ class ApiAuthService {
     }
   }
 
-  Future<Response> register({
+  Future register({
     required String username,
     required String firstName,
     required String lastName,
@@ -116,40 +171,152 @@ class ApiAuthService {
     progressDialog!.show();
     String url =
         '$baseUrl/register/firebase';
-    Response response = await post(
-      Uri.parse(url),
-      headers: <String, String>{
-        "Accept": "application/json",
-        'Content-Type': 'application/json',
-        "Origin": origin
-      },
-      body: jsonEncode(<String, String>{
-        'username': username,
-        'firstname': firstName,
-        'lastname': lastName,
-        'email': email,
-        'password': password,
-        'password_confirmation': pwdConfirm,
-        'telephone': telephone,
-        'phone_country_code': countryCode,
-        'telephone_alt': telephoneAlt!,
-        'licence': licence,
-      }),
-    );
-    if (response.statusCode == 200) {
+    try {
+      Response response = await post(
+        Uri.parse(url),
+        headers: <String, String>{
+          "Accept": "application/json",
+          'Content-Type': 'application/json',
+          "Origin": origin
+        },
+        body: jsonEncode(<String, String>{
+          'username': username,
+          'firstname': firstName,
+          'lastname': lastName,
+          'email': email,
+          'password': password,
+          'password_confirmation': pwdConfirm,
+          'telephone': telephone,
+          'phone_country_code': countryCode,
+          'telephone_alt': telephoneAlt!,
+          'licence': licence,
+        }),
+      );
+      if (response.statusCode == 200) {
+        progressDialog!.hide();
+        var body = json.decode(response.body);
+        String accessToken =body['access_token'];
+        UserHelper.token = accessToken;
+        UserHelper.currentUser1?.token=accessToken;
+        // ApiAuthService(context: context).getUserProfile(accessToken);
+        showMessage(context: context,title: "Félicitation",
+            errorMessage: "Vos informations ont été enregistrées. Vous allez recevoir un code au numéro $telephone et à l'adresse $email."
+        );
+        await Future.delayed(const Duration(
+            seconds: 2),(){
+          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (bContext)=> VerificationCode(
+            email: email,
+            phone: telephone,
+            token: accessToken,
+            resetPassword: false,
+            code: countryCode,
+          )));
+        });
+        return response;
+      } else {
+        progressDialog!.hide();
+        var body = json.decode(response.body);
+        var res = body['data'];
+        debugPrint("${response.statusCode}");
+        var mes = body['message'];
+        debugPrint('ERROR MESSAGE ${body['message']}');
+        logger.e(response.body);
+        if(body['message'].toString().contains('email address is already')) {
+          showGenDialog(
+          context,
+          true,
+          CustomDialog(
+            title: 'Ooooops',
+            content:
+            "l'adresse e-mail est déjà utilisée par un autre compte",
+            positiveBtnText: "OK",
+            positiveBtnPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+        );
+        }else if(body['message'].toString().contains('phone number is already')){
+          showGenDialog(
+            context,
+            true,
+            CustomDialog(
+              title: 'Ooooops',
+              content:
+              'le numéro de téléphone est déjà utilisé par un autre compte',
+              positiveBtnText: "OK",
+              positiveBtnPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          );
+        }else{
+          showGenDialog(
+            context,
+            true,
+            CustomDialog(
+              title: 'Ooooops',
+              content:onErrorMessage,
+              positiveBtnText: "OK",
+              positiveBtnPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          );
+        }
+      }
+    }on SocketException catch (_) {
       progressDialog!.hide();
-      var body = json.decode(response.body);
-      // logger.d(body);
-      return response;
-    } else {
+      showGenDialog(
+          context,
+          true,
+          CustomDialog(
+              title: 'Ooooops',
+              content: onFailureMessage,
+              positiveBtnText: "OK",
+              positiveBtnPressed: () {
+                Navigator.of(context).pop();
+              }));
+      print('socket error');
+    } on HttpException catch (_) {
       progressDialog!.hide();
-      var body = json.decode(response.body);
-      var res = body['data'];
-      debugPrint("${response.statusCode}");
-      var mes = body['message'];
-      debugPrint('ERROR MESSAGE ${body['message']}');
-      logger.e(response.body);
-      throw (mes);
+      showGenDialog(
+          context,
+          true,
+          CustomDialog(
+              title: 'Ooooops',
+              content: onErrorMessage,
+              positiveBtnText: "OK",
+              positiveBtnPressed: () {
+                Navigator.of(context).pop();
+              }));
+      print('http error');
+    } on FormatException catch (e) {
+      progressDialog!.hide();
+      showGenDialog(
+          context,
+          true,
+          CustomDialog(
+              title: 'Ooooops',
+              content: onErrorMessage,
+              positiveBtnText: "OK",
+              positiveBtnPressed: () {
+                Navigator.of(context).pop();
+              }));
+      logger.e("message$e");
+      print('format error');
+    } catch (e) {
+      progressDialog!.hide();
+      showGenDialog(
+          context,
+          true,
+          CustomDialog(
+              title: 'Ooooops',
+              content: onErrorMessage,
+              positiveBtnText: "OK",
+              positiveBtnPressed: () {
+                Navigator.of(context).pop();
+              }));
+      print('eer error');
     }
   }
 
@@ -160,74 +327,144 @@ class ApiAuthService {
   }) async {
     progressDialog!.show();
     String url = '$baseUrl/login/firebase/password';
-    Response response = await post(
-      Uri.parse(url),
-      headers: <String, String>{
-        "Accept": "application/json",
-        'Content-Type': 'application/json',
-        "Origin": origin
-      },
-      body: jsonEncode(<String, String>{
-        'telephone': telephone,
-        'password': password,
-        'phone_country_code': countryCode,
-      }),
-    );
-    if (response.statusCode == 200) {
-      var body = json.decode(response.body);
-      String accessToken = body['access_token'];
-      getUserProfile(accessToken);
-      return response;
-    } else {
+    try {
+      Response response = await post(
+        Uri.parse(url),
+        headers: <String, String>{
+          "Accept": "application/json",
+          'Content-Type': 'application/json',
+          "Origin": origin
+        },
+        body: jsonEncode(<String, String>{
+          'telephone': telephone,
+          'password': password,
+          'phone_country_code': countryCode,
+        }),
+      );
+      if (response.statusCode == 200) {
+        var body = json.decode(response.body);
+        String accessToken = body['access_token'];
+        getUserProfile(accessToken);
+        return response;
+      } else {
+        progressDialog!.hide();
+        var body = json.decode(response.body);
+        logger.e(response.statusCode);
+        var mes = body['message'];
+        var err = body['errors'];
+        if (response.statusCode == 401) {
+          log("$mes  $err");
+          if(mes.toString().contains("phone number")) {
+            showGenDialog(
+            context,
+            true,
+            CustomDialog(
+              title: 'Ooooops',
+              content:noPhoneNumberUser,
+              positiveBtnText: "OK",
+              positiveBtnPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          );
+          }
+        } else if (response.statusCode == 404 ||
+            response.statusCode == 408 ||
+            response.statusCode == 422 ||
+            response.statusCode == 400 ||
+            response.statusCode == 499) {
+          if(mes == "The given data was invalid.") {
+            if(err['password'].toString().contains('8')) {
+              showGenDialog(
+              context,
+              true,
+              CustomDialog(
+                  title: 'Password Error',
+                  content: "Le texte mot de passe doit contenir au moins 8 caractères",
+                  positiveBtnText: "OK",
+                  positiveBtnPressed: () {
+                    Navigator.of(context).pop();
+                  }));
+            }else{
+              showGenDialog(
+                  context,
+                  true,
+                  CustomDialog(
+                      title: 'Ooooops',
+                      content: onLoginInvalidDate,
+                      positiveBtnText: "OK",
+                      positiveBtnPressed: () {
+                        Navigator.of(context).pop();
+                      }));
+            }
+          }
+        } else {
+          // debugPrint('ERROR MESSAGE ${body['message']}');
+          showGenDialog(
+              context,
+              true,
+              CustomDialog(
+                  title: 'Ooooops',
+                  content: onErrorMessage,
+                  positiveBtnText: "OK",
+                  positiveBtnPressed: () {
+                    Navigator.of(context).pop();
+                  }));
+        }
+      }
+    } on SocketException catch (_) {
       progressDialog!.hide();
-      var body = json.decode(response.body);
-      logger.e("+++ ${response.body} ");
-      var mes = body['message'];
-      var err = body['errors'];
-      if (response.statusCode == 401) {
-        showGenDialog(
+      showGenDialog(
           context,
           true,
           CustomDialog(
-            title: 'Ooooops',
-            content:
-                'Une erreur est survenu. Veuillez verifier votre Numero de telephone ou le mot de passe',
-            positiveBtnText: "OK",
-            positiveBtnPressed: () {
-              Navigator.of(context).pop();
-            },
-          ),
-        );
-      } else if (response.statusCode == 404 ||
-          response.statusCode == 408 ||
-          response.statusCode == 422 ||
-          response.statusCode == 400 ||
-          response.statusCode == 499) {
-        logger.e(response.statusCode);
-        logger.d(response.body);
-        showGenDialog(
-            context,
-            true,
-            CustomDialog(
-                title: 'Ooooops',
-                content: onFailureMessage,
-                positiveBtnText: "OK",
-                positiveBtnPressed: () {
-                  Navigator.of(context).pop();
-                }));
-      } else {
-        // debugPrint('ERROR MESSAGE ${body['message']}');
-        showGenDialog(
-            context,
-            true,
-            CustomDialog(
-                title: 'Ooooops',
-                content: onFailureMessage,
-                positiveBtnText: "OK",
-                positiveBtnPressed: () {
-                  Navigator.of(context).pop();
-                }));
-      }
+              title: 'Ooooops',
+              content: onFailureMessage,
+              positiveBtnText: "OK",
+              positiveBtnPressed: () {
+                Navigator.of(context).pop();
+              }));
+      logger.e('socket error');
+    } on HttpException catch (_) {
+      progressDialog!.hide();
+      showGenDialog(
+          context,
+          true,
+          CustomDialog(
+              title: 'Ooooops',
+              content: onErrorMessage,
+              positiveBtnText: "OK",
+              positiveBtnPressed: () {
+                Navigator.of(context).pop();
+              }));
+      print('http error');
+    } on FormatException catch (_) {
+      progressDialog!.hide();
+      showGenDialog(
+          context,
+          true,
+          CustomDialog(
+              title: 'Ooooops',
+              content: onErrorMessage,
+              positiveBtnText: "OK",
+              positiveBtnPressed: () {
+                Navigator.of(context).pop();
+              }));
+
+      print('format error');
+    } catch (e) {
+      progressDialog!.hide();
+      showGenDialog(
+          context,
+          true,
+          CustomDialog(
+              title: 'Ooooops',
+              content: onErrorMessage,
+              positiveBtnText: "OK",
+              positiveBtnPressed: () {
+                Navigator.of(context).pop();
+              }));
+      print('eer error');
     }
   }
 
@@ -270,14 +507,12 @@ class ApiAuthService {
       UserCredential result = await _auth.signInWithEmailAndPassword(
           email: email, password: password);
       if (result.toString().isNotEmpty) {
-        progressDialog!.hide();
         User? user = result.user;
         if (user != null) {
           final idToken = await user.getIdToken();
-          log("token id: $idToken");
           getAccessToken(firebaseTokenId: idToken);
         } else {
-          logger.e("${user?.email}");
+          progressDialog!.hide();
           showGenDialog(
               context,
               true,
@@ -301,9 +536,9 @@ class ApiAuthService {
             context,
             true,
             CustomDialog(
-                title: 'Ooooops',
+                title: 'Password Error',
                 content:
-                    "Une erreur est survenu. Veuillez verifier votre mot de passe",
+                    "Une erreur est survenu. Veuillez verifier votre mot de passe et elle doit contenir au moins 8 caractères",
                 positiveBtnText: "OK",
                 positiveBtnPressed: () {
                   Navigator.of(context).pop();
@@ -322,7 +557,7 @@ class ApiAuthService {
                   Navigator.of(context).pop();
                 }));
       }
-      print(e.code);
+      logger.e(e.code);
     }
   }
 
@@ -391,36 +626,96 @@ class ApiAuthService {
     }
   }
 
-  Future<Response> verifyResetCode({
+  Future verifyResetCode({
     required String telephone,
     required String countryCode,
     required String email,
   }) async {
     progressDialog!.show();
     String url = '$baseUrl/password/code/verify';
-    Response response = await post(
-      Uri.parse(url),
-      headers: <String, String>{
-        "Accept": "application/json",
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode(<String, String>{
-        'telephone': telephone,
-        'code': countryCode,
-        'email': email,
-      }),
-    );
-    if (response.statusCode == 202) {
+    try {
+      Response response = await post(
+        Uri.parse(url),
+        headers: <String, String>{
+          "Accept": "application/json",
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(<String, String>{
+          'telephone': telephone,
+          'code': countryCode,
+          'email': email,
+        }),
+      );
+      if (response.statusCode == 202) {
+        progressDialog!.hide();
+        Navigator.of(context).pushReplacement(MaterialPageRoute(
+            builder: (BuildContext context) => ResetPassword(
+              email: email,
+              code: countryCode,
+              telephone: telephone,
+            )));
+        return response;
+      } else {
+        progressDialog!.hide();
+        var body = json.decode(response.body);
+        var res = body['message'];
+        logger.e(body);
+        print('// ${response.body.isNotEmpty}');
+        throw (res);
+      }
+    } on SocketException catch (_) {
       progressDialog!.hide();
-      var body = json.decode(response.body);
-      return response;
-    } else {
+      showGenDialog(
+          context,
+          true,
+          CustomDialog(
+              title: 'Ooooops',
+              content: onFailureMessage,
+              positiveBtnText: "OK",
+              positiveBtnPressed: () {
+                Navigator.of(context).pop();
+              }));
+      print('socket error');
+    } on HttpException catch (_) {
       progressDialog!.hide();
-      var body = json.decode(response.body);
-      var res = body['message'];
-      logger.e(body);
-      print('// ${response.body.isNotEmpty}');
-      throw (res);
+      showGenDialog(
+          context,
+          true,
+          CustomDialog(
+              title: 'Ooooops',
+              content: onErrorMessage,
+              positiveBtnText: "OK",
+              positiveBtnPressed: () {
+                Navigator.of(context).pop();
+              }));
+      print('http error');
+    } on FormatException catch (e) {
+      progressDialog!.hide();
+      showGenDialog(
+          context,
+          true,
+          CustomDialog(
+              title: 'Ooooops',
+              content: onErrorMessage,
+              positiveBtnText: "OK",
+              positiveBtnPressed: () {
+                Navigator.of(context).pop();
+              }));
+      logger.e("message$e");
+      print('format error');
+    } catch (e) {
+      progressDialog!.hide();
+      showGenDialog(
+          context,
+          true,
+          CustomDialog(
+              title: 'Ooooops',
+              content: onErrorMessage,
+              positiveBtnText: "OK",
+              positiveBtnPressed: () {
+                Navigator.of(context).pop();
+              }));
+      print('eer error');
     }
   }
 
@@ -438,8 +733,6 @@ class ApiAuthService {
     );
 
     if (response.statusCode == 200) {
-      // print("/// ${response.body}");
-      var body = json.decode(response.body);
       return response;
     } else {
       logger.e(response.body);
@@ -509,7 +802,6 @@ class ApiAuthService {
       };
       final response = await get(Uri.parse(url), headers: headers);
       if (response.statusCode == 200) {
-        print(';;;get config');
         Map<String, dynamic> value = jsonDecode(response.body)['data'];
         SharedPreferences preferences = await SharedPreferences.getInstance();
         preferences.setString('modules', jsonEncode(value['modules']));

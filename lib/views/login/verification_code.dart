@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:livraison_express/data/user_helper.dart';
 import 'package:livraison_express/service/auth_service.dart';
+import 'package:livraison_express/utils/main_utils.dart';
 import 'package:livraison_express/utils/size_config.dart';
 import 'package:livraison_express/views/home/home-page.dart';
 import 'package:livraison_express/views/login/login.dart';
@@ -103,7 +104,6 @@ class _VerificationCodeState extends State<VerificationCode> {
                     borderRadius: BorderRadius.circular(5.0),
                   ))),
                   onPressed: () {
-                    print('$resetPassword ${widget.resetPassword}');
                     if (widget.resetPassword == false &&
                         codeTextController.text.isNotEmpty) {
                       token = widget.token!;
@@ -127,12 +127,8 @@ class _VerificationCodeState extends State<VerificationCode> {
                                         builder: (context) => const LoginScreen()));
                               },
                             ));
-                        await Future.delayed(
-                            const Duration(seconds: 2),
-                            () => Navigator.of(context).pushReplacement(
-                                MaterialPageRoute(
-                                    builder: (context) => const LoginScreen())));
                       }).catchError((onError) {
+                        log("message$onError");
                         showGenDialog(
                             context,
                             false,
@@ -157,19 +153,7 @@ class _VerificationCodeState extends State<VerificationCode> {
                           .verifyResetCode(
                               telephone: phone,
                               countryCode: codeTextController.text,
-                              email: email)
-                          .then((response) {
-                        var body = json.decode(response.body);
-                        print(body);
-                        Navigator.of(context).pushReplacement(MaterialPageRoute(
-                            builder: (BuildContext context) => ResetPassword(
-                                  email: email,
-                                  code: codeTextController.text,
-                                  telephone: phone,
-                                )));
-                      }).catchError((onError) {
-                        print(onError);
-                      });
+                              email: email);
                     }
                   },
                   child: const Text(
@@ -204,9 +188,33 @@ class _VerificationCodeState extends State<VerificationCode> {
                       await ApiAuthService(context: context)
                           .requestCode(token)
                           .then((response) {
+                            setState(() {
+                            isLoading= false;
+                            });
+                            showGenDialog(context, false, CustomDialog(
+                              title: 'success',
+                              content:
+                              "un nouveau code a été envoyé à votre adresse e-mail, veuillez vérifier",
+                              positiveBtnText: "OK",
+                              positiveBtnPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ));
                         var body = json.decode(response.body);
                         print(body);
                       }).catchError((onError) {
+                        setState(() {
+                          isLoading= false;
+                        });
+                        showGenDialog(context, false, CustomDialog(
+                          title: 'Ooooops',
+                          content:
+                          onErrorMessage,
+                          positiveBtnText: "OK",
+                          positiveBtnPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ));
                         print(onError);
                       });
                     }

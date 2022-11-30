@@ -1,19 +1,13 @@
-import 'package:badges/badges.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:livraison_express/data/user_helper.dart';
 import 'package:livraison_express/views/main/product_page.dart';
 import 'package:livraison_express/views/widgets/custom_sliver_app_bar.dart';
-import 'package:provider/provider.dart';
 
 import '../../model/category.dart';
-import '../../model/module_color.dart';
-import '../../provider/nav_view_model.dart';
 import '../../service/shopService.dart';
 import '../../utils/size_config.dart';
-import '../custom-container.dart';
-import '../super-market/cart-provider.dart';
 import '../cart/cart.dart';
 import '../widgets/floating_action_button.dart';
 import '../widgets/open_wrapper.dart';

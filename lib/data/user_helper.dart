@@ -13,16 +13,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../model/city.dart';
 import '../model/module.dart';
 import '../model/shop.dart';
+import '../views/widgets/custom_alert_dialog.dart';
 
-  showAnimModal({required BuildContext context, required Widget child}){
-    return showModal(
-      context: context,
-      configuration: const FadeScaleTransitionConfiguration(),
-      builder: (context) {
-        return child;
-      },
-    );
-  }
 showGenDialog(context, dismissible, dialog) => showGeneralDialog(
     context: context,
     barrierColor: Colors.black54,
@@ -87,13 +79,25 @@ void showMessage({
 
 showToast(
     {required BuildContext context,
-    required String text,
-    required IconData iconData,
-      ToastGravity? gravity,
-    required Color color}) {
-  Fluttertoast.showToast(msg: text,backgroundColor: color,gravity:gravity ?? ToastGravity.BOTTOM);
+    required String text, IconData? iconData,
+      ToastGravity? gravity, Color? color}) {
+  Fluttertoast.showToast(msg: text,backgroundColor: color ?? UserHelper.getColor(),gravity:gravity ?? ToastGravity.BOTTOM);
 }
-
+showError({required String title, required String message,required BuildContext context,
+    String icon = 'img/icon/svg/alert_round.svg'}) {
+  UserHelper.userExitDialog(
+      context,
+      false,
+      CustomAlertDialog(
+        title: title,
+        message: message,
+        svgIcon: icon,
+        positiveText: 'Fermer',
+        onContinue: () {
+          Navigator.pop(context);
+        },
+      ));
+}
 errorDialog({required BuildContext context,required String title,required String message,required Function() onTap}){
   return showDialog(
       context: context,
@@ -105,7 +109,7 @@ errorDialog({required BuildContext context,required String title,required String
             children: [
               const FaIcon(FontAwesomeIcons.triangleExclamation,color: Color(0xffFFAE42),),
               const SizedBox(
-                width: 5,
+                width: 10,
               ),
               Text(title),
             ],
@@ -134,6 +138,7 @@ class UserHelper {
   static String selectedFavAdd = "";
   static City city = City();
   static String selectCity = '';
+  static List<String> quarters = [];
   static bool isTodayOpen = false;
   static bool isTomorrowOpen = false;
 

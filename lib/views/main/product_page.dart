@@ -21,6 +21,7 @@ import '../../model/module.dart';
 import '../../model/product.dart';
 import '../../model/shop.dart';
 import '../../provider/nav_view_model.dart';
+import '../../utils/main_utils.dart';
 import '../super-market/cart-provider.dart';
 import '../cart/cart.dart';
 import '../widgets/custom_alert_dialog.dart';
@@ -38,8 +39,10 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
   late AnimationController animationController;
   DBHelper1? dbHelper = DBHelper1();
   final logger = Logger();
+  FocusNode focusNode = FocusNode();
   TextEditingController controller = TextEditingController();
   List<Products> products = [];
+  final List<Products> _searchResult = [];
   late FToast fToast;
   int page = 1, lastPage = 1;
   int perPage = 10;
@@ -308,7 +311,21 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
     }
   }
 
+  onSearchTextChanged(String text) async {
+    _searchResult.clear();
+    if (text.isEmpty) {
+      setState(() {});
+      return;
+    }
 
+    for (var userDetail in products) {
+    if (userDetail.libelle!.toLowerCase().contains(text.toLowerCase())) {
+      _searchResult.add(userDetail);
+    }
+    }
+
+    setState(() {});
+  }
 
   @override
   void initState() {
@@ -317,6 +334,10 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
     shops=UserHelper.shops;
     modules=UserHelper.module;
     category=UserHelper.category;
+    controller.addListener(() {setState(() {});});
+    focusNode.addListener(() {
+      setState(() {});
+    });
     getProduct();
     super.initState();
     _controller.addListener(() {
@@ -342,6 +363,7 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
     _controller.dispose();
     animationController.dispose();
     controller.dispose();
+    focusNode.dispose();
   }
 
   @override
@@ -370,7 +392,40 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
                       icon: const Icon(Icons.search,size: 28,color: Color(0xFF89dad0),))
                 ],
               ):
-              const SearchTextField(),
+               ListTile(
+                 title: TextFormField(
+                   controller: controller,
+                   decoration: InputDecoration(
+                       floatingLabelBehavior: FloatingLabelBehavior.auto,
+                       fillColor: Colors.white,
+                       filled: true,
+                       hintText: 'Rechercher',
+                       border: OutlineInputBorder(
+                           borderRadius: BorderRadius.circular(32),
+                           borderSide: BorderSide.none),
+                       contentPadding: const EdgeInsets.symmetric(vertical: 10,horizontal: 15),
+                       prefixIcon: IconButton(
+                         icon: Icon(
+                           Icons.search,
+                           color:
+                           focusNode.hasFocus ? UserHelper.getColor() : null,
+                         ),
+                         onPressed: () {
+                           onSearchTextChanged('');
+                         },
+                       ),
+                       suffixIcon: controller.text.isNotEmpty
+                           ? IconButton(
+                           color: UserHelper.getColor(),
+                           onPressed: () {
+                             controller.clear();
+                             MainUtils.hideKeyBoard(context);
+                           },
+                           icon: const Icon(Icons.clear))
+                           : null),
+                   onChanged: onSearchTextChanged,
+                 ),
+               )
             ),
           ),
         ),
@@ -384,7 +439,7 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
             Container(
                 margin: const EdgeInsets.only(top: 5),
                 color: const Color(0xffF2F2F2),
-                child: ListView.builder(
+                child:_searchResult.isEmpty && controller.text.isEmpty? ListView.builder(
                     controller: _controller,
                     itemCount: products.length,
                     itemBuilder: (context, index) {
@@ -452,6 +507,103 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
                                                 left: 4),
                                             child: Text(
                                               products[index]
+                                                  .prixUnitaire
+                                                  .toString() +
+                                                  ' FCFA',
+                                              style:  TextStyle(
+                                                fontWeight:
+                                                FontWeight.w500,
+                                                color: UserHelper.getColor(),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Container(
+                                        alignment: Alignment.bottomCenter,
+                                        height: 1,
+                                        width: MediaQuery.of(context)
+                                            .size
+                                            .width,
+                                        color: Colors.black38,
+                                      )
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }):
+                ListView.builder(
+                    controller: _controller,
+                    itemCount: _searchResult.length,
+                    itemBuilder: (context, index) {
+                      return Material(
+                        shadowColor: Colors.grey,
+                        child: InkWell(
+                          autofocus: true,
+                          onTap: () {
+                            setState(() {
+                              _show=true;
+                              showFab=false;
+                            });
+                            _showBottomSheet(index: index,context: context);
+
+                          },
+                          child: Row(
+                            children: [
+                              Container(
+                                margin: const EdgeInsets.all(5),
+                                child: CircleAvatar(
+                                  radius: 40,
+                                  backgroundColor: Colors.white,
+                                  child: SizedBox(
+                                      height: getProportionateScreenHeight(60),
+                                      child: Image.network(
+                                        _searchResult[index].image!,
+                                        errorBuilder:
+                                            (BuildContext
+                                        context,
+                                            Object
+                                            exception,
+                                            StackTrace?
+                                            stackTrace) {
+                                          return Container();
+                                        },
+                                      )
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  height: getProportionateScreenHeight(80),
+                                  margin: const EdgeInsets.only(right: 5),
+                                  child: Column(
+                                    mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                        MainAxisAlignment
+                                            .spaceBetween,
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              _searchResult[index]
+                                                  .libelle
+                                                  .toString(),
+                                              style: const TextStyle(
+                                                  fontWeight:
+                                                  FontWeight.w500),
+                                            ),
+                                          ),
+                                          Container(
+                                            margin: const EdgeInsets.only(
+                                                left: 4),
+                                            child: Text(
+                                              _searchResult[index]
                                                   .prixUnitaire
                                                   .toString() +
                                                   ' FCFA',

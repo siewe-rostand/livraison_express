@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:contacts_service/contacts_service.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -32,6 +33,7 @@ import '../../model/horaire.dart';
 import '../../model/order.dart';
 import '../../model/quartier.dart';
 import '../../model/shop.dart';
+import '../../utils/main_utils.dart';
 import '../home/home-page.dart';
 import '../widgets/custom_alert_dialog.dart';
 
@@ -118,6 +120,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
   String? locationDestination;
   String quartierDestination = '';
   bool isLoading = false, isMeDepart = true;
+  bool isLoading1 = false;
 
   //step 3 variables
   TextEditingController descColisTextController = TextEditingController();
@@ -564,8 +567,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
   calculateDistance()async{
     String? origin = sender.addresses![0].latLng;
     String? destination = receiver.addresses![0].latLng;
-    debugPrint("distances $origin // $destination");
-    await CourseApi()
+    await CourseApi(context: context)
         .calculateDeliveryDistance(origin: origin!, destination: destination!)
         .then((response) {
       var body = json.decode(response.body);
@@ -585,7 +587,11 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
       });
       showToast(context: context, text: message, iconData: Icons.check, color: UserHelper.getColor());
     }).catchError((onError) {
-      print('eroo/');
+      var message ="Une erreur est survenue lors du calcul de la distance. Veuillez vérifier vos informations puis réessayez.";
+      logger.e(onError);
+      errorDialog(context: context, title: "Distance Error", message: message, onTap: (){
+        Navigator.pop(context);
+      });
     });
   }
 
@@ -650,8 +656,10 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
       "orders": order,
       "paiement": payment,
     };
-    await CourseApi().commnander(data: data).then((response) async {
-      isLoading=false;
+    await CourseApi(context: context).commnander(data: data).then((response) async {
+      setState(() {
+        isLoading1=false;
+      });
       var body = json.decode(response.body);
       var res = body['data'];
       var infos = body['message'];
@@ -666,6 +674,16 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
         },
       ));
     }).catchError((onError) {
+      setState(() {
+        isLoading1=false;
+      });
+      UserHelper.userExitDialog(context, true,  CustomAlertDialog(
+          svgIcon: "img/icon/svg/smiley_cry.svg", title: "Desole",
+          message: onErrorMessage,
+          positiveText: "OK",
+          onContinue:(){
+            Navigator.of(context).pop();
+          }));
       // log(onError);
     });
   }
@@ -823,21 +841,27 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                   controlsBuilder:
                       (BuildContext context, ControlsDetails detail) {
                     return _currentStep >= 3
-                        ? SizedBox(
-                            width: MediaQuery.of(context).size.width * 0.7,
-                            child: ElevatedButton(
-                                onPressed: () {
-                                  setState(() {
-                                    isLoading=true;
-                                  });
-                                  setPaymentMode();
-                                  print('$isLoading');
-                                },
-                                child:  const Text(
-                                  "COMMANDER",
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                )),
+                        ? InkWell(
+                      onTap:(isLoading1 == false)? ()async{
+                        setState(() {
+                          isLoading1=true;
+                        });
+                        setPaymentMode();
+                      }:null,
+                      child: Container(
+                          height: getProportionateScreenHeight(50),
+                          decoration: BoxDecoration(
+                              color: UserHelper.getColor(),
+                              border: Border.all(color: primaryColor, width: 1.5),
+                              borderRadius: BorderRadius.circular(getProportionateScreenHeight(6))
+                          ),
+                          child: Center(
+                              child: (isLoading1 == false)
+                                  ? Text("COMMANDER", style: boldTextStyle(16, color: Colors.white))
+                                  : CupertinoActivityIndicator(radius: 15, animating: (isLoading1 == true), color: Colors.white)
                           )
+                      ),
+                    )
                         : SizedBox(
                             width: MediaQuery.of(context).size.width * 0.7,
                             child: ElevatedButton(
@@ -851,12 +875,13 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                   type: stepperType,
                   physics: const ScrollPhysics(),
                   currentStep: _currentStep,
-                  onStepTapped: (step) => tapped(step),
+                  onStepTapped: (step) => step <= _currentStep? tapped(step):null,
                   onStepContinue: continued,
                   onStepCancel: cancel,
                   steps: [
                     Step(
                       title: const Text('Depart'),
+                      subtitle: const Text("Contact de l'expéditeur",style: TextStyle(color: Colors.black38),),
                       content: Step1(
                         addressSender: senderAddress,
                         sender: sender,
@@ -869,6 +894,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                     ),
                     Step(
                       title: const Text('Destination'),
+                      subtitle: const Text("Contact du destinataire",style: TextStyle(color: Colors.black38),),
                       content: Step2(receiver: receiver,receiverAddress: receiverAddress,formKey: _formKeys[1],),
                       isActive: _currentStep >= 0,
                       state: _currentStep > 1
@@ -935,6 +961,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                 InkWell(
                                   onTap: () {
                                     setState(() {
+                                      chooseTime = '';
                                       _deliveryType =
                                           DeliveryType.heure_livraison;
                                     });
@@ -957,8 +984,18 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                         groupValue: _deliveryType,
                                         onChanged: (DeliveryType? value) {
                                           setState(() {
+                                            chooseTime = '';
                                             _deliveryType = value;
                                           });
+                                          showDialog<void>(
+                                              context: context,
+                                              builder: (context) {
+                                                return SelectTime(onSelectedDate: (onSelectedDate){
+                                                  setState(() {
+                                                    chooseTime = onSelectedDate;
+                                                  });
+                                                });
+                                              });
                                         },
                                       ),
                                       const Text(
@@ -1108,7 +1145,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                       'img/icon/svg/ic_link_black.svg',
                                       color: grey40,
                                     )),
-                                Text(
+                                const Text(
                                   'Ajouter un code promo',
                                   style: TextStyle(color: primaryColor),
                                 ),
@@ -1212,12 +1249,16 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
           setReceiver();
           break;
         case 2:
-          setState(() {
+          if(chooseTime.isNotEmpty) {
+            setState(() {
             dateFormat = DateFormat.Hms();
             currentTime = dateFormat.format(now);
             currentDate = DateFormat("yyyy-MM-dd").format(now);
             _currentStep++;
           });
+          }else{
+            showToast(context: context, text: "Veuillez choisir l'heure de livraison");
+          }
           break;
         default:
           break;

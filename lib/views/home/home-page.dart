@@ -10,8 +10,10 @@ import 'package:http/http.dart';
 import 'package:livraison_express/constant/all-constant.dart';
 import 'package:livraison_express/data/user_helper.dart';
 import 'package:livraison_express/model/horaire.dart';
+import 'package:livraison_express/model/quarter.dart';
 import 'package:livraison_express/model/user.dart';
 import 'package:livraison_express/service/auth_service.dart';
+import 'package:livraison_express/service/main_api_call.dart';
 import 'package:livraison_express/utils/main_utils.dart';
 import 'package:livraison_express/utils/size_config.dart';
 import 'package:livraison_express/views/drawer/home-drawer.dart';
@@ -40,6 +42,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
+  GlobalKey<RefreshIndicatorState>();
   //dop down menu initial value
   String initialDropValue = 'DOUALA';
   String currentTime = '';
@@ -59,96 +63,36 @@ class _HomePageState extends State<HomePage> {
   bool isActive = true;
   bool isTodayOpened = false;
   bool isTomorrowOpened = false;
-  final ScrollController _controller = ScrollController();
   final ScrollController controller = ScrollController();
   List<String> ville = [];
+  List<String> quarters = [];
+  DateTime currentBackPressTime =DateTime.now();
+  List<Quarter> quarter = [];
 
   @override
   void initState() {
     initView();
     super.initState();
   }
+  void toast({required BuildContext context, required String text}){
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text,textAlign: TextAlign.center,),
+      behavior: SnackBarBehavior.floating, backgroundColor: Colors.blueGrey,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
+    ));
 
-  getModule(
-      {required String module,
-      required bool isRestaurant}) {
-    bool isAvailable = true;
-    // print("module ");
-    for (Modules modul in modules) {
-      List<Shops>? shopsList = modul.shops;
-      isAvailableInCity = modul.isActiveInCity == true;
-      if (modul.isActiveInCity == false && mounted) {
-        setState(() {
-          isActive = false;
-        });
-      }
-
-      if (modul.slug == module) {
-        if (modul.isActive == 1) {
-          Shops shops = modul.shops!.first;
-          UserHelper.shops = shops;
-          UserHelper.module = modul;
-
-          if (isRestaurant) {
-            Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => const Restaurant()));
-          } else {
-            try {
-              if(module=='delivery'){
-                Navigator.of(context).push(
-                    MaterialPageRoute(
-                        builder: (BuildContext
-                        context) =>
-                            const CommandeCoursier()));
-              }else if (shopsList!.isNotEmpty) {
-                if (shopsList.length == 1 &&
-                    shopsList[0].toString().isNotEmpty &&
-                    shopsList[0].horaires != null &&
-                    shopsList[0].horaires?.today != null &&
-                    isOpened1(shopsList[0].horaires?.today!.items)) {
-                  debugPrint('from home page ${shopsList[0].slug}');
-                  Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => const CategoryPage(
-                          )));
-                } else {
-                  Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => const MagasinPage()));
-                }
-              } else {
-                isAvailable = false;
-              }
-            } catch (e) {
-              debugPrint('error $e');
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  backgroundColor: Colors.red,
-                  content: Text(
-                      'Ce service est indisponnible pour l\'instant. Veuillez contactez le service client.'),
-                ),
-              );
-            }
-          }
-          if (isAvailable) {
-            isAvailableInCity = true;
-            const HomePage();
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                backgroundColor: Colors.red,
-                content: Text('Ce service est momentanément indisponible.'),
-              ),
-            );
-          }
-        }
-      }
-
-      // debugPrint('shop length${shopsList?.length}');
+  }
+  Future<bool> _onBackButtonDoubleClicked(BuildContext context)async{
+    final difference = DateTime.now().difference(currentBackPressTime);
+    currentBackPressTime = DateTime.now();
+    if(difference >= const Duration(seconds: 2)){
+      toast(context: context, text: "Cliquez 2 fois pour sortir");
+      return false;
+    }else{
+      SystemNavigator.pop(animated: true);
+      return true;
     }
   }
-
   getModulesOnCityChange({String cityString = "douala",required BuildContext context}) async {
-    SharedPreferences pref = await SharedPreferences
-        .getInstance();
     Future.delayed(Duration.zero,()=>_showDialog(context));
     cities.clear();
     modules.clear();
@@ -304,6 +248,23 @@ class _HomePageState extends State<HomePage> {
       );
     });
   }
+  _getQuarters(){
+    MainApi.getQuarters().then((value){
+      var body = json.decode(value.body);
+      List list;
+      var res = body['data'] as List;
+      quarter=res.map((json) => Quarter.fromJson(json)).toList();
+      list =[];
+      for(int i = 0; i<quarter.length; i++){
+        list.add(quarter[i].name!);
+        if(quarter[i].city == city.name || quarter[i].city == "DOUALA"){
+          quarters.add(quarter[i].name!);
+          log("quarters ${quarter[i].name }");
+        }
+      }
+
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -323,109 +284,118 @@ class _HomePageState extends State<HomePage> {
               )),
               iconTheme: const IconThemeData(color: primaryColor),
               backgroundColor: Colors.white.withOpacity(.3),
-              shadowColor: Colors.blue[100],
+              shadowColor: Colors.blue,
+              actions: [
+                IconButton(onPressed:(){
+                  getModulesOnCityChange(context: context);
+                }, icon: const Icon(Icons.refresh))
+              ],
             ),
           ),
           drawer: const MyHomeDrawer(),
-          body: Stack(
-            children: [
-              ScrollConfiguration(
-                behavior: const ScrollBehavior()
-                  ..buildOverscrollIndicator(context, Container(), ScrollableDetails(direction: AxisDirection.down, controller: controller)),
-                child: NotificationListener<ScrollNotification>(
-                  onNotification: _handleScrollNotification,
-                  child: SingleChildScrollView(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxHeight: SizeConfig.screenHeight!
-                      ),
-                      child: Column(
-                        children: [
-                          SelectCity(
-                            cities: cities,
-                            citySelected: (city) {
-                              getModulesOnCityChange(
-                                  cityString: city.name!.toLowerCase(),
-                                  context: context);
-                            },
-                          ),
-                          Expanded(
-                            child: GridView.builder(
-                              controller: controller,
-                                shrinkWrap: true,
-                                itemCount: modules.length,
-                                gridDelegate:
-                                SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 2,
-                                    childAspectRatio:
-                                    SizeConfig.screenWidth! /
-                                        (SizeConfig.screenHeight! /
-                                            2.5)),
-                                itemBuilder: (context, index) {
-                                  isAvailableInCity =
-                                      modules[index].isActiveInCity!;
-                                  List<Shops> shopsList= modules[index].shops!;
-                                  return OpenContainerWrapper(
-                                    transitionType: ContainerTransitionType.fade,
-                                    nextPage: modules[index].slug == 'delivery'
-                                        ? const CommandeCoursier()
-                                        : modules[index].slug == 'restaurant'
-                                        ? const Restaurant()
-                                        : (shopsList.length == 2 &&
-                                        shopsList[0].toString().isNotEmpty &&
-                                        shopsList[0].horaires != null &&
-                                        shopsList[0].horaires?.today != null &&
-                                        isOpened1(shopsList[0].horaires?.today!.items))? const CategoryPage():const MagasinPage(),
-                                    closedBuilder: (BuildContext _, VoidCallback openContainer) {
-                                      return InkWellOverlay(
-                                          onTap: () {
-                                            if (modules[index].isActiveInCity==true) {
-                                              UserHelper.module = modules[index];
-                                              if(modules[index].slug == 'delivery') {
-                                                UserHelper.shops = modules[index].shops!.first;
+          body: WillPopScope(
+            onWillPop:()=> _onBackButtonDoubleClicked(context),
+            child: Stack(
+              children: [
+                ScrollConfiguration(
+                  behavior: const ScrollBehavior()
+                    ..buildOverscrollIndicator(context, Container(), ScrollableDetails(direction: AxisDirection.down, controller: controller)),
+                  child: NotificationListener<ScrollNotification>(
+                    onNotification: _handleScrollNotification,
+                    child: SingleChildScrollView(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                            maxHeight: SizeConfig.screenHeight!
+                        ),
+                        child: Column(
+                          children: [
+                            SelectCity(
+                              cities: cities,
+                              citySelected: (city) {
+                                getModulesOnCityChange(
+                                    cityString: city.name!.toLowerCase(),
+                                    context: context);
+                              },
+                            ),
+                            Expanded(
+                              child: GridView.builder(
+                                  controller: controller,
+                                  shrinkWrap: true,
+                                  itemCount: modules.length,
+                                  gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: 2,
+                                      childAspectRatio:
+                                      SizeConfig.screenWidth! /
+                                          (SizeConfig.screenHeight! /
+                                              2.5)),
+                                  itemBuilder: (context, index) {
+                                    isAvailableInCity =
+                                    modules[index].isActiveInCity!;
+                                    List<Shops> shopsList= modules[index].shops!;
+                                    return OpenContainerWrapper(
+                                      transitionType: ContainerTransitionType.fade,
+                                      nextPage: modules[index].slug == 'delivery'
+                                          ? const CommandeCoursier()
+                                          : modules[index].slug == 'restaurant'
+                                          ? const Restaurant()
+                                          : (shopsList.length == 2 &&
+                                          shopsList[0].toString().isNotEmpty &&
+                                          shopsList[0].horaires != null &&
+                                          shopsList[0].horaires?.today != null &&
+                                          isOpened1(shopsList[0].horaires?.today!.items))? const CategoryPage():const MagasinPage(),
+                                      closedBuilder: (BuildContext _, VoidCallback openContainer) {
+                                        return InkWellOverlay(
+                                            onTap: () {
+                                              _getQuarters();
+                                              if (modules[index].isActiveInCity==true) {
+                                                UserHelper.module = modules[index];
+                                                if(modules[index].slug == 'delivery') {
+                                                  UserHelper.shops = modules[index].shops!.first;
+                                                }
+                                                openContainer();
+                                              }else{
+                                                showToast(context: context, text: "Service Pas disponible dans cette ville", iconData: Icons.close, color: Colors.red);
                                               }
-                                              openContainer();
-                                            }else{
-                                              showToast(context: context, text: "Service Pas disponible dans cette ville", iconData: Icons.close, color: Colors.red);
-                                            }
-                                          },
-                                          child: item(modules[index], modules[index].isActiveInCity!));
-                                    },
-                                  );
-                                }),
-                          ),
-                        ],
+                                            },
+                                            child: item(modules[index], modules[index].isActiveInCity!));
+                                      },
+                                    );
+                                  }),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                left: 0,
-                child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    decoration: const BoxDecoration(
-                        image: DecorationImage(
-                            image: AssetImage("assets/images/semi_circle.png"),
-                            fit: BoxFit.cover
-                        )
-                    ),
-                    height: heightBottom,
-                    child: Visibility(
-                      visible: !_scrolling,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          SizedBox(height: getProportionateScreenHeight(10)),
-                          const FancyFab(),
-                        ],
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  left: 0,
+                  child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      decoration: const BoxDecoration(
+                          image: DecorationImage(
+                              image: AssetImage("assets/images/semi_circle.png"),
+                              fit: BoxFit.cover
+                          )
                       ),
-                    )
+                      height: heightBottom,
+                      child: Visibility(
+                        visible: !_scrolling,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            SizedBox(height: getProportionateScreenHeight(10)),
+                            const FancyFab(),
+                          ],
+                        ),
+                      )
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
