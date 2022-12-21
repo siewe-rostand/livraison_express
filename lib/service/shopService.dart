@@ -136,7 +136,6 @@ class ShopServices{
       progressDialog!.hide();
       var body=jsonDecode(response.body);
       var rest = body['data'];
-      log("message$body");
       List<Shops> magasins;
       magasins =rest.map<Shops>((json) =>Shops.fromJson(json)).toList();
       return magasins;

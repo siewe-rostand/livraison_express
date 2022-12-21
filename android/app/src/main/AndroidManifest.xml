@@ -8,7 +8,7 @@
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.WRITE_CONTACTS" />
     <application
-        android:label="Flu Livraison Express"
+        android:label="Livraison Express 1.2.1"
         android:name="${applicationName}"
        android:windowSoftInputMode="stateHidden|adjustResize"
         android:icon="@mipmap/ic_launcher"

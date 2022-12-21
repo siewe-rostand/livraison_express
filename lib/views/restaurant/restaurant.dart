@@ -12,11 +12,11 @@ import 'package:livraison_express/views/MapView.dart';
 import 'package:livraison_express/views/address_detail/selected_fav_address.dart';
 import 'package:livraison_express/views/main/magasin_page.dart';
 import 'package:livraison_express/views/restaurant/resto_home.dart';
+import 'package:logger/logger.dart';
 
 import '../../model/module.dart';
 import '../../service/shopService.dart';
 import '../../utils/main_utils.dart';
-import '../widgets/custom_alert_dialog.dart';
 
 class Restaurant extends StatefulWidget {
   const Restaurant(
@@ -29,6 +29,7 @@ class Restaurant extends StatefulWidget {
 
 class _RestaurantState extends State<Restaurant> {
   double latitude = 0.0;
+  Logger logger =Logger();
   Modules modules =Modules();
   bool isLoading = false;
   double longitude = 0.0;
@@ -121,11 +122,11 @@ class _RestaurantState extends State<Restaurant> {
          Navigator.of(context).pushReplacement(MaterialPageRoute(
           builder: (context) => const MagasinPage()));
        }else{
-         debugPrint("$value");
+         logger.e("====$value");
          showError(title: "Oops!!", message: "Désolé nous ne livrons pas encore dans cette zone.",context: context);
        }
     }).catchError((onError) {
-      debugPrint('///$onError');
+      logger.e('///$onError');
       showError(title: "Oops!!", message: onErrorMessage,context: context);
     });
   }

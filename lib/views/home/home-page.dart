@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:animations/animations.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -32,6 +33,7 @@ import '../../model/module.dart';
 import '../../model/shop.dart';
 import '../livraison/commande-coursier.dart';
 import '../super-market/cart-provider.dart';
+import '../widgets/custom_dialog.dart';
 import '../widgets/open_wrapper.dart';
 
 class HomePage extends StatefulWidget {
@@ -97,32 +99,101 @@ class _HomePageState extends State<HomePage> {
     cities.clear();
     modules.clear();
     Provider.of<CartProvider>(context,listen: false).clears();
-    String url = "$baseUrl/modules?city=$cityString";
-    final response = await get(Uri.parse(url)).catchError((e) {
-      logger.e(e.toString());
-    });
-    if (response.statusCode == 200) {
-      List moduleList = jsonDecode(response.body)['data']['modules'] as List;
-      List cityList = jsonDecode(response.body)['data']['cities'] as List;
-      if (mounted) {
-        setState(() {
-          for (var element in moduleList) {
-            Modules module = Modules.fromJson(element);
-            UserHelper.module=module;
-            modules.add(module);
-          }
-          for (var element in cityList) {
-            City city = City.fromJson(element);
-            cities.add(city);
-            city = cities.first;
-            if (city.name?.toLowerCase() == cityString.toLowerCase()) {
-              UserHelper.city = city;
+    String url = "$baseUrl/preload?city=$cityString";
+    try {
+      final response = await get(Uri.parse(url)).catchError((e) {
+        logger.e(e.toString());
+      });
+      if (response.statusCode == 200) {
+        List moduleList = jsonDecode(response.body)['data']['modules'] as List;
+        List cityList = jsonDecode(response.body)['data']['cities'] as List;
+        if (mounted) {
+          setState(() {
+            for (var element in moduleList) {
+              Modules module = Modules.fromJson(element);
+              UserHelper.module=module;
+              modules.add(module);
             }
-          }
-        });
+            for (var element in cityList) {
+              City city = City.fromJson(element);
+              cities.add(city);
+              city = cities.first;
+              if (city.name?.toLowerCase() == cityString.toLowerCase()) {
+                UserHelper.city = city;
+              }
+            }
+          });
+        }
+        Navigator.pop(context);
+      }else{
+        Navigator.pop(context);
+        showGenDialog(
+            context,
+            true,
+            CustomDialog(
+                title: 'Ooooops',
+                content: onErrorMessage,
+                positiveBtnText: "OK",
+                positiveBtnPressed: () {
+                  Navigator.of(context).pop();
+                }));
+        print(response.body);
       }
+    } on SocketException catch (_) {
+      Navigator.pop(context);
+      showGenDialog(
+          context,
+          true,
+          CustomDialog(
+              title: 'Ooooops',
+              content: onFailureMessage,
+              positiveBtnText: "OK",
+              positiveBtnPressed: () {
+                Navigator.of(context).pop();
+              }));
+      logger.e('socket error');
+    } on HttpException catch (_) {
+      Navigator.pop(context);
+      showGenDialog(
+          context,
+          true,
+          CustomDialog(
+              title: 'Ooooops',
+              content: onErrorMessage,
+              positiveBtnText: "OK",
+              positiveBtnPressed: () {
+                Navigator.of(context).pop();
+              }));
+      print('http error');
+    }on FormatException catch (_) {
+      Navigator.pop(context);
+      showGenDialog(
+          context,
+          true,
+          CustomDialog(
+              title: 'Ooooops',
+              content: onErrorMessage,
+              positiveBtnText: "OK",
+              positiveBtnPressed: () {
+                Navigator.of(context).pop();
+              }));
+
+      print('format error');
+    } catch (e) {
+      Navigator.pop(context);
+      showGenDialog(
+          context,
+          true,
+          CustomDialog(
+              title: 'Ooooops',
+              content: onErrorMessage,
+              positiveBtnText: "OK",
+              positiveBtnPressed: () {
+                Navigator.of(context).pop();
+              }));
+      print('eer error');
     }
-    Navigator.pop(context);
+
   }
 
   initView() async {
@@ -347,7 +418,6 @@ class _HomePageState extends State<HomePage> {
                                       closedBuilder: (BuildContext _, VoidCallback openContainer) {
                                         return InkWellOverlay(
                                             onTap: () {
-                                              _getQuarters();
                                               if (modules[index].isActiveInCity==true) {
                                                 UserHelper.module = modules[index];
                                                 if(modules[index].slug == 'delivery') {

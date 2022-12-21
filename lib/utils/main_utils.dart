@@ -4,9 +4,9 @@ import '../constant/color-constant.dart';
 
  const onFailureMessage =
     "Veuillez vérifier votre connexion internet puis réessayez. Si le problème persiste, veuillez contacter le service technique.";
- const onErrorMessage="Nous rencontrons actuellement des problèmes lies à cette opération. Veuillez réessayer plustard ou contactez le service technique.";
+ const onErrorMessage="Nous rencontrons actuellement des problèmes lies à cette opération. Veuillez réessayer plus tard ou contactez le service technique.";
  const onLoginInvalidDate = "Une erreur est survenu. Veuillez verifier votre Numero de telephone ou le mot de passe";
- const noPhoneNumberUser = "aucun utilisateur avec ce numéro de téléphone n'a été trouvé. veuillez vous connecter avec un e-mail ou créer un nouveau compte si ce n'est pas encore fait";
+ const noPhoneNumberUser = "Aucun utilisateur avec ce numéro de téléphone n'a été trouvé. veuillez vous connecter avec un e-mail ou créer un nouveau compte si ce n'est pas encore fait";
 ThemeData theme(){
   return ThemeData(
     scaffoldBackgroundColor: kGrey5,

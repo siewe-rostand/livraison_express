@@ -21,8 +21,9 @@ import '../views/login/verification_code.dart';
 import '../views/widgets/custom_alert_dialog.dart';
 import '../views/widgets/custom_dialog.dart';
 
-String baseUrl = 'https://api.test.livraison-express.net/api/v1.1';
-// String baseUrl = 'https://api.staging.livraison-express.net/api/v1.1';
+// String baseUrl = 'https://api.test.livraison-express.net/api/v1.1';
+String baseUrl = 'https://api.staging.livraison-express.net/api/v1.1';
+// String baseUrl = 'https://api.v2.livraison-express.net/api/v1.1';
 String origin = 'https://livraison-express.net';
 String devBaseUrl = 'http://192.168.137.194:8002/api/';
 String token = '';

@@ -11,6 +11,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_api_headers/google_api_headers.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_webservice/places.dart';
+import 'package:livraison_express/utils/main_utils.dart';
 import 'package:livraison_express/views/widgets/custom_dialog.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:ui' as ui;
@@ -27,7 +28,8 @@ class MapsView extends StatefulWidget {
 
 class _MapsViewState extends State<MapsView> {
   final homeScaffoldKey = GlobalKey<ScaffoldState>();
-  String googleApikey = "AIzaSyBn_LS3TTqaSsByi5U7poZjoFLB8Egi2Kk";
+  String googleApikey = "AIzaSyCwNlcJfxXOzZpcw-QHx--1aZS_j84Tsk8";
+  // String googleApikey = "AIzaSyBn_LS3TTqaSsByi5U7poZjoFLB8Egi2Kk";
   CameraPosition initialPosition =
       const CameraPosition(target: LatLng(4.0511, 9.7679));
   CameraPosition? cameraPosition;
@@ -249,7 +251,7 @@ class _MapsViewState extends State<MapsView> {
 
   void onError(PlacesAutocompleteResponse response) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(response.errorMessage!)),
+      const SnackBar(content: Text(onErrorMessage)),
     );
   }
 

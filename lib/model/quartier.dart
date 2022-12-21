@@ -52,7 +52,7 @@ class QuarterProvider extends ChangeNotifier{
     "BONABERI BONENDALE I",
     "BONABERI BONENDALE II",
     "BONABERI CARREFOUR MUTZIG",
-    "BONABERI NDOBO"
+    "BONABERI NDOBO",
     "BONABERI MABANDA",
     "BONABERI NKOMBA",
     "BONABERI PANJO",
@@ -106,7 +106,7 @@ class QuarterProvider extends ChangeNotifier{
     "DEIDO GRAND-MOULIN",
     "DEIDO MARCHÉ NEW DEIDO",
     "DEIDO MARCHÉ SAKER",
-    "DEIDO PLAGE"
+    "DEIDO PLAGE",
     "ESSEC",
     "ESSENGUE",
     "GENIE MILLITAIRE",
@@ -119,32 +119,32 @@ class QuarterProvider extends ChangeNotifier{
     "KOTTO BLOC",
     "KOTTO IMMEUBLE",
     "KOTTO VILLAGE",
-    "LAGOS MARKET"
+    "LAGOS MARKET",
     "LENDI",
     "LOGBABA",
     "LOGBESSOU",
     "LOGPOM",
     "LOGPOM ANDEM",
     "LOGPOM CHARLES DE GAULLE",
-    "LOGPOM LYCEE"
-    "LOGPOM NJOYA"
+    "LOGPOM LYCEE",
+    "LOGPOM NJOYA",
     "MADAGASCAR",
     "MAKEPE",
     "MAKEPE BM",
     "MAKEPE COURS SUPREME",
     "MAKEPE LYCEE",
     "MAKEPE PETIT PAYS",
-    "MAKEPE RHONE POULENC"
+    "MAKEPE RHONE POULENC",
     "MAKEPE ST TROPEZ",
     "MAKEPE MISSOKE",
-    "MALANGUE"
+    "MALANGUE",
     "MARCHE CONGO",
     "MBANYA",
     "SABLE",
     "MBOPPI",
-    "NDOGBATTI"
-    "NDOGBATTI I"
-    "NDOGBATTI II"
+    "NDOGBATTI",
+    "NDOGBATTI I",
+    "NDOGBATTI II",
     "NDOGBONG",
     "NDOGPASSI",
     "NDOGPASSI 1",
@@ -158,7 +158,7 @@ class QuarterProvider extends ChangeNotifier{
     "NEW BELL LYCEE",
     "NEW BELL MARCHE CENTRAL",
     "NEW BELL MARCHE CONGO",
-    "NEW BELL MAKEA"
+    "NEW BELL MAKEA",
     "NEW BELL NKOLOULON",
     "NEW DEIDO",
     "NGODI",
@@ -213,8 +213,8 @@ class QuarterProvider extends ChangeNotifier{
     "BASTOS",
     "BASTOS GOLF",
     "BASTOS NOUVELLE ROUTE",
-    "BATA"
-    "BATA NLONGKAK"
+    "BATA",
+    "BATA NLONGKAK",
     "BIYEM-ASSI",
     "BIYEM-ASSI ACCACIA",
     "BIYEM-ASSI JOUVENCE",
@@ -313,7 +313,7 @@ class QuarterProvider extends ChangeNotifier{
     "NKOABANG"
     "NKOLBISSON",
     "NKOLBISSON BEATITUDE",
-    "NKOLDA"
+    "NKOLDA",
     "NKOL-EWOUE",
     "NKOLETON",
     "NKOLFOULOU",
