@@ -59,9 +59,9 @@ class Orders {
     gratuitePour = json["gratuite_pour"];
     commentaireClient = json["commentaire_client"];
     description = json["description"];
-    listeArticles = json["listeArticles"] == null
+    listeArticles = json["liste_articles"] == null
         ? null
-        : (json["listeArticles"] as List).map((e) => Products.fromJson(e)).toList();
+        : (json["liste_articles"] as List).map((e) => Products.fromJson(e)).toList();
   }
 
   Map<String, dynamic> toJson() {

@@ -32,13 +32,11 @@ class PaymentApi{
             merchantCountryCode: 'US',
             merchantDisplayName: 'ROSTAND',
             customerId: paymentIntentData!['customer'],
-            customerEphemeralKeySecret: paymentIntentData!['ephemeralKey'],)).then((value){
-
-      });
+            customerEphemeralKeySecret: paymentIntentData!['ephemeralKey'],));
       ///now finally display payment sheeet
       displayPaymentSheet();
-      log("$paymentIntentData");
-
+      // log("$paymentIntentData");
+      return paymentIntentData;
     } catch (e, s) {
       print('exception:$e$s');
     }
@@ -47,33 +45,15 @@ class PaymentApi{
   displayPaymentSheet() async {
 
     try {
-      await Stripe.instance.presentPaymentSheet().then((newValue){
-
-
-        print('payment intent'+paymentIntentData!['id'].toString());
-        logger.v('payment intent'+paymentIntentData!['client_secret'].toString());
-        print('payment intent'+paymentIntentData!['amount'].toString());
-        print('payment intent'+paymentIntentData.toString());
-        //orderPlaceApi(paymentIntentData!['id'].toString());
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text("Paiement reussir"),
-          backgroundColor: Colors.green,
-        ));
-        logger.e(paymentIntentData!['amount']);
-        paymentIntentData = null;
-
-      }).onError((error, stackTrace){
-        print('Exception/DISPLAYPAYMENTSHEET==> $error $stackTrace');
-      });
+      await Stripe.instance.presentPaymentSheet();
 
 
     } on StripeException catch (e) {
-      print('Exception/DISPLAYPAYMENTSHEET==> $e');
-      showDialog(
-          context: context,
-          builder: (_) => const AlertDialog(
-            content: Text("Cancelled "),
-          ));
+      logger.e('Exception/DISPLAYPAYMENTSHEET==> $e');
+      ScaffoldMessenger.of(context).showSnackBar( SnackBar(
+        content: const Text("Paiement annulé"),
+        backgroundColor: Colors.redAccent.shade200,
+      ));
     } catch (e) {
       print('$e');
     }
@@ -87,7 +67,6 @@ class PaymentApi{
         'currency': currency,
         'payment_method_types[]': 'card'
       };
-      logger.i(body);
       var response = await post(
           Uri.parse('https://api.stripe.com/v1/payment_intents'),
           body: body,
@@ -96,7 +75,7 @@ class PaymentApi{
             'Bearer $stripeSecret',
             'Content-Type': 'application/x-www-form-urlencoded'
           });
-      logger.d('Create Intent reponse ===> ${response.body.toString()}');
+      // logger.d('Create Intent reponse ===> ${response.body.toString()}');
       return jsonDecode(response.body);
     } catch (err) {
       logger.e('err charging user: ${err.toString()}');

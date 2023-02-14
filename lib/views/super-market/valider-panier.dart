@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 
-import 'package:contacts_service/contacts_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart' as stripe;
@@ -140,75 +140,6 @@ class _ValiderPanierState extends State<ValiderPanier> {
     isOpened(UserHelper.shops.horaires!);
   }
 
-  displayPaymentSheet() async {
-
-    try {
-      await stripe.Stripe.instance.presentPaymentSheet().then((newValue){
-
-
-        print('payment intent'+paymentIntentData!['id'].toString());
-        logger.v('payment intent'+paymentIntentData!['client_secret'].toString());
-        print('payment intent'+paymentIntentData!['amount'].toString());
-        print('payment intent'+paymentIntentData.toString());
-        //orderPlaceApi(paymentIntentData!['id'].toString());
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text("Paiement reussir"),
-          backgroundColor: Colors.green,
-        ));
-        logger.e(paymentIntentData!['amount']);
-        // saveOrder('card', paymentIntentData!['id'].toString(), 'OK', paymentIntentData!['object']);
-        paymentIntentData = null;
-
-      }).onError((error, stackTrace){
-        log('Exception/DISPLAYPAYMENTSHEET==> $error $stackTrace');
-      });
-
-
-    } on stripe.StripeException catch (e) {
-      log('Exception/DISPLAYPAYMENTSHEET==> $e');
-      showDialog(
-          context: context,
-          builder: (_) => const AlertDialog(
-            content: Text("Cancelled "),
-          ));
-    } catch (e) {
-      log('$e');
-    }
-  }
-
-   makePayment({required String amount, required BuildContext context}) async {
-    try {
-      SharedPreferences sharedPreferences =
-      await SharedPreferences.getInstance();
-      String? userString =
-      sharedPreferences.getString("userData");
-      final extractedUserData =
-      json.decode(userString!);
-      AppUser1 appUser1 = AppUser1.fromJson(extractedUserData);
-
-      paymentIntentData =
-      await PaymentApi(context: context).createPaymentIntent(amount, 'XAF');
-      await stripe.Stripe.instance.initPaymentSheet(
-          paymentSheetParameters: stripe.SetupPaymentSheetParameters(
-            paymentIntentClientSecret: paymentIntentData!['client_secret'],
-            applePay: true,
-            googlePay: true,
-            testEnv: true,
-            style: ThemeMode.dark,
-            merchantCountryCode: 'US',
-            merchantDisplayName: appUser1.fullname ?? appUser1.firstname,
-            customerId: paymentIntentData!['customer'],
-            customerEphemeralKeySecret: paymentIntentData!['ephemeralKey'],)).then((value){
-        print('0000000000000000000000');
-      });
-
-      ///now finally display payment sheeet
-      displayPaymentSheet();
-    } catch (e, s) {
-      print('exception:$e$s');
-    }
-  }
-
   setSenderAndReceiverInfo() {
     var city =  UserHelper.city;
     Shops shops=UserHelper.shops;
@@ -239,6 +170,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
     if (mounted) {
       setState(() {
         _currentStep++;
+        isLoading1 = false;
       });
     }
   }
@@ -299,7 +231,12 @@ class _ValiderPanierState extends State<ValiderPanier> {
       });
       logger.e(onError);
       var message ="Une erreur est survenue lors du calcul de la distance. Veuillez vérifier vos informations puis réessayez.";
-      showGenDialog(context,true,CustomDialog(title: "Alert", content: message, positiveBtnText: "OK", positiveBtnPressed: (){
+      String title ="Alert";
+      if(onError.toString().contains("Point")){
+        message = "Point de livraison non acceptable";
+        title = "Désolé";
+      }
+      showGenDialog(context,true,CustomDialog(title: title, content: message, positiveBtnText: "OK", positiveBtnPressed: (){
         Navigator.pop(context);
       }));
     });
@@ -316,24 +253,6 @@ class _ValiderPanierState extends State<ValiderPanier> {
       deliveryTime = currentDate + " " + currentTime;
     }
     return deliveryTime;
-  }
-  setCartItems()async {
-    List<CartItem> cartList =await dbHelper.getCartList();
-    for(int i=0; i<cartList.length;i++){
-      CartItem cartItem = cartList[i];
-      Products article =Products();
-      article.id=cartItem.id;
-      article.libelle=cartItem.title;
-      article.prixUnitaire=cartItem.price;
-      article.totalPrice=cartItem.totalPrice;
-      article.categorieId=cartItem.categoryId;
-      article.subCategoryId=cartItem.categoryId;
-      article.totalPrice = widget.totalAmount.toInt();
-      article.quantity =cartItem.quantity;
-      article.subTotalAmount =Provider.of<CartProvider>(context).getTotalPrice().toInt();
-
-      productList.add(article);
-    }
   }
   saveOrder(String modePaiement, String pi, String status, String paimentMessage)async{
     Shops shops =UserHelper.shops;
@@ -379,7 +298,6 @@ class _ValiderPanierState extends State<ValiderPanier> {
 
     Orders order =Orders();
     order.module=UserHelper.module.slug;
-    order.listeArticles =productList;
     order.description ="";
     order.montantTotal =widget.totalAmount.toInt();
     order.codePromo =codePromo;
@@ -418,12 +336,10 @@ class _ValiderPanierState extends State<ValiderPanier> {
     };
 
     await CourseApi(context: context).commnander2( data: data).then((response) {
-      var body = json.decode(response.body);
-      var com = body['data'];
-      command.Command ord =command.Command.fromJson(com);
+      logger.w(response);
       UserHelper.userExitDialog(context, true,  CustomAlertDialog(
           svgIcon: "img/icon/svg/smiley_happy.svg", title: "Youpiii".toUpperCase(),
-          message: "Felicitation, Commande enregistrée avec succès\nN° commande ${ord.infos?.ref} ",
+          message: "Felicitation, Commande enregistrée avec succès",
           positiveText: "OK",
           onContinue:(){
             setState(() {
@@ -434,18 +350,34 @@ class _ValiderPanierState extends State<ValiderPanier> {
             Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context)=>const CartPage()));
           },
           ));
-    }).catchError((onError){
+    }).onError((error, stackTrace) {
       setState(() {
         isLoading1=false;
       });
-      logger.e(onError);
-      UserHelper.userExitDialog(context, true,  CustomAlertDialog(
-          svgIcon: "img/icon/svg/smiley_cry.svg", title: "Desole",
-          message: onError.toString(),
-          positiveText: "OK",
-          onContinue:(){
-            Navigator.of(context).pop();
-      }));
+      if(error is SocketException){
+        showGenDialog(
+            context,
+            true,
+            CustomDialog(
+                title: 'Ooooops',
+                content: onFailureMessage,
+                positiveBtnText: "OK",
+                positiveBtnPressed: () {
+                  Navigator.of(context).pop();
+                }));
+      }else{
+        showGenDialog(
+            context,
+            true,
+            CustomDialog(
+                title: 'Ooooops',
+                content: onErrorMessage,
+                positiveBtnText: "OK",
+                positiveBtnPressed: () {
+                  Navigator.of(context).pop();
+                }));
+        logger.e(error);
+      }
     });
   }
   bool isOpened(Horaires horaires) {
@@ -502,6 +434,43 @@ class _ValiderPanierState extends State<ValiderPanier> {
     }
     return juge;
   }
+
+  displayPaymentSheet(Map<String, dynamic> paymentIntentData) async {
+
+    try {
+      await stripe.Stripe.instance.presentPaymentSheet().then((value) {
+        String pi = paymentIntentData['id'];
+        saveOrder('card', pi, '', '');
+      }).onError((error, stackTrace) {
+        logger.e("message error");
+      });
+
+
+    } on stripe.StripeException catch (e) {
+      logger.e('Exception/DISPLAYPAYMENTSHEET==> $e');
+      ScaffoldMessenger.of(context).showSnackBar( SnackBar(
+        content: const Text("Paiement annulé"),
+        backgroundColor: Colors.redAccent.shade200,
+      ));
+    } catch (e) {
+      print('$e');
+    }
+  }
+  initPaymentSheet(Map<String, dynamic> paymentIntentData)async{
+    await stripe.Stripe.instance.initPaymentSheet(
+        paymentSheetParameters: stripe.SetupPaymentSheetParameters(
+          paymentIntentClientSecret: paymentIntentData['client_secret'],
+          applePay: true,
+          googlePay: true,
+          testEnv: true,
+          style: ThemeMode.dark,
+          merchantCountryCode: 'US',
+          merchantDisplayName: 'ROSTAND',
+          customerId: paymentIntentData['customer'],
+          customerEphemeralKeySecret: paymentIntentData['ephemeralKey'],));
+  }
+
+
   @override
   Widget build(BuildContext context) {
     final cartProvider = Provider.of<CartProvider>(context);
@@ -538,13 +507,27 @@ class _ValiderPanierState extends State<ValiderPanier> {
                         isLoading1=true;
                       });
                       if(payMode == "cash"){
+                        setState(() {
+                          isLoading1=false;
+                        });
                         saveOrder("cash", '', '', '');
                       }else if(payMode == "card"){
                         var amt=cartProvider.totalPrice +deliveryPrice;
                         var amount= amt.toString();
-                        await stripe.Stripe.instance.presentPaymentSheet();
-                        PaymentApi(context: context).makePayment(amount: amount);
+                        PaymentApi(context: context).createPaymentIntent(amount, 'XAF').then((value) async{
+                          setState(() {
+                            isLoading1=false;
+                          });
+                          paymentIntentData = value;
+                          initPaymentSheet(value);
+                        }).catchError((onError){
+                          logger.e(onError);
+                        });
+                        displayPaymentSheet(paymentIntentData!);
                       }else{
+                        setState(() {
+                          isLoading1 = false;
+                        });
                         Fluttertoast.showToast(msg: "Veuillez choisir un moyen de paiement");
                       }
                     }:null,
@@ -940,6 +923,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
             dateFormat=DateFormat.Hms();
             currentTime=dateFormat.format(now);
             currentDate =DateFormat("yyyy-MM-dd").format(now);
+            isLoading1=false;
             _currentStep++;
           });
             }else{

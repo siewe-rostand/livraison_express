@@ -120,12 +120,12 @@ class CartItem {
       required this.quantity,
       required this.price,
       required this.image,
+      required this.productId,
       this.unitPrice,
       this.userId,
       this.categoryId,
       this.complement,
       this.preparationTime,
-      this.productId,
       this.totalPrice,
       this.quantityMax,
       this.moduleSlug});

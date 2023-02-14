@@ -17,7 +17,7 @@ class Products {
   String? detail;
   String? slug;
   int? prixUnitaire;
-  int? subTotalAmount;
+  dynamic subTotalAmount;
   int? quantiteDispo;
   Null? disponibiliteGeneral;
   String? brandName;

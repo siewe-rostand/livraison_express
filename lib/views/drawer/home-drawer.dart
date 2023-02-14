@@ -17,7 +17,6 @@ import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/user_helper.dart';
-import '../../model/module_color.dart';
 import '../../model/user.dart';
 
 class MyHomeDrawer extends StatefulWidget {

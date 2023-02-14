@@ -31,37 +31,6 @@ class OpenContainerWrapper extends StatelessWidget {
     );
   }
 }
-class OpenContainerWrapper1 extends StatelessWidget {
-  const OpenContainerWrapper1({
-    Key? key,
-    required this.closedBuilder,
-    this.transitionType,
-    required this.onClosed,
-    required this.nextPage, this.routeSettings
-  }): super(key: key);
-
-  final Widget Function(BuildContext, void Function()) closedBuilder;
-  final ContainerTransitionType? transitionType;
-  final void Function(Never?)? onClosed;
-  final Widget nextPage;
-  final RouteSettings? routeSettings;
-
-  @override
-  Widget build(BuildContext context) {
-    return OpenContainer(
-      closedElevation: 4.0,
-      transitionDuration: const Duration(milliseconds: 500),
-      transitionType: transitionType??ContainerTransitionType.fade,
-      closedBuilder: closedBuilder ,/** this is the initial widget  of the page */
-      openBuilder: (context, _){
-        return nextPage;
-      },/** this is the widget that is shown when the initial widget has been clicked  */
-      onClosed: onClosed,
-      tappable: false,
-      routeSettings: routeSettings,
-    );
-  }
-}
 
 class InkWellOverlay extends StatelessWidget {
   const InkWellOverlay({

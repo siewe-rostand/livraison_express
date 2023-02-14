@@ -355,7 +355,8 @@ class _HomePageState extends State<HomePage> {
               )),
               iconTheme: const IconThemeData(color: primaryColor),
               backgroundColor: Colors.white.withOpacity(.3),
-              shadowColor: Colors.blue,
+              shadowColor: Color(0xff4084BAFF),
+              elevation: 40,
               actions: [
                 IconButton(onPressed:(){
                   getModulesOnCityChange(context: context);

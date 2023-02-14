@@ -200,7 +200,7 @@ class _ModuleCardState extends State<ModuleCard> {
   getModulesOnCityChange({String cityString = "douala",required BuildContext context}) async {
     SharedPreferences pref = await SharedPreferences
         .getInstance();
-    DBHelper dbHelper=DBHelper();
+    DBHelper1 dbHelper=DBHelper1();
     _loading = true;
     cities.clear();
     modules.clear();

@@ -61,7 +61,7 @@ class _CartPageState extends State<CartPage> with SingleTickerProviderStateMixin
               )),
         ],
       ),
-      body:  FutureBuilder(
+      body:  FutureBuilder<List<CartItem>>(
         future: cartProvider.getData(),
         builder: (context ,AsyncSnapshot<List<CartItem>> snapshot){
           if(snapshot.hasData){
@@ -134,13 +134,7 @@ class _CartPageState extends State<CartPage> with SingleTickerProviderStateMixin
                               );
                             }
                             return
-                              CartItemView(
-                                id: snapshot.data![index].id!,
-                                title: snapshot.data![index].title!,
-                                image: snapshot.data![index].image,
-                                quantity: snapshot.data![index].quantity!,
-                                price: snapshot.data![index].price!,
-                                );
+                              CartItemView(cartItem: snapshot.data![index],);
                           }),
                     ),
                   ],

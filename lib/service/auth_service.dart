@@ -217,10 +217,6 @@ class ApiAuthService {
       } else {
         progressDialog!.hide();
         var body = json.decode(response.body);
-        var res = body['data'];
-        debugPrint("${response.statusCode}");
-        var mes = body['message'];
-        debugPrint('ERROR MESSAGE ${body['message']}');
         logger.e(response.body);
         if(body['message'].toString().contains('email address is already')) {
           showGenDialog(
@@ -438,7 +434,6 @@ class ApiAuthService {
               positiveBtnPressed: () {
                 Navigator.of(context).pop();
               }));
-      print('http error');
     } on FormatException catch (_) {
       progressDialog!.hide();
       showGenDialog(
@@ -451,8 +446,7 @@ class ApiAuthService {
               positiveBtnPressed: () {
                 Navigator.of(context).pop();
               }));
-
-      print('format error');
+    logger.e('format error');
     } catch (e) {
       progressDialog!.hide();
       showGenDialog(
@@ -465,41 +459,10 @@ class ApiAuthService {
               positiveBtnPressed: () {
                 Navigator.of(context).pop();
               }));
-      print('eer error');
+      logger.e(e);
     }
   }
 
-  Future signInWithPhone1({
-    required String telephone,
-    required String countryCode,
-    required String password,
-  }) async {
-    String url = '$baseUrl/login/firebase/password';
-    var httpClient =HttpClient();
-
-    var body =jsonEncode(<String, String>{
-      'telephone': telephone,
-      'password': password,
-      'phone_country_code': countryCode,
-    });
-
-    HttpClientRequest request = await httpClient.postUrl(Uri.parse(url));
-    // request.headers.set('content-type', 'application/json');
-    request.headers.set('content-type', 'application/json');
-    request.headers.set('Accept', 'application/json');
-    request.headers.set("Origin", origin);
-    // request.headers.set ('Authorization', "Bearer " + token);
-    request.add(utf8.encode(body));
-    log(body);
-    HttpClientResponse response = await request.close();
-    // todo - you should check the response.statusCode
-    String reply = await response.transform(utf8.decoder).join();
-    httpClient.close();
-    logger.i(request.headers);
-    // log(token);
-    logger.w(reply);
-    return reply;
-  }
 
   Future signInWithEmail(String email, String password) async {
     FirebaseAuth _auth = FirebaseAuth.instance;
@@ -531,7 +494,6 @@ class ApiAuthService {
       }
     } on FirebaseAuthException catch (e) {
       progressDialog!.hide();
-      logger.e("message${e.message}");
       if (e.code == "wrong-password") {
         showGenDialog(
             context,
@@ -558,7 +520,70 @@ class ApiAuthService {
                   Navigator.of(context).pop();
                 }));
       }
+      if(e.code == 'network-request-failed'){
+        showGenDialog(
+            context,
+            true,
+            CustomDialog(
+                title: 'Ooooops',
+                content: onFailureMessage,
+                positiveBtnText: "OK",
+                positiveBtnPressed: () {
+                  Navigator.of(context).pop();
+                }));
+      }
       logger.e(e.code);
+    }on SocketException catch (_) {
+      progressDialog!.hide();
+      showGenDialog(
+          context,
+          true,
+          CustomDialog(
+              title: 'Ooooops',
+              content: onFailureMessage,
+              positiveBtnText: "OK",
+              positiveBtnPressed: () {
+                Navigator.of(context).pop();
+              }));
+      logger.e('socket error');
+    } on HttpException catch (_) {
+      progressDialog!.hide();
+      showGenDialog(
+          context,
+          true,
+          CustomDialog(
+              title: 'Ooooops',
+              content: onErrorMessage,
+              positiveBtnText: "OK",
+              positiveBtnPressed: () {
+                Navigator.of(context).pop();
+              }));
+    } on FormatException catch (_) {
+      progressDialog!.hide();
+      showGenDialog(
+          context,
+          true,
+          CustomDialog(
+              title: 'Ooooops',
+              content: onErrorMessage,
+              positiveBtnText: "OK",
+              positiveBtnPressed: () {
+                Navigator.of(context).pop();
+              }));
+      logger.e('format error');
+    } catch (e) {
+      progressDialog!.hide();
+      showGenDialog(
+          context,
+          true,
+          CustomDialog(
+              title: 'Ooooops',
+              content: onErrorMessage,
+              positiveBtnText: "OK",
+              positiveBtnPressed: () {
+                Navigator.of(context).pop();
+              }));
+      logger.e(e);
     }
   }
 
@@ -581,14 +606,10 @@ class ApiAuthService {
     );
     if (response.statusCode == 200) {
       progressDialog!.hide();
-      var body = json.decode(response.body);
-      // var res = body['data'];
-      // AppUser appUsers=AppUser.fromJson(res);
       return response;
     } else {
       progressDialog!.hide();
       var body = json.decode(response.body);
-      var res = body['data'];
       logger.e(response.body);
       var mes = body['message'];
       logger.e('ERROR MESSAGE ${body['message']}');
@@ -611,18 +632,12 @@ class ApiAuthService {
     );
     if (response.statusCode == 200) {
       progressDialog!.hide();
-      var body = json.decode(response.body);
-      // var res = body['data'];
-      // AppUser appUsers=AppUser.fromJson(res);
       return response;
     } else {
       progressDialog!.hide();
       var body = json.decode(response.body);
-      var res = body['data'];
-      print(response.body);
       logger.e(body);
       var mes = body['message'];
-      debugPrint('ERROR MESSAGE ${body['message']}');
       throw (mes);
     }
   }

@@ -607,7 +607,15 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
       } else if (payMode == 'card') {
         payment.paymentMode = payMode;
         var amt = deliveryPrice.toString();
-        PaymentApi(context: context).makePayment(amount: amt);
+        PaymentApi(context: context).makePayment(amount: amt).then((val){
+          setState(() {
+            isLoading1=false;
+          });
+        },onError:(err){
+          setState(() {
+            isLoading1=false;
+          });
+        });
       }
     } else {
       showToast(context: context, text: "Veuillez choisir un moyen de paiement", iconData: Icons.check, color: UserHelper.getColor());

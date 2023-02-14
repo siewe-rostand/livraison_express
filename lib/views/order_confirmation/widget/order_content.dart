@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:livraison_express/data/user_helper.dart';
 import 'package:livraison_express/model/orders.dart';
 import 'package:livraison_express/views/widgets/horizontal_dash_line.dart';
 
@@ -14,7 +15,7 @@ class OrderContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint("${_order.orders?.listeArticles?.length}");
+    debugPrint("//// ${_order.orders?.listeArticles?.length}");
     return Column(
       children: [
         Card(
@@ -28,7 +29,7 @@ class OrderContent extends StatelessWidget {
             ),
           ),
         ),
-        const HorizontalLine(),
+         HorizontalLine(color: UserHelper.getColorDark(),),
         _order.orders?.module == "delivery"
             ? Column(
                 children: [
@@ -52,32 +53,36 @@ class OrderContent extends StatelessWidget {
                 ],
               )
             : Column(
-                children: [
-                  SizedBox(
-                    height: getProportionateScreenHeight(10),
-                  ),
-                  Row(
+              children: [
+                SizedBox(
+                  height: getProportionateScreenHeight(10),
+                ),
+                Row(
+                  children: [
+                    item('Produit'),
+                    item('Qté'),
+                    item('Prix'),
+                  ],
+                ),
+                ListView.builder(
+          shrinkWrap: true,
+          itemCount: _order.orders?.listeArticles?.length,
+                itemBuilder:(context,index){
+                Products p  = _order.orders!.listeArticles![index];
+                  return Column(
                     children: [
-                      item('Produit'),
-                      item('Qté'),
-                      item('Prix'),
+                      SizedBox(
+                        height: getProportionateScreenHeight(15),
+                      ),
+                      listItem(p),
+                      SizedBox(
+                        height: getProportionateScreenHeight(10),
+                      ),
                     ],
-                  ),
-                  SizedBox(
-                    height: getProportionateScreenHeight(15),
-                  ),
-                  Row(
-                    children: [
-                      item('\u2022 Livraison '),
-                      item(' '),
-                      item('${_order.orders?.montantTotal} FCFA')
-                    ],
-                  ),
-                  SizedBox(
-                    height: getProportionateScreenHeight(10),
-                  ),
-                ],
-              )
+                  );
+                }),
+              ],
+            )
       ],
     );
   }
@@ -136,4 +141,6 @@ class OrderContent extends StatelessWidget {
 
     return string;
   }
+
 }
+

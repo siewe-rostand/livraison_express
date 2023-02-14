@@ -1,14 +1,18 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:livraison_express/data/user_helper.dart';
 import 'package:livraison_express/model/order_status.dart';
 import 'package:livraison_express/service/course_service.dart';
+import 'package:livraison_express/utils/main_utils.dart';
+import 'package:livraison_express/views/home/home-page.dart';
 import 'package:livraison_express/views/order_confirmation/order_status_dialog.dart';
 import 'package:livraison_express/views/order_confirmation/widget/order_detail.dart';
 import 'package:livraison_express/views/order_confirmation/widget/order_item_card.dart';
+import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -28,6 +32,7 @@ class CommandLists extends StatefulWidget {
 }
 
 class _CommandListsState extends State<CommandLists> {
+  Logger logger = Logger();
   List<Command> command=[];
   List orders=[];
   late SharedPreferences prefs;
@@ -54,7 +59,6 @@ class _CommandListsState extends State<CommandLists> {
           prefs.setString("orders", order);
         });
       }
-      // print('${res}.');
     });
   }
   deleteCourse(int id)async{
@@ -76,7 +80,7 @@ class _CommandListsState extends State<CommandLists> {
       List<OrderStatus> or;
       or= res.map((e) =>OrderStatus.fromJson(e)).toList();
     }).catchError((onError){
-      debugPrint("on error $onError");
+      logger.e("on error $onError");
     });
   }
 

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:livraison_express/constant/all-constant.dart';
 import 'package:livraison_express/data/user_helper.dart';
 import 'package:livraison_express/model/category.dart';
 import 'package:livraison_express/model/user.dart';
@@ -151,6 +152,9 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
     dbHelper
         ?.insert(CartItem(
         id: index,
+        productId: int.parse(products[
+        index]
+            .id!.toString()),
         title: products[
         index]
             .libelle!,
@@ -170,9 +174,6 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
         categoryId: products[
         index]
             .categorieId!,
-        productId: products[
-        index]
-            .id!,
         preparationTime: products[
         index]
             .tempsPreparation,
@@ -193,16 +194,15 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
           .pop();
       showToast(context: context, text: "${products[index].libelle} a ete bien ajouter au panier", iconData: Icons.check, color: Colors.green);
 
-      // const snackBar = SnackBar(backgroundColor: Colors.green,content: Text('Product is added to cart'), duration: Duration(seconds: 1),);
-      // ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }).onError((error,
         stackTrace) {
+      logger.e(error);
       _show = false;
       showFab=true;
-      logger.e(' ---- ${error.toString()}');
-      const snackBar = SnackBar(backgroundColor: Colors.red ,content: Text('Product is already added in cart'), duration: Duration(seconds: 1));
-
-      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      Navigator.of(context)
+          .pop();
+      showToast(context: context, text: productAlreadyInCart, iconData: Icons.check, color: Colors.redAccent);
+      // logger.e(' ---- ${error.toString()}');
     });
 
   }

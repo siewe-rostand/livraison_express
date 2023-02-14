@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/widgets.dart';
@@ -33,7 +32,7 @@ class CourseApi {
       var body = json.decode(response.body);
       logger.e(response.body);
       var message = body['message'];
-      throw Exception(message);
+      throw Exception(body);
     }
   }
   static Future<Response> deleteOrder({required int id}) async {
@@ -117,8 +116,11 @@ class CourseApi {
       return response;
     } else {
       var body = json.decode(response.body);
-      logger.e("+++${response.body}");
+      logger.e("+++${body['message'].toString().contains("Point")}");
       var mes = body['message'];
+      if(body['message'].toString().contains("Point")){
+        throw("Point de livraison non acceptable ");
+      }
       if (response.statusCode == 401) {
         throw onFailureMessage;
       } else if (response.statusCode == 404 ||
@@ -211,11 +213,10 @@ class CourseApi {
     }
   }
 
-   Future<Response> commnander2({
+  /* Future<Response> commnander2({
     required Map data
   }) async {
     String url = '$baseUrl/user/purchases';
-    log("${Request("method", Uri.parse(url))}");
     Response response = await post(
       Uri.parse(url),
       headers: <String, String>{
@@ -224,28 +225,19 @@ class CourseApi {
         "Content-Type": "application/json",
         "Origin": origin
       },
-      body: jsonEncode(data),
+      body: json.encode(data),
     );
     if (response.statusCode == 200) {
       return response;
     } else {
       var body = json.decode(response.body);
-      var mes = body['message'];
-      var rw = body['data'];
-      // logger.e("+++ ${response.body}+ ${response.statusCode}");
-     log("message ${response.body} //");
-      if (response.statusCode == 401 || response.statusCode ==400) {
-        throw (onErrorMessage);
-      } else if (response.statusCode == 404 ||
-          response.statusCode == 422 ||
-          response.statusCode == 400 ||
-          response.statusCode == 499) {
-        throw (onErrorMessage);
-      }
-      debugPrint('ERROR MESSAGE ${body['message']}');
-      throw (onFailureMessage);
+      logger.e(response.body);
+      var message = body['message'];
+      throw Exception(body);
     }
   }
+
+   */
 
    Future<Response>getOrderStatusHistory({required orderId})async {
      String url = '$baseUrl/user/courses/$orderId/statut-changelog';
@@ -266,28 +258,27 @@ class CourseApi {
 
 
 
-  // Future<String> commnander2({
-  //   required Map data
-  // }) async {
-  //   String url = '$baseUrl/user/purchases';
-  //   var httpClient =HttpClient();
-  //   var body =jsonEncode(data);
-  //
-  //   HttpClientRequest request = await httpClient.postUrl(Uri.parse(url));
-  //   // request.headers.set('content-type', 'application/json');
-  //   request.headers.set('content-type', 'application/json');
-  //   request.headers.set('Accept', 'application/json');
-  //   request.headers.set("Origin", origin);
-  //   request.headers.set ('Authorization', "Bearer " + token);
-  //   request.add(utf8.encode(body));
-  //   // log(body);
-  //   HttpClientResponse response = await request.close();
-  //   // todo - you should check the response.statusCode
-  //   String reply = await response.transform(utf8.decoder).join();
-  //   httpClient.close();
-  //   // logger.i(request.headers);
-  //   //logger.w(reply);
-  //   log("$reply}");
-  //   return reply;
-  // }
+  Future<String> commnander2({
+    required Map data
+  }) async {
+    String url = '$baseUrl/user/purchases';
+    var httpClient =HttpClient();
+    var body =jsonEncode(data);
+
+    HttpClientRequest request = await httpClient.postUrl(Uri.parse(url));
+    // request.headers.set('content-type', 'application/json');
+    request.headers.set('content-type', 'application/json');
+    request.headers.set('Accept', 'application/json');
+    request.headers.set("Origin", origin);
+    request.headers.set ('Authorization', "Bearer " + token);
+    request.add(utf8.encode(body));
+    // log(body);
+    HttpClientResponse response = await request.close();
+    // todo - you should check the response.statusCode
+    String reply = await response.transform(utf8.decoder).join();
+    httpClient.close();
+    // logger.i(request.headers);
+    //logger.w(reply);
+    return reply;
+  }
 }

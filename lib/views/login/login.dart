@@ -69,6 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               setState(() {
                                 _isPhone = !_isPhone;
                                 _phoneTextController.clear();
+                                emailTextController.clear();
                               });
                             },
                             child: const Text("Se connecter avec l'email ?"))
@@ -77,6 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               setState(() {
                                 _isPhone = !_isPhone;
                                 emailTextController.clear();
+                                _phoneTextController.clear();
                               });
                             },
                             child: const Text(
@@ -90,12 +92,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     _isPhone
                         ? IntlPhoneField(
                             controller: _phoneTextController,
+                            disableLengthCheck: true,
                             autovalidateMode:
                                 AutovalidateMode.onUserInteraction,
                             decoration: InputDecoration(
                               labelText: 'Telephone',
+                              contentPadding: const EdgeInsets.symmetric(vertical: 15.0,horizontal: 10),
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(25),
+                                borderRadius: BorderRadius.circular(16),
                               ),
                             ),
                             onChanged: (phone) {
@@ -107,11 +111,10 @@ class _LoginScreenState extends State<LoginScreen> {
                             keyboardType: TextInputType.emailAddress,
                             decoration: InputDecoration(
                               floatingLabelBehavior: FloatingLabelBehavior.auto,
-                              fillColor: Colors.white,
-                              filled: true,
                               labelText: 'Email',
+                              contentPadding: const EdgeInsets.symmetric(vertical: 15.0,horizontal: 10),
                               border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(25)),
+                                  borderRadius: BorderRadius.circular(16)),
                             ),
                             controller: emailTextController,
                           ),
@@ -121,11 +124,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextFormField(
                       decoration: InputDecoration(
                         floatingLabelBehavior: FloatingLabelBehavior.auto,
-                        fillColor: Colors.white,
-                        filled: true,
                         labelText: 'Mot de passe',
+                        contentPadding: const EdgeInsets.symmetric(vertical: 15.0,horizontal: 10),
                         border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25)),
+                            borderRadius: BorderRadius.circular(16)),
                         suffixIcon: IconButton(
                           icon: isObscureText
                               ? const Icon(Icons.visibility)
