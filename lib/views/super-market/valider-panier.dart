@@ -442,6 +442,9 @@ class _ValiderPanierState extends State<ValiderPanier> {
         String pi = paymentIntentData['id'];
         saveOrder('card', pi, '', '');
       }).onError((error, stackTrace) {
+        setState(() {
+          isLoading1=false;
+        });
         logger.e("message error");
       });
 
@@ -521,6 +524,9 @@ class _ValiderPanierState extends State<ValiderPanier> {
                           paymentIntentData = value;
                           initPaymentSheet(value);
                         }).catchError((onError){
+                          setState(() {
+                            isLoading1=false;
+                          });
                           logger.e(onError);
                         });
                         displayPaymentSheet(paymentIntentData!);
