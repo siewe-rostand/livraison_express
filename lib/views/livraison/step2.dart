@@ -48,7 +48,7 @@ class _Step2State extends State<Step2> {
   TextEditingController();
   final TextEditingController _typeAheadController = TextEditingController();
   Address receiverAddress = Address();
-  AddressFavorite selectedAddressDestination = AddressFavorite();
+  Adresse selectedAddressDestination = Adresse();
   double? placeLatDestination,placeLonDestination;
   String? locationDestination;
   String quartierDestination = '';
@@ -72,6 +72,7 @@ class _Step2State extends State<Step2> {
       TypeAheadField(
         getImmediateSuggestions: true,
         textFieldConfiguration:  TextFieldConfiguration(
+          scrollPadding: EdgeInsets.zero,
           decoration: const InputDecoration(labelText: 'Nom et prenom *'),
           controller: _typeAheadController,
         ),
@@ -280,6 +281,7 @@ class _Step2State extends State<Step2> {
                   builder: (context) {
                     return Center(
                       child: AlertDialog(
+                        contentPadding: EdgeInsets.zero,
                         content: SelectedFavAddress(
                           isDialog: true,
                           onTap: (a) {

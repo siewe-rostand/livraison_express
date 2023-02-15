@@ -9,7 +9,7 @@ PopupMenuItem<Menu> buildPopupMenuItem(
   return PopupMenuItem<Menu>(
     value: position,
     child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
         Icon(
           iconData,

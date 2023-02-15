@@ -53,9 +53,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 headerSliverBuilder: (context, isScrolled){
                   return [
                     SliverCardResume(
-                        _order.infos!.distanceText!,
-                        _order.paiement!.montantTotal!.toString(),
-                        _order.infos!.dateLivraison!
+                      command: _order,
                     )
                   ];
                 },

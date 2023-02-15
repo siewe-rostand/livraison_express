@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:contacts_service/contacts_service.dart';
 import 'package:flutter/material.dart';
@@ -44,7 +45,7 @@ class _Step1State extends State<Step1> {
   TextEditingController titleDepartTextController = TextEditingController();
   final TextEditingController _typeAheadController = TextEditingController();
   Address senderAddress = Address();
-  AddressFavorite selectedAddressDepart = AddressFavorite();
+  Adresse selectedAddressDepart = Adresse();
   double? placeLatDepart,placeLonDepart;
   String? location;
   String quartierDepart = '';
@@ -64,7 +65,6 @@ class _Step1State extends State<Step1> {
       cityDepartTextController = TextEditingController(text: city);
     });
     sender =widget.sender;
-    print('city uuuu....$city');
   }
 
   autoComplete(){
@@ -190,7 +190,7 @@ class _Step1State extends State<Step1> {
       throw Exception('error');
     }
   }
-  bool isFavoriteAddress(AddressFavorite addressFavorite, Address address) {
+  bool isFavoriteAddress(Adresse addressFavorite, Address address) {
     if (addressFavorite.toString().isEmpty) {
       return false;
     }

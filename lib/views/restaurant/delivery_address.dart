@@ -5,15 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:livraison_express/constant/all-constant.dart';
-import 'package:livraison_express/model/module_color.dart';
 import 'package:livraison_express/service/shopService.dart';
-import 'package:livraison_express/views/main/categoryPage.dart';
-import 'package:livraison_express/views/restaurant/restaurant.dart';
+import 'package:livraison_express/views/category/categoryPage.dart';
 
 import '../../data/user_helper.dart';
-import '../../model/auto_gene.dart';
 import '../../model/category.dart';
 import '../../model/day_item.dart';
+import '../../model/shop.dart';
 import '../../utils/size_config.dart';
 
 class DeliveryAddress extends StatefulWidget {
@@ -57,21 +55,6 @@ class _DeliveryAddressState extends State<DeliveryAddress> {
         appBar: PreferredSize(
           preferredSize: const Size.fromHeight(65),
           child: AppBar(
-            automaticallyImplyLeading: false,
-            leading: IconButton(
-              onPressed: () {
-                setState(() {
-                  shops = [];
-                });
-                Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => Restaurant(
-                              moduleId: widget.moduleId,
-                            )));
-              },
-              icon: const Icon(Icons.arrow_back_rounded),
-            ),
             systemOverlayStyle: SystemUiOverlayStyle(
                 statusBarColor: UserHelper.getColor()),
             elevation: 0,
@@ -123,7 +106,6 @@ class _DeliveryAddressState extends State<DeliveryAddress> {
                           now.day, int.parse(nw!), int.parse(a!), 0);
                       DateTime closeTimeStamp = DateTime(now.year, now.month,
                           now.day, int.parse(cnm!), int.parse(cla!), 0);
-                      debugPrint('close time // $closeTimeStamp');
                       if ((now.isAtSameMomentAs(openTimeStamp) ||
                               now.isAfter(openTimeStamp)) &&
                           now.isBefore(closeTimeStamp)) {
@@ -131,10 +113,6 @@ class _DeliveryAddressState extends State<DeliveryAddress> {
                           isTodayOpened = true;
                         });
                       }
-                      print("isTodayOpened $isTodayOpened");
-                      // if(isShopOpen(i.openedAt!, i.closedAt!)){
-                      //   isTodayOpened =true;
-                      // }
                     } catch (e) {
                       debugPrint('shop get time error $e');
                     }
@@ -165,8 +143,7 @@ class _DeliveryAddressState extends State<DeliveryAddress> {
                     categoryList =
                         await ShopServices.getCategories(shopId: shopId!);
                     Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) => CategoryPage(
-                            )));
+                        builder: (context) => CategoryPage()));
                   },
                   child: Stack(
                     children: [

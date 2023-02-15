@@ -1,21 +1,21 @@
 
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
 import '../../constant/color-constant.dart';
+import '../../model/orders.dart';
 import '../../utils/size_config.dart';
 import 'widget/horizontal_line.dart';
 class SliverCardResume extends StatelessWidget {
-  final String distance;
-  final String price;
-  final String date;
-
-
-  SliverCardResume(this.distance, this.price, this.date);
+   final Command command;
+  const SliverCardResume({Key? key, required this.command,}):super(key: key);
 
   @override
   Widget build(BuildContext context) {
     double height = getProportionateScreenHeight(140);
+    command.paiement!.datePayment = null;
+    String mode = command.paiement!.datePayment == null? " (Non Payée)": " (Payée)";
     return SliverAppBar(
       toolbarHeight: 0,
       backgroundColor: kGrey5,
@@ -33,7 +33,7 @@ class SliverCardResume extends StatelessWidget {
                 bottom: height * 0.497,
                 right: 0,
                 left: 0,
-                child: HorizontalLine(),
+                child: const HorizontalLine(),
               ),
               Positioned(
                 top:  0,
@@ -45,48 +45,60 @@ class SliverCardResume extends StatelessWidget {
                   child: Card(
                     elevation: 4.0,
                     child: Padding(
-                      padding: EdgeInsets.all(10),
-                      child: Row(
+                      padding: const EdgeInsets.all(10),
+                      child: Column(
                         children: [
-                          Expanded(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                SvgPicture.asset(
-                                  'img/icon/svg/ic_map_route.svg',
-                                  height: 30,
-                                  color: primaryColor,
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    SvgPicture.asset(
+                                      'img/icon/svg/ic_map_route.svg',
+                                      height: 30,
+                                      color: primaryColor,
+                                    ),
+                                    Text(command.infos!.distanceText!)
+                                  ],
                                 ),
-                                Text(distance)
-                              ],
-                            ),
-                          ),
-                          Expanded(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                SvgPicture.asset(
-                                  'img/icon/svg/ic_coins.svg',
-                                  height: 30,
-                                  color: primaryColor,
+                              ),
+                              Expanded(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    SvgPicture.asset(
+                                      'img/icon/svg/ic_coins.svg',
+                                      height: 30,
+                                      color: primaryColor,
+                                    ),
+                                    Text('${command.paiement!.totalAmount!} FCFA')
+                                  ],
                                 ),
-                                Text('$price FCFA')
-                              ],
-                            ),
-                          ),
-                          Expanded(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                SvgPicture.asset(
-                                  'img/icon/svg/ic_time.svg',
-                                  height: 30,
-                                  color: primaryColor,
+                              ),
+                              Expanded(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    SvgPicture.asset(
+                                      'img/icon/svg/ic_time.svg',
+                                      height: 30,
+                                      color: primaryColor,
+                                    ),
+                                    Text(command.infos!.dateLivraison!, textAlign: TextAlign.center,)
+                                  ],
                                 ),
-                                Text(date, textAlign: TextAlign.center,)
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text('Paiement: '),
+                              Text(command.paiement!.paymentMode == 'cash'? "A la livraison $mode" : "Carte bancaire $mode",
+                                style: TextStyle(color: command.paiement!.datePayment == null? primaryRed:primaryGreenDark),)
+                            ],
+                          )
                         ],
                       ),
                     ),

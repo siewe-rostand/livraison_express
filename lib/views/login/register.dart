@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
-import 'package:livraison_express/service/api_auth_service.dart';
+import 'package:livraison_express/service/auth_service.dart';
 import 'package:livraison_express/views/login/verification_code.dart';
 import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -85,42 +85,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                                          lastName: surnameTextController.text, email: emailTextController.text,
                                          password: passwordTextController.text, telephoneAlt: _phone2TextController.text,
                                          pwdConfirm: confirmPasswordTextController.text, telephone: _phoneTextController.text,
-                                         countryCode: countryCode, licence: true.toString()).then((response)async{
-                                           var body = json.decode(response.body);
-                                           String accessToken =body['access_token'];
-                                               UserHelper.token = accessToken;
-                                               UserHelper.currentUser1?.token=accessToken;
-                                           // ApiAuthService(context: context).getUserProfile(accessToken);
-                                           showMessage(context: bContext,title: "Félicitation",
-                                               errorMessage: "Vos informations ont été enregistrées. Vous allez recevoir un code au numéro ${_phoneTextController.text} et à l'adresse ${emailTextController.text}."
-                                           );
-                                           await Future.delayed(const Duration(
-                                             seconds: 2),(){
-                                             Navigator.of(bContext).pushReplacement(MaterialPageRoute(builder: (bContext)=> VerificationCode(
-                                               email: emailTextController.text,
-                                               phone: _phoneTextController.text,
-                                               token: accessToken,
-                                               resetPassword: false,
-                                               code: countryCode,
-                                             )));
-                                           });
-
-                                       // debugPrint('access_token \n${emailTextController.text}\n${_phoneTextController.text}\n$countryCode\n');
-                                     }).catchError((onError){
-                                       print('errpp// $onError');
-                                       showMessage(title: "ERROR",
-                                           errorMessage: "Le donner existe deja", context: bContext,negativeText: "OK");
-
-                                     });
-                                     // setState(() {
-                                     //   isLoading=false;
-                                     // });
-                                      // await phoneSignIn(
-                                      //         phoneNumber:
-                                      //             _phone2TextController
-                                      //                 .text)
-                                      //     .then((value) =>
-                                      //         debugPrint('success'));
+                                         countryCode: countryCode, licence: true.toString());
                                     } else {
                                       debugPrint('error');
                                     }

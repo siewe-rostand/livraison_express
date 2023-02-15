@@ -1,8 +1,5 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:livraison_express/constant/all-constant.dart';
-import 'package:livraison_express/model/module_color.dart';
 
 import '../../data/user_helper.dart';
 import '../../utils/size_config.dart';

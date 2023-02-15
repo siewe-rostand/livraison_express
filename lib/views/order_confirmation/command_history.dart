@@ -1,22 +1,27 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/model/order.dart';
 import 'package:livraison_express/model/order_status.dart';
 import 'package:livraison_express/service/course_service.dart';
+import 'package:livraison_express/utils/main_utils.dart';
 import 'package:livraison_express/views/home/home-page.dart';
 import 'package:livraison_express/views/order_confirmation/order_status_dialog.dart';
 import 'package:livraison_express/views/order_confirmation/widget/order_detail.dart';
+import 'package:livraison_express/views/order_confirmation/widget/order_item_card.dart';
+import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../constant/color-constant.dart';
 import '../../model/orders.dart';
 import '../../utils/size_config.dart';
 import '../../utils/value_helper.dart';
 import '../address_detail/selected_fav_address.dart';
+import '../widgets/custom_dialog.dart';
 import '../widgets/open_wrapper.dart';
 
 class CommandLists extends StatefulWidget {
@@ -27,14 +32,24 @@ class CommandLists extends StatefulWidget {
 }
 
 class _CommandListsState extends State<CommandLists> {
+  Logger logger = Logger();
   List<Command> command=[];
   List orders=[];
   late SharedPreferences prefs;
 
+  Future<void> _downloadBill(Uri url) async {
+    if (!await launchUrl(
+      url,
+      mode: LaunchMode.externalApplication,
+    )) {
+      showToast(context: context, text: "Impossible de télécharger cette facture.");
+    }
+  }
+
 
   getCourse() async{
     prefs =await SharedPreferences.getInstance();
-    await CourseApi.getOrders().
+    await CourseApi(context: context).getOrders().
     then((value) {
       if (mounted) {
         setState(() {
@@ -44,7 +59,6 @@ class _CommandListsState extends State<CommandLists> {
           prefs.setString("orders", order);
         });
       }
-      // print('${res}.');
     });
   }
   deleteCourse(int id)async{
@@ -60,17 +74,33 @@ class _CommandListsState extends State<CommandLists> {
   }
 
   getCourseStatus(int id){
-    CourseApi().getOrderStatusHistory(orderId: id).then((value){
+    CourseApi(context: context).getOrderStatusHistory(orderId: id).then((value){
       var body = json.decode(value.body);
       var res = body['data'] as List;
       List<OrderStatus> or;
       or= res.map((e) =>OrderStatus.fromJson(e)).toList();
-      // showGenDialog(context, true, OrderStatusDialog(command: order,));
-      // log("order status ${or[index].toJson()}");
-      log("order status ${res}");
     }).catchError((onError){
-      log("on error $onError");
+      logger.e("on error $onError");
     });
+  }
+
+  getModuleColor(String slug){
+    if(slug.isNotEmpty){
+      switch(slug){
+        case "restaurant":
+          return redDarker;
+        case "gas":
+          return gazOrangeDark;
+        case "market":
+          return darkGreen;
+        case "pharmacy":
+          return primaryGreenDark;
+        case "gift":
+          return gazOrangeDark;
+        default:
+          return primaryColor;
+      }
+    }
   }
   @override
   void initState() {
@@ -103,32 +133,26 @@ class _CommandListsState extends State<CommandLists> {
           ListView.builder(
               itemCount: command.length,
               itemBuilder: (context, index) {
-                String? or= prefs.getString('orders');
-                final decOrder= json.decode(or!) as List;
-                List<Command> saveOrder=decOrder.map((e) => Command.fromJson(e)).toList();
-                      Command commands =command[index];
+                prefs.getString('orders');
                 Command order =command[index];
-                // String? quarter=saveOrder[index].sender?.adresses![0].quarter;
-                // print(" ;;;${saveOrder[index].infos?.id}");
-                // log('... ${saveOrder[index].receiver?.toJson()}');
+
                 return OpenContainerWrapper(
                   transitionType: ContainerTransitionType.fade,
                   nextPage: OrderDetailScreen(order),
                   closedBuilder: (BuildContext _, VoidCallback openContainer){
                     return InkWellOverlay(
                       onTap: openContainer,
-                      child: items(order: order),
+                      child: _items(order: order,),
                     );
-                  }, onClosed: (v) async => Future.delayed(
-                const Duration(milliseconds: 500)),
+                  },
                 );
               })
     );
   }
 
-  items({required Command order}){
+  _items({required Command order}){
     return Card(
-      elevation: 5,
+      elevation: 4.0,
       child: Column(
         children: [
           Row(
@@ -139,7 +163,7 @@ class _CommandListsState extends State<CommandLists> {
                 width: getProportionateScreenWidth(30),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(30),
-                  color:UserHelper.kPrimaryColor,
+                  color:getModuleColor(order.orders!.module!),
                 ),
               ),
               Text(order.infos!.ref!),
@@ -147,7 +171,7 @@ class _CommandListsState extends State<CommandLists> {
               PopupMenuButton<Menu>(
                 onSelected: (Menu item){
                   if(item.name =="detail"){
-                    Navigator.of(context).push(MaterialPageRoute(builder: (context)=>OrderDetailScreen(order)));
+                    Navigator.of(context).push(MaterialPageRoute(builder: (context)=>OrderStatusDialog(command: order,)));
                   }
                   if(item.name =='delete'){
                     String message='Cette commande sera annulée et ne sera plus présente dans cette liste.';
@@ -156,10 +180,26 @@ class _CommandListsState extends State<CommandLists> {
                     });
 
                   }
+                  if(item.name =='edit'){
+                    String message='Vous serez redirigé vers la page de téléchargement';
+                    showGenDialog(context, true, CustomDialog(
+                      title: 'Ooooops',
+                      content:
+                      message,
+                      positiveBtnText: "OK",
+                      positiveBtnPressed: () {
+                        _downloadBill(Uri.parse(order.extra!.factureDownload!));
+                        Navigator.of(context).pop();
+                      },
+                      negativeBtnText: 'Annuler',
+                    ));
+
+                  }
                 },
                 itemBuilder:(BuildContext context){
                   return <PopupMenuEntry<Menu>>[
-                    buildPopupMenuItem('DETAIL', Icons.settings,Menu.detail),
+                    buildPopupMenuItem('Suivre', Icons.settings,Menu.detail),
+                    buildPopupMenuItem('Télécharger la facture', Icons.save,Menu.edit),
                     buildPopupMenuItem('Annuler', Icons.delete,Menu.delete),
                   ];
                 },
@@ -198,7 +238,7 @@ class _CommandListsState extends State<CommandLists> {
             children: [
               Expanded(
                   child: Text(
-                    order.sender!.adresses![0].quarter??order.receiver!.adresses![0].quarter!,
+                    order.sender!.addresses![0].quarter??order.receiver!.addresses![0].quarter!,
                     textAlign: TextAlign.center,
                   )),
               Icon(
@@ -207,7 +247,7 @@ class _CommandListsState extends State<CommandLists> {
               ),
               Expanded(
                   child: Text(
-                    order.receiver!.adresses![0].quarter!,
+                    order.receiver!.addresses![0].quarter!,
                     textAlign: TextAlign.center,
                   )),
             ],
@@ -216,7 +256,7 @@ class _CommandListsState extends State<CommandLists> {
             height: getProportionateScreenHeight(4),
           ),
           Container(
-            margin: const EdgeInsets.only(bottom: 2),
+            margin: const EdgeInsets.only(bottom: 2,left: 6),
             child: Row(
               children: [
                 Expanded(
@@ -225,7 +265,7 @@ class _CommandListsState extends State<CommandLists> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         SizedBox(width: getProportionateScreenWidth(2),),
-                        Icon(Icons.calendar_today, size: getProportionateScreenWidth(12),),
+                        Icon(Icons.today_outlined, size: getProportionateScreenWidth(12),),
                         SizedBox(width: getProportionateScreenWidth(4),),
                         Expanded(
                           child: Text(
@@ -245,8 +285,7 @@ class _CommandListsState extends State<CommandLists> {
                       Icon(Icons.monetization_on, size: getProportionateScreenWidth(15),),
                       SizedBox(width: getProportionateScreenWidth(4),),
                       Text(
-                        '${order.paiement!.montantTotal} FCFA',
-                        style: TextStyle(),
+                        '${order.paiement!.totalAmount} FCFA',
                       )
                     ],
                   ),

@@ -1,78 +1,123 @@
-// import 'package:json_annotation/json_annotation.dart';
-// import 'package:livraison_express/constant/some-constant.dart';
-//
-// import 'magasin.dart';
-//
-// class Module {
-//   final int? id;
-//   final String? libelle;
-//   final String? slug;
-//   final String? heureOuverture;
-//   final String? heureFermeture;
-//   final String? image;
-//   final String? moduleColor;
-//   final int? isActive;
-//   final int? isOpen;
-//   final bool? isActiveInCity;
-//   final List<Magasin>? shops;
-//   final List<String>? availableInCity;
-//
-//   Module(
-//       {this.id,
-//         this.libelle,
-//         this.slug,
-//         this.heureOuverture,
-//         this.heureFermeture,
-//         this.image,
-//         this.moduleColor,
-//         this.isActive,
-//         this.isOpen,
-//         this.isActiveInCity,
-//         this.shops,
-//         this.availableInCity});
-//
-//   static Map<String, dynamic>toMap(Module module)=>{
-//     ModuleConstant.id:module.id,
-//     ModuleConstant.name:module.libelle,
-//     ModuleConstant.isActive:module.isActive,
-//     ModuleConstant.slug:module.slug,
-//     ModuleConstant.heureFermeture:module.heureFermeture,
-//     ModuleConstant.heureOverture:module.heureOuverture,
-//     ModuleConstant.isOpen:module.isOpen,
-//     ModuleConstant.isActiveInCity:module.isActiveInCity,
-//     ModuleConstant.availableInCity:module.availableInCity,
-//     ModuleConstant.shops:module.shops,
-//   };
-//
-//   factory Module.fromJsom(Map<String,dynamic>json){
-//     var list = json[ModuleConstant.shops] as List;
-//     // print(list.runtimeType);
-//     List<Magasin> shops = list.map((i) => Magasin.fromJson(i)).toList();
-//     var streetsFromJson  = json[ModuleConstant.availableInCity];
-//     List<String> streetsList = streetsFromJson.cast<String>();
-//     // List<Magasin>.from(json[ModuleConstant.shops].map((x) => Magasin.fromJson(x)));
-//     return Module(
-//         id: json[ModuleConstant.id] as int,
-//         libelle: json[ModuleConstant.name] as String,
-//         slug: json[ModuleConstant.slug] as String,
-//         heureOuverture: json[ModuleConstant.heureOverture] as String,
-//         heureFermeture: json[ModuleConstant.heureFermeture] as String,
-//         isActive: json[ModuleConstant.isActive] as int,
-//         isOpen: json[ModuleConstant.isOpen] as int,
-//         image: json[ModuleConstant.image] as String,
-//         isActiveInCity: json[ModuleConstant.isActiveInCity] as bool,
-//         shops:  List<Magasin>.from(json[ModuleConstant.shops].map((x) => Magasin.fromJson(x))),
-//         availableInCity: streetsList
-//     );
-//   }
-//
-//
-// }
-// class Data{
-//   Module? module;
-//
-//   Data({this.module});
-//   factory Data.fromJson(Map<String,dynamic> json)=> Data(
-//     module: Module.fromJsom(json),
-//   );
-// }
+
+import 'package:livraison_express/model/shop.dart';
+
+import 'extra.dart';
+
+class Modules {
+  int? id;
+  String? libelle;
+  String? slug;
+  int? displayRank;
+  dynamic? information;
+  String? heureOuverture;
+  String? heureFermeture;
+  dynamic? baseDeliveryMeters;
+  dynamic? baseDeliveryAmountPerStep;
+  int? baseDeliveryMetersAsStepUnit;
+  dynamic? freeShippingCartAmount;
+  int? isOpen;
+  int? isActive;
+  int? isAvailable;
+  bool? isActiveInCity;
+  String? image;
+  List<Shops>? shops;
+  String? moduleColor;
+  List<String>? availableInCities;
+  dynamic? baseDeliveryAmount;
+  String? createdAt;
+  String? updatedAt;
+  dynamic? deletedAt;
+  Extra? extra;
+
+  Modules(
+      {this.id,
+        this.libelle,
+        this.slug,
+        this.displayRank,
+        this.information,
+        this.heureOuverture,
+        this.heureFermeture,
+        this.baseDeliveryMeters,
+        this.baseDeliveryAmountPerStep,
+        this.baseDeliveryMetersAsStepUnit,
+        this.freeShippingCartAmount,
+        this.isOpen,
+        this.isActive,
+        this.isAvailable,
+        this.isActiveInCity,
+        this.image,
+        this.shops,
+        this.moduleColor,
+        this.availableInCities,
+        this.baseDeliveryAmount,
+        this.createdAt,
+        this.updatedAt,
+        this.deletedAt,
+        this.extra});
+
+  Modules.fromJson(Map<String, dynamic> json) {
+    id = json['id'];
+    libelle = json['libelle'];
+    slug = json['slug'];
+    displayRank = json['display_rank'];
+    information = json['information'];
+    heureOuverture = json['heure_ouverture'];
+    heureFermeture = json['heure_fermeture'];
+    baseDeliveryMeters = json['base_delivery_meters'];
+    baseDeliveryAmountPerStep = json['base_delivery_amount_per_step'];
+    baseDeliveryMetersAsStepUnit = json['base_delivery_meters_as_step_unit'];
+    freeShippingCartAmount = json['free_shipping_cart_amount'];
+    isOpen = json['is_open'];
+    isActive = json['is_active'];
+    isAvailable = json['is_available'];
+    isActiveInCity = json['is_active_in_city'];
+    image = json['image'];
+    if (json['shops'] != null) {
+      shops = <Shops>[];
+      json['shops'].forEach((v) {
+        shops!.add(Shops.fromJson(v));
+      });
+    }
+    moduleColor = json['module_color'];
+    availableInCities = json['available_in_cities'].cast<String>();
+    baseDeliveryAmount = json['base_delivery_amount'];
+    createdAt = json['created_at'];
+    updatedAt = json['updated_at'];
+    deletedAt = json['deleted_at'];
+    extra = json['extra'] != null ? Extra.fromJson(json['extra']) : null;
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['libelle'] = libelle;
+    data['slug'] = slug;
+    data['display_rank'] = displayRank;
+    data['information'] = information;
+    data['heure_ouverture'] = heureOuverture;
+    data['heure_fermeture'] = heureFermeture;
+    data['base_delivery_meters'] = baseDeliveryMeters;
+    data['base_delivery_amount_per_step'] = baseDeliveryAmountPerStep;
+    data['base_delivery_meters_as_step_unit'] =
+        baseDeliveryMetersAsStepUnit;
+    data['free_shipping_cart_amount'] = freeShippingCartAmount;
+    data['is_open'] = isOpen;
+    data['is_active'] = isActive;
+    data['is_available'] = isAvailable;
+    data['is_active_in_city'] = isActiveInCity;
+    data['image'] = image;
+    if (shops != null) {
+      data['shops'] = shops!.map((v) => v.toJson()).toList();
+    }
+    data['module_color'] = moduleColor;
+    data['available_in_cities'] = availableInCities;
+    data['base_delivery_amount'] = baseDeliveryAmount;
+    data['created_at'] = createdAt;
+    data['updated_at'] = updatedAt;
+    data['deleted_at'] = deletedAt;
+    if (extra != null) {
+      data['extra'] = extra!.toJson();
+    }
+    return data;
+  }
+}

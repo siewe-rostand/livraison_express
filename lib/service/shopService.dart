@@ -1,20 +1,26 @@
 
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart';
-import 'package:livraison_express/model/auto_gene.dart';
 import 'package:livraison_express/model/category.dart';
-import 'package:livraison_express/model/magasin.dart';
+import 'package:livraison_express/utils/handle_exception.dart';
 import 'package:livraison_express/utils/main_utils.dart';
 import 'package:logger/logger.dart';
+import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 
 import '../data/user_helper.dart';
-import 'api_auth_service.dart';
+import '../model/shop.dart';
+import 'auth_service.dart';
 
 class ShopServices{
   final logger = Logger();
+  final BuildContext context;
+  final ProgressDialog? progressDialog;
+
+  ShopServices({required this.context, this.progressDialog});
 
   static Future<List<Shops>> getCategoriesFromShop({required int? shopId}) async{
     String url = "$baseUrl/magasins/?shopId=$shopId/categories";
@@ -39,23 +45,24 @@ class ShopServices{
 
   static Future<List<Category>> getCategories({required int shopId})async{
     String url = "$baseUrl/magasins/$shopId/categories";
-    Response response = await get(Uri.parse(url),headers: {
-      "Accept":"application/json",
-      "Content-Type":"application/json",
-      "Origin":origin
-    });
-    if(response.statusCode == 200){
-      var body=json.decode(response.body);
-      var rest = body['data'] as List;
-      // print("rest only  ");
-      // debugPrint('category ${rest}');
-      List<Category> categories;
+    try {
+      Response response = await get(Uri.parse(url),headers: {
+        "Accept":"application/json",
+        "Content-Type":"application/json",
+        "Origin":origin
+      });
+      if(response.statusCode == 200){
+        var body=json.decode(response.body);
+        var rest = body['data'] as List;
+        List<Category> categories;
 
-      categories = rest.map<Category>((json) =>Category.fromJson(json)).toList();
-      // print('main ${stores[0]}');
-      return categories;
-    }else{
-      throw Exception('error loading module data');
+        categories = rest.map<Category>((json) =>Category.fromJson(json)).toList();
+        return categories;
+      }else{
+        throw Exception('error loading module data');
+      }
+    } catch ( e) {
+      throw handleException(e);
     }
   }
   static Future<List<Category>> getSubCategoriesFromShopAndCategory({required int shopId,required int categoryId}) async{
@@ -70,11 +77,9 @@ class ShopServices{
       print('module App Start loading data retrieved successfully');
       var body=json.decode(response.body);
       var rest = body['data'] as List;
-      // print('restq ${rest}');
       List<Category> categories;
 
       categories = rest.map<Category>((json) =>Category.fromJson(json)).toList();
-      // print('main ${stores[0]}');
       return categories;
     }else{
       throw Exception('error loading module data from getSubCategoriesFromShopAndCategory');
@@ -108,6 +113,7 @@ class ShopServices{
     required int inner_radius,
     required int outer_radius
   })async{
+    progressDialog!.show();
     String url = "$baseUrl/magasins/search/nearby";
     Response response = await post(
       Uri.parse(url),
@@ -127,13 +133,16 @@ class ShopServices{
       },
     );
     if(response.statusCode == 200){
+      progressDialog!.hide();
       var body=jsonDecode(response.body);
       var rest = body['data'];
-      // log(rest);
       List<Shops> magasins;
       magasins =rest.map<Shops>((json) =>Shops.fromJson(json)).toList();
       return magasins;
     }else{
+      progressDialog!.hide();
+      var body=jsonDecode(response.body);
+      logger.e("message${response.body}");
       if (response.statusCode == 401) {
         throw (onErrorMessage);
       } else if (response.statusCode == 404 ||response.statusCode == 408||
@@ -141,7 +150,6 @@ class ShopServices{
           response.statusCode == 400 ||
           response.statusCode == 499) {
         logger.e(response.statusCode);
-        logger.d(response.body);
         throw (onFailureMessage);
       }else{
         throw (onFailureMessage);

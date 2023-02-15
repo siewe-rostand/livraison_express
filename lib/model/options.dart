@@ -1,4 +1,4 @@
-import 'package:livraison_express/constant/some-constant.dart';
+
 
 class Options{
   int? id;
@@ -6,13 +6,6 @@ class Options{
   int? price;
   int? quantity;
   Options({this.id,this.name,this.price,this.quantity});
-
-  static Map<String, dynamic> toMap(Options options) => {
-    OptionsConstant.id: options.id,
-    OptionsConstant.name: options.name,
-    OptionsConstant.quantity: options.quantity,
-    OptionsConstant.price: options.price
-  };
 
   Options.fromJson(Map<String, dynamic> json) {
     id = json['id'];

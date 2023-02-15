@@ -3,20 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:livraison_express/data/user_helper.dart';
 
 class SearchTextField extends StatefulWidget {
-   const SearchTextField({Key? key}) : super(key: key);
+   const SearchTextField({Key? key, this.controller}) : super(key: key);
+   final TextEditingController? controller;
 
   @override
   State<SearchTextField> createState() => _SearchTextFieldState();
 }
 
 class _SearchTextFieldState extends State<SearchTextField> {
- final TextEditingController controller = TextEditingController();
  late FocusNode focusNode;
 
  @override
   void initState() {
    focusNode=FocusNode();
-   controller.addListener(() {
+  widget.controller?.addListener(() {
      setState(() {});
    });
    focusNode.addListener(() {
@@ -28,14 +28,14 @@ class _SearchTextFieldState extends State<SearchTextField> {
   }
   @override
   void dispose() {
-   controller.dispose();
+    widget.controller?.dispose();
    focusNode.dispose();
     super.dispose();
   }
   @override
   Widget build(BuildContext context) {
     return  TextFormField(
-      controller: controller,
+      controller: widget.controller,
       decoration: InputDecoration(
           floatingLabelBehavior: FloatingLabelBehavior.auto,
           fillColor: Colors.white,
@@ -48,10 +48,10 @@ class _SearchTextFieldState extends State<SearchTextField> {
             Icons.search,
             color: focusNode.hasFocus?UserHelper.getColor():null,
           ),
-          suffixIcon: controller.text.isNotEmpty
+          suffixIcon: widget.controller!.text.isNotEmpty
               ? IconButton(
             color: UserHelper.getColor(),
-              onPressed: () => controller.clear(),
+              onPressed: () => widget.controller?.clear(),
               icon: const Icon(Icons.clear))
               : null),
     );

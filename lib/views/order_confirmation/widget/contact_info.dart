@@ -1,7 +1,7 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:livraison_express/model/client.dart';
 
-import '../../../model/orders.dart';
+import '../../../data/user_helper.dart';
 import '../../../utils/size_config.dart';
 import 'horizontal_line.dart';
 
@@ -29,7 +29,7 @@ class ContactInfo extends StatelessWidget {
             ),
           ),
         ),
-        const HorizontalLine(),
+        HorizontalLine(color: UserHelper.getColorDark(),),
         Container(
           margin: const EdgeInsets.only(left: 10),
           child: Column(
@@ -38,7 +38,7 @@ class ContactInfo extends StatelessWidget {
             children: [
               item(
                   label: 'Nom et prénom',
-                  value: contact.fullname!
+                  value: contact.fullName!
               ),
               item(
                   label: 'Email',
@@ -50,11 +50,11 @@ class ContactInfo extends StatelessWidget {
               ),
               item(
                   label: 'Quartier',
-                  value: "contact.adresses!.first.quarter!"
+                  value: contact.addresses!.first.quarter!
               ),
               item(
                   label: 'Description',
-                  value: "contact.adresses!.first.description!"
+                  value: contact.addresses!.first.description!
               ),
             ],
           ),

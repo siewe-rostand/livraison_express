@@ -12,7 +12,8 @@ import '../../model/module_color.dart';
 
 class SelectTime extends StatefulWidget {
   // final ModuleColor moduleColor;
-  const SelectTime({Key? key}) : super(key: key);
+  const SelectTime({Key? key, required this.onSelectedDate}) : super(key: key);
+  final Function onSelectedDate;
 
   @override
   State<SelectTime> createState() => _SelectTimeState();
@@ -56,7 +57,6 @@ class _SelectTimeState extends State<SelectTime> {
             dateFormat = DateFormat.Hm();
             if(now.isBefore(openTimeStamp)){
               todayTime=[];
-              selectTodayTime=i.openedAt!;
               while (openTimeStamp.isBefore(closeTimeStamp)) {
                 DateTime timeIncrement = openTimeStamp.add(step);
                 openTimeStamp = timeIncrement;
@@ -74,7 +74,6 @@ class _SelectTimeState extends State<SelectTime> {
                 now1 = incr;
               }
               selectTodayTime=todayTime.first;
-              print('... ${now}');
             }
           }
         }
@@ -85,13 +84,17 @@ class _SelectTimeState extends State<SelectTime> {
 
   showToday(BuildContext context) {
     Navigator.of(context).pop();
-    Days today =UserHelper.shops.horaires!.today!;
     showDialog<void>(
         context: context,
         builder: (context) {
+          dateFormat = DateFormat.Hm();
+          if(!todayTime.contains(selectTodayTime)){
+            selectTodayTime = todayTime[2];
+          }else{
+            selectTodayTime = dateFormat.format(t);
+          }
           var selectTime;
           return StatefulBuilder(builder: (context, setStateSB) {
-            log("select time  $selectTodayTime, ");
             return Dialog(
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16.0)),
@@ -131,7 +134,6 @@ class _SelectTimeState extends State<SelectTime> {
                                       MaterialStateProperty.all(
                                           UserHelper.getColorDark())),
                                   onPressed: () {
-                                    print("Today's today");
                                     isToday = true;
                                     showToday(context);
                                   },
@@ -160,7 +162,6 @@ class _SelectTimeState extends State<SelectTime> {
                                         MaterialStateProperty.all(
                                             UserHelper.getColorDark())),
                                     onPressed: () {
-                                      print("today's tomorrow");
                                       isToday == false;
                                       showTomorrow(context);
                                     },
@@ -225,14 +226,10 @@ class _SelectTimeState extends State<SelectTime> {
                               now.day, int.parse(nw), int.parse(a), 0);
                           var selectTime1 =
                           DateFormat('dd-MM-yyyy  k:mm').format(startTime2);
-                          Navigator.of(context).pop();
                           chooseTime = selectTime ?? selectTime1;
-                          if (mounted) {
-                            setState(() {
-                              UserHelper.chooseTime=chooseTime;
-                            });
-                          }
-                          print("// ${UserHelper.chooseTime}");
+                          widget.onSelectedDate(chooseTime);
+                          UserHelper.chooseTime=selectTime ?? selectTime1;
+                          Navigator.of(context).pop();
                         },
                         child:  Text('VALIDER',style: TextStyle(color: UserHelper.getColorDark()),),
                       ),
@@ -298,11 +295,9 @@ class _SelectTimeState extends State<SelectTime> {
           DateTime(now.year, now.month, now.day, 8, 30, 0);
           var selectTime;
           nextStart=timeSlots.first;
-          print('build');
           return StatefulBuilder(builder: (context, setStateSB) {
             List<String> se=[];
             se.add(nextStart);
-            print('rebuild');
 
             return Dialog(
               shape: RoundedRectangleBorder(
@@ -405,7 +400,6 @@ class _SelectTimeState extends State<SelectTime> {
                                     0);
                                 selectTime = DateFormat('dd-MM-yyyy  k:mm')
                                     .format(startTime2);
-
                               },
                               items: timeSlots.map<DropdownMenuItem<String>>(
                                       (String value) {
@@ -438,7 +432,8 @@ class _SelectTimeState extends State<SelectTime> {
                           var selectTime1 =
                           DateFormat('dd-MM-yyyy k:mm').format(startTime2);
                           Navigator.of(context).pop();
-                          UserHelper.chooseTime = selectTime ?? selectTime1;
+                          chooseTime = selectTime ?? selectTime1;
+                          widget.onSelectedDate(chooseTime);
                         },
                         child: Text('VALIDER',style: TextStyle(color: UserHelper.getColorDark()),),
                       ),

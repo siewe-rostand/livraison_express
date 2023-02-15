@@ -1,49 +1,45 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 
-import 'package:contacts_service/contacts_service.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart' as stripe;
 import 'package:flutter_svg/svg.dart';
-import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:livraison_express/data/local_db/db-helper.dart';
 import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/model/articles.dart';
-import 'package:livraison_express/model/auto_gene.dart';
 import 'package:livraison_express/model/cart-model.dart';
 import 'package:livraison_express/model/client.dart';
 import 'package:livraison_express/model/day_item.dart';
 import 'package:livraison_express/model/infos.dart';
 import 'package:livraison_express/model/orders.dart' as command;
 import 'package:livraison_express/model/payment.dart';
+import 'package:livraison_express/model/product.dart';
 import 'package:livraison_express/model/user.dart';
 import 'package:livraison_express/service/paymentApi.dart';
+import 'package:livraison_express/utils/app_extension.dart';
 import 'package:livraison_express/utils/main_utils.dart';
 import 'package:livraison_express/utils/size_config.dart';
-import 'package:livraison_express/views/main/product_page.dart';
-import 'package:livraison_express/views/order_confirmation/order_confirmation.dart';
 import 'package:livraison_express/views/super-market/widget/step1.dart';
 import 'package:livraison_express/views/super-market/widget/step2.dart';
 import 'package:livraison_express/views/widgets/custom_alert_dialog.dart';
 import 'package:livraison_express/views/widgets/custom_dialog.dart';
 import 'package:livraison_express/views/widgets/select_time.dart';
 import 'package:logger/logger.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../constant/color-constant.dart';
-import '../../model/address-favorite.dart';
 import '../../model/address.dart';
 import '../../model/distance_matrix.dart';
 import '../../model/horaire.dart';
-import '../../model/module_color.dart';
 import '../../model/order.dart';
+import '../../model/shop.dart';
 import '../../service/course_service.dart';
 import 'cart-provider.dart';
-import 'cart.dart';
+import '../cart/cart.dart';
 
 enum DeliveryType { express, heure_livraison }
 
@@ -58,7 +54,9 @@ class ValiderPanier extends StatefulWidget {
 class _ValiderPanierState extends State<ValiderPanier> {
   MainUtils mainUtils =MainUtils();
 
+  DBHelper1 dbHelper = DBHelper1();
   final logger = Logger();
+  Map<String, dynamic>? paymentIntentData;
   int radioSelected = 1;
   DeliveryType? _deliveryType;
   int _currentStep = 0;
@@ -67,6 +65,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
   bool isChecked = false;
   bool isChecked1 = false;
   bool isLoading=false;
+  bool isLoading1=false;
   bool isToday = false;
   String chooseTime = '';
   List<String> timeSlots = [];
@@ -83,7 +82,6 @@ class _ValiderPanierState extends State<ValiderPanier> {
     GlobalKey<FormState>(),
     GlobalKey<FormState>()
   ];
-  DBHelper dbHelper =DBHelper();
 
   //some variables
   String fullName = '';
@@ -114,31 +112,15 @@ class _ValiderPanierState extends State<ValiderPanier> {
   Client receiverClient = Client();
   Address senderAddress = Address();
   Address addressReceiver = Address();
-  AddressFavorite selectedFavoriteAddress = AddressFavorite();
-  TextEditingController quarterTextController = TextEditingController();
-  TextEditingController nameTextController = TextEditingController();
-  TextEditingController phoneTextController = TextEditingController();
-  TextEditingController phone2DepartTextController = TextEditingController();
-  TextEditingController emailTextController = TextEditingController();
-  TextEditingController addressTextController = TextEditingController();
-  TextEditingController descTextController = TextEditingController();
   TextEditingController cityDepartTextController = TextEditingController();
-  TextEditingController titleTextController = TextEditingController();
-  AddressFavorite selectedAddressDepart = AddressFavorite();
-  double? placeLat;
-  double? placeLon;
-  String? location;
+  TextEditingController promoTextController = TextEditingController();
+  Adresse selectedAddressDepart = Adresse();
   String? city;
   int? cityId;
   String? slug;
-  String? moduleSlug,paymentIntentClientSecret;
   int? idChargement;
-  List<Article> productList =[];
-  List<Contact> contacts=[];
+  List<Products> productList =[];
   bool isTodayOpened=false,isTomorrowOpened=false;
-
-  TextEditingController controller = TextEditingController();
-  final TextEditingController _typeAheadController = TextEditingController();
 
   @override
   void initState() {
@@ -158,39 +140,9 @@ class _ValiderPanierState extends State<ValiderPanier> {
     isOpened(UserHelper.shops.horaires!);
   }
 
-
-   makePayment({required String amount, required BuildContext context}) async {
-    try {
-
-      var paymentIntentData =
-      await PaymentApi(context: context).createPaymentIntent(amount, 'XAF'); //json.decode(response.body);
-      // print('Response body==>${response.body.toString()}');
-      await stripe.Stripe.instance.initPaymentSheet(
-          paymentSheetParameters: stripe.SetupPaymentSheetParameters(
-            paymentIntentClientSecret: paymentIntentData!['client_secret'],
-            applePay: true,
-            googlePay: true,
-            testEnv: true,
-            style: ThemeMode.dark,
-            merchantCountryCode: 'US',
-            merchantDisplayName: 'ROSTAND',
-            customerId: paymentIntentData!['customer'],
-            customerEphemeralKeySecret: paymentIntentData!['ephemeralKey'],)).then((value){
-      });
-
-
-      ///now finally display payment sheeet
-      PaymentApi(context: context).displayPaymentSheet();
-
-    } catch (e, s) {
-      print('exception:$e$s');
-    }
-  }
-
-  setSenderAndReceiverInfo() async {
-    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+  setSenderAndReceiverInfo() {
+    var city =  UserHelper.city;
     Shops shops=UserHelper.shops;
-    var providerName = "livraison-express";
     senderClient.id = shops.client?.id;
     senderClient.providerId = shops.client?.providerId;
     senderClient.providerName = shops.client?.providerName;
@@ -203,8 +155,8 @@ class _ValiderPanierState extends State<ValiderPanier> {
 
     senderAddress.id = shops.adresseFavorite?.id;
     senderAddress.titre = shops.adresseFavorite?.surnom;
-    senderAddress.villeId = cityId;
-    senderAddress.ville = city;
+    senderAddress.villeId = city.id;
+    senderAddress.ville = city.name;
     senderAddress.pays = "Cameroun";
     senderAddress.quarter = shops.adresse?.quartier;
     senderAddress.description = shops.adresse?.description;
@@ -214,56 +166,30 @@ class _ValiderPanierState extends State<ValiderPanier> {
     senderAddress.providerName = shops.adresse?.providerName;
     senderAddress.nom=shops.slug;
 
-    // receiverClient.fullName = nameTextController.text;
-    // receiverClient.telephone = phoneTextController.text;
-    // receiverClient.email = emailTextController.text;
-    // addressReceiver.address = addressTextController.text;
-    logger.d('4${receiverClient.toJson()}');
+    // logger.d('4${receiverClient.toJson()}');
     if (mounted) {
       setState(() {
         _currentStep++;
+        isLoading1 = false;
       });
     }
   }
 
   setDeliveryAddress() {
-
-    // addressReceiver.address = addressTextController.text;
-    // addressReceiver.villeId = villeId;
-    // addressReceiver.description = descTextController.text;
-    // addressReceiver.quarter = quarterTextController.text;
-    // addressReceiver.titre = titleTextController.text;
-    // addressReceiver.latitude = placeLat.toString();
-    // addressReceiver.longitude = placeLon.toString();
     addressReceiver.providerName = "livraison-express";
     addressReceiver.id = null;
     addressReceiver.providerId = null;
     addressReceiver.ville=city;
     addressReceiver.villeId=cityId;
     addressReceiver.pays="Cameroun";
-    // print(';;;${isFavoriteAddress(selectedFavoriteAddress, addressReceiver) }${selectedFavoriteAddress.toString().length}');
-    log("message ${addressReceiver.toJson()}");
-    // log("message ${UserHelper.chooseTime}");
     calculateDistance();
   }
 
-  bool isFavoriteAddress(AddressFavorite addressFavorite, Address address) {
-    if (addressFavorite.toString().isEmpty) {
-      return false;
-    }
-    return addressFavorite.quartier == address.quarter &&
-        addressFavorite.description == address.description &&
-        addressFavorite.latitude == address.latitude &&
-        addressFavorite.longitude == address.longitude &&
-        addressFavorite.nom == address.address;
-  }
 
   calculateDistance() async {
-    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    String? mags = sharedPreferences.getString("magasin");
-    // final magasinData = json.decode(mags!);
-    // Magasin magasin = Magasin.fromJson(magasinData);
-
+    setState(() {
+      isLoading1 = true;
+    });
     Shops shops=UserHelper.shops;
     String slug = shops.slug!;
     String module = shops.slug!;
@@ -271,7 +197,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
     String origin = senderAddress.latitude! + "," + senderAddress.longitude!;
     String destination =
         addressReceiver.latitude! + "," + addressReceiver.longitude!;
-    await CourseApi().calculateOrderDistance(
+    await CourseApi(context: context).calculateOrderDistance(
         origin: origin,
         destination: destination,
         module: module,
@@ -293,14 +219,24 @@ class _ValiderPanierState extends State<ValiderPanier> {
               initialDeliveryPrice = distanceMatrix.prix!;
               express =distanceMatrix.durationText!;
 
+              isLoading1 =false;
               UserHelper.chooseTime='';
               _currentStep++;
             });
           }
+          log("message${distanceMatrix.toJson()}");
     }).catchError((onError) {
+      setState(() {
+        isLoading1 =false;
+      });
       logger.e(onError);
       var message ="Une erreur est survenue lors du calcul de la distance. Veuillez vérifier vos informations puis réessayez.";
-      showGenDialog(context,true,CustomDialog(title: "Alert", content: message, positiveBtnText: "OK", positiveBtnPressed: (){
+      String title ="Alert";
+      if(onError.toString().contains("Point")){
+        message = "Point de livraison non acceptable";
+        title = "Désolé";
+      }
+      showGenDialog(context,true,CustomDialog(title: title, content: message, positiveBtnText: "OK", positiveBtnPressed: (){
         Navigator.pop(context);
       }));
     });
@@ -318,27 +254,6 @@ class _ValiderPanierState extends State<ValiderPanier> {
     }
     return deliveryTime;
   }
-  setCartItems()async {
-    List<CartItem> cartList =await dbHelper.getCartList();
-    for(int i=0; i<cartList.length;i++){
-      CartItem cartItem = cartList[i];
-      Article article =Article();
-      article.id=cartItem.id;
-      article.libelle=cartItem.title;
-      article.unitPrice=cartItem.price;
-      article.totalPrice=cartItem.totalPrice;
-      article.categoryId=cartItem.categoryId;
-      article.subCategoryId=cartItem.categoryId;
-      article.totalPrice = widget.totalAmount.toInt();
-      article.quantity =cartItem.quantity;
-      article.subTotalAmount =cartItem.quantity!*cartItem.price!;
-      article.description ="";
-      // var list =json.decode(cartItem.complement!)as List;
-      // List<Attributes> attributes = list.map((json) => Attributes.fromJson(json)).toList();
-      // article.attributes =attributes;
-      productList.add(article);
-    }
-  }
   saveOrder(String modePaiement, String pi, String status, String paimentMessage)async{
     Shops shops =UserHelper.shops;
     SharedPreferences sharedPreferences =
@@ -347,34 +262,27 @@ class _ValiderPanierState extends State<ValiderPanier> {
     sharedPreferences.getString("userData");
     final extractedUserData =
     json.decode(userString!);
-    var av = sharedPreferences.getString('city');
 
 
     AppUser1 appUser1 = AppUser1.fromJson(extractedUserData);
     List<CartItem> cartList =await dbHelper.getCartList();
     for(int i=0; i<cartList.length;i++){
       CartItem cartItem = cartList[i];
-      Article article =Article();
+      Products article =Products();
       article.id=cartItem.productId;
       article.libelle=cartItem.title;
-      article.unitPrice=cartItem.price;
+      article.prixUnitaire=cartItem.price;
       article.totalPrice=cartItem.totalPrice;
-      // article.categoryId=cartItem.categoryId;
-      // article.subCategoryId=cartItem.categoryId;
       article.totalPrice = widget.totalAmount.toInt();
       article.quantity =cartItem.quantity;
-      article.subTotalAmount =cartItem.quantity!*cartItem.price!;
-      article.description ="";
+      article.subTotalAmount =Provider.of<CartProvider>(context,listen: false).getTotalPrice().toInt();
       article.magasinId=shops.id;
-      // var list =json.decode(cartItem.complement!)as List;
-      // List<Attributes> attributes = list.map((json) => Attributes.fromJson(json)).toList();
-      // article.attributes =attributes;
       productList.add(article);
-      // logger.wtf(cartItem.id);
     }
 
     List<Address> addressSender = [];
     List<Address>  receiverAddress = [];
+    addressReceiver.clientId = appUser1.id;
     addressSender.add(senderAddress);
     receiverAddress.add(addressReceiver);
     senderClient.addresses =addressSender;
@@ -388,15 +296,15 @@ class _ValiderPanierState extends State<ValiderPanier> {
     originalClient.email =appUser1.email;
 
 
-    Order order =Order();
+    Orders order =Orders();
     order.module=UserHelper.module.slug;
-    order.articles =productList;
     order.description ="";
     order.montantTotal =widget.totalAmount.toInt();
-    order.promoCode =codePromo;
+    order.codePromo =codePromo;
     order.commentaire ='';
     order.montantLivraison =initialDeliveryPrice;
     order.magasinId=shops.id;
+    order.listeArticles = productList;
     var total=Provider.of<CartProvider>(context,listen: false).getTotalPrice() +deliveryPrice;
     Payment payment =Payment();
     payment.totalAmount = total.toInt();
@@ -405,16 +313,16 @@ class _ValiderPanierState extends State<ValiderPanier> {
     payment.status = status;
     payment.paymentIntent = pi;
 
-    Info info = Info();
+    Infos info = Infos();
     info.origin ="Livraison express";
     info.platform ="Mobile";
     info.dateLivraison=currentDate + " "+ currentTime;
     info.dateChargement = currentDate;
     info.heureLivraison = currentTime;
     info.jourLivraison=currentDate;
-    info.villeLivraison=av;
+    info.villeLivraison=city;
     info.duration = duration;
-    info.distance = distance.toString();
+    info.distance = distance;
     info.durationText=durationText;
     info.distanceText=distanceText;
 
@@ -427,117 +335,50 @@ class _ValiderPanierState extends State<ValiderPanier> {
       "paiement":payment,
     };
 
-    await CourseApi().commnander2( data: data).then((response) {
-      var body = json.decode(response.body);
-      var com = body['data'];
-      command.Command ord =command.Command.fromJson(com);
-      log("body ${ord}");
+    await CourseApi(context: context).commnander2( data: data).then((response) {
+      logger.w(response);
       UserHelper.userExitDialog(context, true,  CustomAlertDialog(
           svgIcon: "img/icon/svg/smiley_happy.svg", title: "Youpiii".toUpperCase(),
-          message: "Felicitation, Commande enregistrée avec succès\nN° commande ${ord.infos?.ref} ",
+          message: "Felicitation, Commande enregistrée avec succès",
           positiveText: "OK",
           onContinue:(){
+            setState(() {
+              isLoading1=false;
+            });
             Navigator.of(context).pop();
             Provider.of<CartProvider>(context,listen: false).clears();
             Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context)=>const CartPage()));
           },
           ));
-    }).catchError((onError){
-      logger.e(onError);
-      UserHelper.userExitDialog(context, true,  CustomAlertDialog(
-          svgIcon: "img/icon/svg/smiley_cry.svg", title: "Desole",
-          message: onError.toString(),
-          positiveText: "OK",
-          onContinue:(){
-            Navigator.of(context).pop();
-      }));
-    });
-  }
-  Future<List<Contact>> getContacts(String query) async {
-    //We already have permissions for contact when we get to this page, so we
-    // are now just retrieving it
-    final PermissionStatus permission = await Permission.contacts.status;
-    if(permission == PermissionStatus.granted) {
-      return await ContactsService.getContacts(query: query,
-          withThumbnails: false,photoHighResolution: false
-      );
-    }else{
-      await Permission.contacts.request().then((value) {
-        if(value==PermissionStatus.granted){
-          getContacts(query);
-        }
+    }).onError((error, stackTrace) {
+      setState(() {
+        isLoading1=false;
       });
-      throw Exception('error');
-    }
-  }
-  autoComplete(){
-    return
-      TypeAheadField(
-        getImmediateSuggestions: true,
-        textFieldConfiguration:  TextFieldConfiguration(
-          decoration: const InputDecoration(labelText: 'Nom et prenom *'),
-          controller: _typeAheadController,
-        ),
-        suggestionsCallback: (pattern) {
-          // call the function to get suggestions based on text entered
-          return getContacts(pattern);
-        },
-        itemBuilder: (context,Contact suggestion) {
-          // show suggection list
-          suggestion.phones?.forEach((element) {
-            telephone=element.value!;
-          });
-          return ListTile(
-            title: Text(suggestion.displayName!),
-            subtitle: Text(
-              telephone,
-            ),
-          );
-        },
-        onSuggestionSelected: (Contact suggestion) {
-          suggestion.phones?.forEach((element) {
-            telephone=element.value!;
-          });
-          _typeAheadController.text=suggestion.displayName!;
-          phoneTextController.text =telephone;
-        },
-        hideOnEmpty: true,
-        autoFlipDirection: true,
-      );
-}
-  bool isOpened1(List<DayItem>? itemsToday) {
-    bool juge = false;
-    if(itemsToday!.isNotEmpty) {
-      for (DayItem i in itemsToday) {
-        try {
-          DateTime now = DateTime.now();
-          String? openTime = i.openedAt;
-          String? closeTime = i.closedAt;
-          var nw = openTime?.substring(0, 2);
-          var a = openTime?.substring(3, 5);
-          var cnm = closeTime?.substring(0, 2);
-          var cla = closeTime?.substring(3, 5);
-          DateTime openTimeStamp = DateTime(
-              now.year, now.month, now.day, int.parse(nw!), int.parse(a!), 0);
-          DateTime closeTimeStamp = DateTime(now.year, now.month, now.day,
-              int.parse(cnm!), int.parse(cla!), 0);
-          debugPrint('close time // $closeTimeStamp');
-          if ((now.isAtSameMomentAs(openTimeStamp) ||
-              now.isAfter(openTimeStamp)) &&
-              now.isBefore(closeTimeStamp)) {
-            setState(() {
-              isTodayOpened = true;
-              juge = true;
-            });
-            break;
-          }
-          log('from home page today', error: isTodayOpened.toString());
-        } catch (e) {
-          debugPrint('shop get time error $e');
-        }
+      if(error is SocketException){
+        showGenDialog(
+            context,
+            true,
+            CustomDialog(
+                title: 'Ooooops',
+                content: onFailureMessage,
+                positiveBtnText: "OK",
+                positiveBtnPressed: () {
+                  Navigator.of(context).pop();
+                }));
+      }else{
+        showGenDialog(
+            context,
+            true,
+            CustomDialog(
+                title: 'Ooooops',
+                content: onErrorMessage,
+                positiveBtnText: "OK",
+                positiveBtnPressed: () {
+                  Navigator.of(context).pop();
+                }));
+        logger.e(error);
       }
-    }
-    return juge;
+    });
   }
   bool isOpened(Horaires horaires) {
     bool juge = false;
@@ -558,7 +399,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
                 now.day, int.parse(nw!), int.parse(a!), 0);
             DateTime closeTimeStamp = DateTime(now.year, now.month,
                 now.day, int.parse(cnm!), int.parse(cla!), 0);
-            debugPrint('close time // $closeTimeStamp');
+            // debugPrint('close time // $closeTimeStamp');
             if ((now.isAtSameMomentAs(openTimeStamp) ||
                 now.isAfter(openTimeStamp)) &&
                 now.isBefore(closeTimeStamp)) {
@@ -593,36 +434,49 @@ class _ValiderPanierState extends State<ValiderPanier> {
     }
     return juge;
   }
-  getUserData(int? value)async{
-    SharedPreferences sharedPreferences =
-    await SharedPreferences.getInstance();
-    String? userString =
-    sharedPreferences.getString("userData");
-    final extractedUserData =
-    json.decode(userString!);
-    AppUser1 appUser = AppUser1.fromJson(extractedUserData);
-    AppUser1? user=UserHelper.currentUser1??appUser;
-    email =(user.email??appUser.email)!;
-    fullName =(user.fullname??appUser.fullname)!;
-    telephone =(user.telephone??appUser.telephone)!;
-    telephone1 =(user.telephoneAlt??appUser.telephoneAlt)??'';
-    setState(() {
-      radioSelected = value!;
-      nameTextController.text = fullName;
-      phone2DepartTextController.text = telephone1;
-      phoneTextController.text = telephone;
-      emailTextController.text = email;
-      senderClient.providerName=user.providerName;
-      senderAddress.providerName =
-      "livraison-express";
-    });
+
+  displayPaymentSheet(Map<String, dynamic> paymentIntentData) async {
+
+    try {
+      await stripe.Stripe.instance.presentPaymentSheet().then((value) {
+        String pi = paymentIntentData['id'];
+        saveOrder('card', pi, '', '');
+      }).onError((error, stackTrace) {
+        setState(() {
+          isLoading1=false;
+        });
+        logger.e("message error");
+      });
+
+
+    } on stripe.StripeException catch (e) {
+      logger.e('Exception/DISPLAYPAYMENTSHEET==> $e');
+      ScaffoldMessenger.of(context).showSnackBar( SnackBar(
+        content: const Text("Paiement annulé"),
+        backgroundColor: Colors.redAccent.shade200,
+      ));
+    } catch (e) {
+      print('$e');
+    }
   }
+  initPaymentSheet(Map<String, dynamic> paymentIntentData)async{
+    await stripe.Stripe.instance.initPaymentSheet(
+        paymentSheetParameters: stripe.SetupPaymentSheetParameters(
+          paymentIntentClientSecret: paymentIntentData['client_secret'],
+          applePay: true,
+          googlePay: true,
+          testEnv: true,
+          style: ThemeMode.dark,
+          merchantCountryCode: 'US',
+          merchantDisplayName: 'ROSTAND',
+          customerId: paymentIntentData['customer'],
+          customerEphemeralKeySecret: paymentIntentData['ephemeralKey'],));
+  }
+
+
   @override
   Widget build(BuildContext context) {
     final cartProvider = Provider.of<CartProvider>(context);
-
-    // print(' times ${selectTodayTime}');
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Valider Panier'),
@@ -643,37 +497,60 @@ class _ValiderPanierState extends State<ValiderPanier> {
               data: ThemeData(
                   colorScheme: Theme.of(context)
                       .colorScheme
-                      .copyWith(primary: UserHelper.getColor())),
+                      .copyWith(primary: UserHelper.getColor()),
+                focusColor: UserHelper.getColorDark(),
+              ),
               child: Stepper(
                 controlsBuilder:
                     (BuildContext context, ControlsDetails detail) {
                   return isLoading==true?const CircularProgressIndicator(): _currentStep >= 3
-                      ? ElevatedButton(
-                          style: ButtonStyle(
-                              backgroundColor: MaterialStateProperty.all(
-                                  UserHelper.getColor())),
-                          onPressed: () {
-                            isLoading=true;
-                            debugPrint('////');
-                            if(payMode == "cash"){
-                              debugPrint('////');
-                              saveOrder("cash", '', '', '');
-                            }else if(payMode == "card"){
-                              var amt=cartProvider.totalPrice +deliveryPrice;
-                              var amount= amt.toString();
-                              PaymentApi(context: context).makePayment(amount: amount).then((value){
-                                logger.e('_ValiderPanierState.build');
-                                // saveOrder('card', '', '', '');
-                                // log("message $value");
-                              });
-                            }else{
-                              Fluttertoast.showToast(msg: "Veuillez choisir un moyen de paiement");
-                            }
-                          },
-                          child: const Text(
-                            "COMMANDER",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ))
+                      ? InkWell(
+                    onTap:(isLoading1 == false)? ()async{
+                      setState(() {
+                        isLoading1=true;
+                      });
+                      if(payMode == "cash"){
+                        setState(() {
+                          isLoading1=false;
+                        });
+                        saveOrder("cash", '', '', '');
+                      }else if(payMode == "card"){
+                        var amt=cartProvider.totalPrice +deliveryPrice;
+                        var amount= amt.toString();
+                        PaymentApi(context: context).createPaymentIntent(amount, 'XAF').then((value) async{
+                          setState(() {
+                            isLoading1=false;
+                          });
+                          paymentIntentData = value;
+                          initPaymentSheet(value);
+                        }).catchError((onError){
+                          setState(() {
+                            isLoading1=false;
+                          });
+                          logger.e(onError);
+                        });
+                        displayPaymentSheet(paymentIntentData!);
+                      }else{
+                        setState(() {
+                          isLoading1 = false;
+                        });
+                        Fluttertoast.showToast(msg: "Veuillez choisir un moyen de paiement");
+                      }
+                    }:null,
+                    child: Container(
+                        height: getProportionateScreenHeight(50),
+                        decoration: BoxDecoration(
+                            color: UserHelper.getColor(),
+                            border: Border.all(color: UserHelper.getColorDark(), width: 1.5),
+                            borderRadius: BorderRadius.circular(getProportionateScreenHeight(6))
+                        ),
+                        child: Center(
+                            child: (isLoading1 == false)
+                                ? Text("COMMANDER", style: boldTextStyle(16, color: Colors.white))
+                                : CupertinoActivityIndicator(radius: 15, animating: (isLoading1 == true))
+                        )
+                    ),
+                  )
                       : Container(
                     padding: const EdgeInsets.only(top: 10),
                         child: MaterialButton(
@@ -683,13 +560,14 @@ class _ValiderPanierState extends State<ValiderPanier> {
                             borderRadius: BorderRadius.circular(10)
                         ),
                         onPressed: detail.onStepContinue,
-                        child: Row(
+                        child:(isLoading1 == false)? Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: const [
                             Text('CONTINUER',style: TextStyle(color: Colors.white,fontSize: 18),),
                             Icon(Icons.arrow_forward,color: Colors.white,size: 23,)
                           ],
-                        )),
+                        ): CupertinoActivityIndicator(radius: 15, animating: (isLoading1 == true))
+                        ),
                       );
 
 
@@ -746,6 +624,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                   children: [
                                     Radio<DeliveryType>(
                                       activeColor: UserHelper.getColorDark(),
+                                      focusColor: UserHelper.getColorDark(),
                                       value: DeliveryType.express,
                                       groupValue: _deliveryType,
                                       onChanged:!isTodayOpened && isTomorrowOpened?null: (DeliveryType? value) {
@@ -765,12 +644,17 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                 onTap: () {
                                   setState(() {
                                     _deliveryType = DeliveryType.heure_livraison;
+                                    chooseTime='';
                                   });
                                   showDialog<void>(
                                       context: context,
                                       builder: (context) {
-                                        return const Center(
-                                          child: SelectTime(),
+                                        return  Center(
+                                          child: SelectTime(onSelectedDate: (selectedDate){
+                                            setState(() {
+                                              chooseTime=selectedDate;
+                                            });
+                                            },),
                                         );
                                       });
                                 },
@@ -778,11 +662,13 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                   children: [
                                     Radio<DeliveryType>(
                                       activeColor: UserHelper.getColorDark(),
+                                      focusColor: UserHelper.getColorDark(),
                                       value: DeliveryType.heure_livraison,
                                       groupValue: _deliveryType,
                                       onChanged: (DeliveryType? value) {
                                         setState(() {
                                           _deliveryType = value;
+                                          chooseTime='';
                                         });
                                       },
                                     ),
@@ -790,7 +676,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                   ],
                                 ),
                               ),
-                              Text(UserHelper.chooseTime),
+                              Text(chooseTime),
                             ],
                           ),
                         ],
@@ -822,7 +708,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               const Text('Montant du panier: '),
-                              Text(cartProvider.totalPrice.toString() + 'FCFA')
+                              Text(cartProvider.getTotalPrice().toString() + 'FCFA')
                             ],
                           ),
                         ),
@@ -840,7 +726,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             const Text('Total: '),
-                            Consumer<Cart>(
+                            Consumer<CartProvider>(
                               builder: (_, cart, child)
                               {
                                 var total=cartProvider.getTotalPrice() +deliveryPrice;
@@ -876,6 +762,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                           TextFormField(
                                             decoration: const InputDecoration(
                                                 labelText: 'Code Promo'),
+                                            controller: promoTextController,
                                           ),
                                           Row(
                                             mainAxisAlignment:
@@ -908,6 +795,14 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                                           .white)),
                                                   onPressed: () {
                                                     Navigator.of(context).pop();
+                                                    var amount = cartProvider.getTotalPrice();
+                                                    CourseApi(context: context).validatePromoCode(
+                                                        code: promoTextController.text,
+                                                        magasin_id: UserHelper.shops.id!,
+                                                        amount: amount.toInt(),
+                                                        delivery_amount: deliveryPrice).onError((error, stackTrace){
+                                                       return  showToast(context: context, text: "Code non valide ou expirer");
+                                                    });
                                                   },
                                                   child: const Text(
                                                     'Valider',
@@ -947,6 +842,8 @@ class _ValiderPanierState extends State<ValiderPanier> {
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             Radio(
+                                activeColor: UserHelper.getColorDark(),
+                                focusColor: UserHelper.getColorDark(),
                                 value: 0,
                                 groupValue: payOption,
                                 onChanged: (int? value) {
@@ -966,6 +863,8 @@ class _ValiderPanierState extends State<ValiderPanier> {
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             Radio(
+                                activeColor: UserHelper.getColorDark(),
+                                focusColor: UserHelper.getColorDark(),
                                 value: 1,
                                 groupValue: payOption,
                                 onChanged: (int? value) {
@@ -1004,7 +903,11 @@ class _ValiderPanierState extends State<ValiderPanier> {
   }
 
   tapped(int step) {
-    setState(() => _currentStep = step);
+    if(step <= _currentStep) {
+      setState(() => _currentStep = step);
+    }else{
+      showToast(context: context, text: 'Veuillez clicker le button');
+    }
   }
 
   continued() async {
@@ -1021,16 +924,17 @@ class _ValiderPanierState extends State<ValiderPanier> {
           break;
         case 2:
           if(mounted) {
-            setState(() {
+            if(chooseTime.isNotEmpty) {
+              setState(() {
             dateFormat=DateFormat.Hms();
             currentTime=dateFormat.format(now);
             currentDate =DateFormat("yyyy-MM-dd").format(now);
-            if(UserHelper.chooseTime.isEmpty) {
-              Fluttertoast.showToast(msg: "Veuillez choisir une heure de livraison");
-            }else {
-              _currentStep++;
-            }
+            isLoading1=false;
+            _currentStep++;
           });
+            }else{
+              showToast(context: context, text: "Veuillez choisir l'heure de livraison");
+            }
           }
           break;
       }

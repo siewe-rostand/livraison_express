@@ -4,13 +4,13 @@ import 'package:http/http.dart';
 import 'package:livraison_express/model/address.dart';
 import 'package:logger/logger.dart';
 
-import 'api_auth_service.dart';
+import 'auth_service.dart';
 
 class AddressService{
   final logger = Logger();
 
 
-  Future<Response>getAddressList()async {
+  static Future<List<Address>>getAddressList()async {
     String url = '$baseUrl/user/adresses';
     Response response = await get(Uri.parse(url), headers: {
       "Authorization": 'Bearer $token',
@@ -18,7 +18,11 @@ class AddressService{
       "Content-Type": "application/json",
     });
     if (response.statusCode == 200) {
-      return response;
+      var body=json.decode(response.body);
+      var rest = body['data'] as List;
+      List<Address> addresses;
+      addresses = rest.map<Address>((json) =>Address.fromJson(json)).toList();
+      return addresses;
     } else {
       var body = json.decode(response.body);
       print(response.body);

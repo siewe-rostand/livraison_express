@@ -4,9 +4,10 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:livraison_express/constant/all-constant.dart';
 import 'package:livraison_express/data/user_helper.dart';
 import 'package:livraison_express/model/user.dart';
-import 'package:livraison_express/service/api_auth_service.dart';
+import 'package:livraison_express/service/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../login/login.dart';
@@ -40,16 +41,6 @@ class _ProfileState extends State<Profile> {
     AppUser1 user1=AppUser1.fromJson(extractedUserData);
     AppUser1? appUser1 = UserHelper.currentUser1??user1;
     setState(() {
-      /*
-        email = extractedUserData['email'];
-        uid = extractedUserData['uid'];
-        name = extractedUserData['firstname'];
-        fName = extractedUserData['lastname'];
-        fullName = extractedUserData['fullname'];
-        tel1 = extractedUserData['telephone'];
-        tel2 = extractedUserData['telephone_alt'];
-        */
-      log("message ${appUser1.token}");
       email =appUser1.email!;
       uid =appUser1.uid!;
       name =appUser1.firstname!;
@@ -58,7 +49,7 @@ class _ProfileState extends State<Profile> {
       tel2 =appUser1.telephoneAlt??'';
       fullName =appUser1.fullname!;
       initialName =fullName.substring(0,1).toUpperCase();
-      print(appUser1.firstname);});
+    });
 
   }
 
@@ -83,7 +74,7 @@ class _ProfileState extends State<Profile> {
               children: [
                 Container(
                   height: MediaQuery.of(context).size.height*0.35,
-                  color: const Color(0xff2A5CA8),
+                  color: primaryColor,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children:  [
@@ -149,7 +140,7 @@ class _ProfileState extends State<Profile> {
                           child: AlertDialog(
                             title: const Text( ' Modifier mon profil ',
                               style: TextStyle(
-                                  fontWeight: FontWeight.bold,color: Color(0xff2A5CA8)),
+                                  fontWeight: FontWeight.bold,color: primaryColor),
                             ),
                             content: Column(
                               mainAxisSize: MainAxisSize.min,
@@ -204,7 +195,6 @@ class _ProfileState extends State<Profile> {
                                   height:45,
                                   child: ElevatedButton(
                                       onPressed: () async{
-                                        SharedPreferences pref= await SharedPreferences.getInstance();
                                         var data={
                                           "uid":uid,
                                           "firstname":nameController.text,

@@ -2,17 +2,15 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:contacts_service/contacts_service.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:livraison_express/constant/all-constant.dart';
-import 'package:livraison_express/model/address-favorite.dart';
 import 'package:livraison_express/model/address.dart';
-import 'package:livraison_express/model/auto_gene.dart';
 import 'package:livraison_express/model/client.dart';
 import 'package:livraison_express/model/distance_matrix.dart';
 import 'package:livraison_express/model/infos.dart';
@@ -22,25 +20,21 @@ import 'package:livraison_express/model/user.dart';
 import 'package:livraison_express/service/course_service.dart';
 import 'package:livraison_express/service/paymentApi.dart';
 import 'package:livraison_express/utils/size_config.dart';
-import 'package:livraison_express/views/MapView.dart';
-import 'package:livraison_express/views/address_detail/selected_fav_address.dart';
-import 'package:livraison_express/views/home/home-page.dart';
 import 'package:livraison_express/views/livraison/step1.dart';
 import 'package:livraison_express/views/livraison/step2.dart';
+import 'package:livraison_express/views/widgets/select_time.dart';
 import 'package:logger/logger.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/user_helper.dart';
 import '../../model/day_item.dart';
 import '../../model/horaire.dart';
-import '../../model/module_color.dart';
 import '../../model/order.dart';
 import '../../model/quartier.dart';
+import '../../model/shop.dart';
 import '../../utils/main_utils.dart';
-import '../order_confirmation/order_confirmation.dart';
-import '../super-market/cart-provider.dart';
+import '../home/home-page.dart';
 import '../widgets/custom_alert_dialog.dart';
 
 enum DeliveryType { express, heure_livraison }
@@ -93,7 +87,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
   TextEditingController cityDepartTextController = TextEditingController();
   TextEditingController titleDepartTextController = TextEditingController();
   Address senderAddress = Address();
-  AddressFavorite selectedAddressDepart = AddressFavorite();
+  Adresse selectedAddressDepart = Adresse();
   double? placeLatDepart, placeLonDepart;
   String? location;
   String quartierDepart = '';
@@ -121,11 +115,12 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
   TextEditingController titleDestinationTextController =
       TextEditingController();
   Address receiverAddress = Address();
-  AddressFavorite selectedAddressDestination = AddressFavorite();
+  Adresse selectedAddressDestination = Adresse();
   double? placeLatDestination, placeLonDestination;
   String? locationDestination;
   String quartierDestination = '';
   bool isLoading = false, isMeDepart = true;
+  bool isLoading1 = false;
 
   //step 3 variables
   TextEditingController descColisTextController = TextEditingController();
@@ -148,8 +143,8 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
   //step4 variables
   Payment payment = Payment();
   String payMode = '';
-  Order order = Order();
-  Info info = Info();
+  Orders order = Orders();
+  Infos info = Infos();
   Client client = Client();
   String codePromo = '';
   int duration = 0, distance = 0;
@@ -188,6 +183,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
     shops = UserHelper.shops;
     city =  UserHelper.city.name;
     cityId =  UserHelper.city.id;
+    isOpened(UserHelper.shops.horaires!);
     setState(() {
       cityDepartTextController = TextEditingController(text: city);
       cityDestinationTextController = TextEditingController(text: city);
@@ -527,75 +523,15 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
   }
 
 
-  Future<List<Contact>> getContacts(String query) async {
-    //We already have permissions for contact when we get to this page, so we
-    // are now just retrieving it
-    final PermissionStatus permission = await Permission.contacts.status;
-    if (permission == PermissionStatus.granted) {
-      return await ContactsService.getContacts(
-          query: query, withThumbnails: false, photoHighResolution: false);
-    } else {
-      await Permission.contacts.request().then((value) {
-        if (value == PermissionStatus.granted) {
-          getContacts(query);
-        }
-      });
-      throw Exception('error');
-    }
-  }
-
-  autoComplete() {
-    return TypeAheadField(
-      getImmediateSuggestions: true,
-      textFieldConfiguration: TextFieldConfiguration(
-        decoration: const InputDecoration(labelText: 'Nom et prenom *'),
-        controller: _typeAheadController,
-      ),
-      suggestionsCallback: (pattern) {
-        // call the function to get suggestions based on text entered
-        return getContacts(pattern);
-      },
-      itemBuilder: (context, Contact suggestion) {
-        // show suggection list
-        suggestion.phones?.forEach((element) {
-          telephone = element.value!;
-        });
-        return ListTile(
-          title: Text(suggestion.displayName!),
-          subtitle: Text(
-            telephone,
-          ),
-        );
-      },
-      onSuggestionSelected: (Contact suggestion) {
-        suggestion.phones?.forEach((element) {
-          telephone = element.value!;
-        });
-        _typeAheadController.text = suggestion.displayName!;
-        phoneDepartTextController.text = telephone;
-      },
-      hideOnEmpty: true,
-      autoFlipDirection: true,
-    );
-  }
-
   setSender() {
     var providerName = "livraison-express";
-    // sender.fullName = nomDepartTextController.text;
-    // sender.telephone = phoneDepartTextController.text;
-    // sender.telephoneAlt = phone2DepartTextController.text;
-    // sender.email = emailDepartTextController.text;
-    // senderAddress.nom = location;
-    // senderAddress.quarter = quartierDepart;
-    // senderAddress.description = descDepartTextController.text;
-    // senderAddress.latitude = placeLatDepart.toString();
-    // senderAddress.longitude = placeLonDepart.toString();
+    var city = UserHelper.city;
     senderAddress.latLng =
         senderAddress.latitude! + ',' + senderAddress.longitude!;
 
     senderAddress.providerName = providerName;
-    senderAddress.villeId = cityId;
-    senderAddress.ville = city;
+    senderAddress.villeId = city.id;
+    senderAddress.ville = city.name;
     senderAddress.pays = "Cameroun";
     // debugPrint("${sender.toJson()} ${senderAddress.providerId}");
     List<Address> addresses = [];
@@ -611,27 +547,13 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
   }
 
   setReceiver() async {
-    /*receiver.fullName = nomDestinationTextController.text;
-    receiver.telephone = phoneDestinationTextController.text;
-    receiver.telephoneAlt = phoneDestinationTextController.text;
-    receiver.email = emailDestinationTextController.text;
-    receiver.providerName = receiverAddress.nom = locationDestination;
-    receiverAddress.quarter = quartierDestination;
-    receiverAddress.description = descDestinationTextController.text;*/
-    // print('//$location');
-    // receiverAddress.latitude = placeLatDestination.toString();
-    // receiverAddress.longitude = placeLonDestination.toString();
     receiverAddress.latLng =
         receiverAddress.latitude! + ',' + receiverAddress.longitude!;
-    // String? latLong = receiver.addresses![0].latLng;
-    // receiverAddress.providerName = "livraison-express";
     receiverAddress.id = null;
     receiverAddress.providerId = null;
     receiverAddress.villeId = cityId;
     receiverAddress.ville = city;
     receiverAddress.pays = "Cameroun";
-
-
 
     List<Address> addresses = [];
     addresses.add(receiverAddress);
@@ -645,8 +567,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
   calculateDistance()async{
     String? origin = sender.addresses![0].latLng;
     String? destination = receiver.addresses![0].latLng;
-    debugPrint("distances $origin // $destination");
-    await CourseApi()
+    await CourseApi(context: context)
         .calculateDeliveryDistance(origin: origin!, destination: destination!)
         .then((response) {
       var body = json.decode(response.body);
@@ -664,11 +585,13 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
         isLoading = true;
         _currentStep++;
       });
-
-      print(deliveryPrice);
       showToast(context: context, text: message, iconData: Icons.check, color: UserHelper.getColor());
     }).catchError((onError) {
-      print('eroo/');
+      var message ="Une erreur est survenue lors du calcul de la distance. Veuillez vérifier vos informations puis réessayez.";
+      logger.e(onError);
+      errorDialog(context: context, title: "Distance Error", message: message, onTap: (){
+        Navigator.pop(context);
+      });
     });
   }
 
@@ -684,10 +607,19 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
       } else if (payMode == 'card') {
         payment.paymentMode = payMode;
         var amt = deliveryPrice.toString();
-        PaymentApi(context: context).makePayment(amount: amt);
+        PaymentApi(context: context).makePayment(amount: amt).then((val){
+          setState(() {
+            isLoading1=false;
+          });
+        },onError:(err){
+          setState(() {
+            isLoading1=false;
+          });
+        });
       }
     } else {
-      Fluttertoast.showToast(msg: "Veuillez choisir un moyen de paiement");
+      showToast(context: context, text: "Veuillez choisir un moyen de paiement", iconData: Icons.check, color: UserHelper.getColor());
+      // Fluttertoast.showToast(msg: "Veuillez choisir un moyen de paiement");
     }
   }
 
@@ -705,7 +637,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
     order.description = descColisTextController.text;
     order.montantLivraison = deliveryPrice;
     // order.articles=[];
-    order.promoCode = codePromo;
+    order.codePromo = codePromo;
     order.commentaire = "";
     info.origin = "Livraison express";
     info.platform = "Mobile";
@@ -715,11 +647,10 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
     info.jourLivraison = currentDate;
     info.villeLivraison = av;
     info.duration = duration;
-    info.distance = distance.toString();
+    info.distance = distance;
     info.durationText = durationText;
     info.distanceText = distanceText;
-    info.statusHuman = '';
-    info.type = '';
+    info.statutHuman = '';
     // client.id=int.parse(userId);
     client.providerName = providerName;
     client.fullName = fullName;
@@ -733,14 +664,10 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
       "orders": order,
       "paiement": payment,
     };
-    /*
-    debugPrint('infos ${info.toJson()}');
-    debugPrint('client ${client.toJson()}');
-    logger.i('receiver ${receiver.toJson()}');
-    debugPrint('sender ${sender.toJson()}');
-    debugPrint('orders ${order.toJson()}');*/
-    await CourseApi().commnander(data: data).then((response) async {
-      isLoading=false;
+    await CourseApi(context: context).commnander(data: data).then((response) async {
+      setState(() {
+        isLoading1=false;
+      });
       var body = json.decode(response.body);
       var res = body['data'];
       var infos = body['message'];
@@ -751,13 +678,20 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
         message: "Felicitation, Commande enregistrée avec succès\nN° commande ${ord.infos?.ref} ",
         positiveText: "OK",
         onContinue:(){
-          // Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context)=>const HomePage()));
+          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context)=>const HomePage()));
         },
       ));
-      // Navigator.of(context).pushReplacement(
-      //     MaterialPageRoute(builder: (context) => const OrderConfirmation()));
-      // AppUser appUsers=AppUser.fromJson(res);
     }).catchError((onError) {
+      setState(() {
+        isLoading1=false;
+      });
+      UserHelper.userExitDialog(context, true,  CustomAlertDialog(
+          svgIcon: "img/icon/svg/smiley_cry.svg", title: "Desole",
+          message: onErrorMessage,
+          positiveText: "OK",
+          onContinue:(){
+            Navigator.of(context).pop();
+          }));
       // log(onError);
     });
   }
@@ -876,17 +810,6 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
     return juge;
   }
 
-  bool isFavoriteAddress(AddressFavorite addressFavorite, Address address) {
-    if (addressFavorite.toString().isEmpty) {
-      return false;
-    }
-    return addressFavorite.quartier == address.quarter &&
-        addressFavorite.description == address.description &&
-        addressFavorite.latitude == address.latitude &&
-        addressFavorite.longitude == address.longitude &&
-        addressFavorite.nom == address.address;
-  }
-
   @override
   void dispose() {
     controller.dispose();
@@ -926,21 +849,27 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                   controlsBuilder:
                       (BuildContext context, ControlsDetails detail) {
                     return _currentStep >= 3
-                        ? SizedBox(
-                            width: MediaQuery.of(context).size.width * 0.7,
-                            child: ElevatedButton(
-                                onPressed: () {
-                                  setState(() {
-                                    isLoading=true;
-                                  });
-                                  setPaymentMode();
-                                  print('$isLoading');
-                                },
-                                child:  const Text(
-                                  "COMMANDER",
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                )),
+                        ? InkWell(
+                      onTap:(isLoading1 == false)? ()async{
+                        setState(() {
+                          isLoading1=true;
+                        });
+                        setPaymentMode();
+                      }:null,
+                      child: Container(
+                          height: getProportionateScreenHeight(50),
+                          decoration: BoxDecoration(
+                              color: UserHelper.getColor(),
+                              border: Border.all(color: primaryColor, width: 1.5),
+                              borderRadius: BorderRadius.circular(getProportionateScreenHeight(6))
+                          ),
+                          child: Center(
+                              child: (isLoading1 == false)
+                                  ? Text("COMMANDER", style: boldTextStyle(16, color: Colors.white))
+                                  : CupertinoActivityIndicator(radius: 15, animating: (isLoading1 == true), color: Colors.white)
                           )
+                      ),
+                    )
                         : SizedBox(
                             width: MediaQuery.of(context).size.width * 0.7,
                             child: ElevatedButton(
@@ -954,12 +883,13 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                   type: stepperType,
                   physics: const ScrollPhysics(),
                   currentStep: _currentStep,
-                  onStepTapped: (step) => tapped(step),
+                  onStepTapped: (step) => step <= _currentStep? tapped(step):null,
                   onStepContinue: continued,
                   onStepCancel: cancel,
                   steps: [
                     Step(
                       title: const Text('Depart'),
+                      subtitle: const Text("Contact de l'expéditeur",style: TextStyle(color: Colors.black38),),
                       content: Step1(
                         addressSender: senderAddress,
                         sender: sender,
@@ -972,6 +902,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                     ),
                     Step(
                       title: const Text('Destination'),
+                      subtitle: const Text("Contact du destinataire",style: TextStyle(color: Colors.black38),),
                       content: Step2(receiver: receiver,receiverAddress: receiverAddress,formKey: _formKeys[1],),
                       isActive: _currentStep >= 0,
                       state: _currentStep > 1
@@ -1038,144 +969,18 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                 InkWell(
                                   onTap: () {
                                     setState(() {
+                                      chooseTime = '';
                                       _deliveryType =
                                           DeliveryType.heure_livraison;
                                     });
                                     showDialog<void>(
                                         context: context,
                                         builder: (context) {
-                                          return Center(
-                                            child: Dialog(
-                                              shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          16.0)),
-                                              elevation: 0.0,
-                                              child: Stack(
-                                                children: [
-                                                  Column(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    children: [
-                                                      Container(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                    .only(
-                                                                top: 10,
-                                                                left: 6),
-                                                        height: 35,
-                                                        width: double.infinity,
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          borderRadius:
-                                                              const BorderRadius
-                                                                      .only(
-                                                                  topLeft: Radius
-                                                                      .circular(
-                                                                          10),
-                                                                  topRight: Radius
-                                                                      .circular(
-                                                                          5)),
-                                                          color:
-                                                          UserHelper.getColorDark(),
-                                                        ),
-                                                        child: const Text(
-                                                          'Quand souhaitez vous etre livre ?',
-                                                          style: TextStyle(
-                                                              color:
-                                                                  Colors.white),
-                                                        ),
-                                                      ),
-                                                      /**
-                                                       * Today
-                                                       */
-                                                      ElevatedButton(
-                                                        style: ButtonStyle(
-                                                            backgroundColor:
-                                                                MaterialStateProperty
-                                                                    .all(
-                                                                  UserHelper.getColorDark(),)),
-                                                        onPressed: () {
-                                                          if (!isTodayOpened &&
-                                                              isTomorrowOpened) {
-                                                            Fluttertoast.showToast(
-                                                                msg:
-                                                                    "Service Momentanement indisponible");
-                                                          } else {
-                                                            print(
-                                                                "isTodayOpened/...$isTodayOpened...$isTomorrowOpened ");
-                                                            showToday();
-                                                          }
-                                                        },
-                                                        child: const Text(
-                                                          "AUJOUD'HUI",
-                                                          style: TextStyle(
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold),
-                                                        ),
-                                                      ),
-                                                      Row(
-                                                        children: const [
-                                                          Expanded(
-                                                              child: Divider()),
-                                                          Padding(
-                                                            padding:
-                                                                EdgeInsets.all(
-                                                                    8.0),
-                                                            child: Text('Ou'),
-                                                          ),
-                                                          Expanded(
-                                                              child: Divider()),
-                                                        ],
-                                                      ),
-                                                      /**
-                                                       * tomorrow
-                                                       */
-                                                      ElevatedButton(
-                                                          style: ButtonStyle(
-                                                              backgroundColor:
-                                                                  MaterialStateProperty
-                                                                      .all(
-                                                                    UserHelper.getColorDark(),)),
-                                                          onPressed: () {
-                                                            showTomorrow();
-                                                          },
-                                                          child: const Text(
-                                                            "DEMAIN",
-                                                            style: TextStyle(
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold),
-                                                          )),
-                                                    ],
-                                                  ),
-                                                  Positioned(
-                                                    right: 0.0,
-                                                    child: GestureDetector(
-                                                      onTap: () {
-                                                        Navigator.of(context)
-                                                            .pop();
-                                                      },
-                                                      child: Align(
-                                                        alignment:
-                                                            Alignment.topRight,
-                                                        child: CircleAvatar(
-                                                          radius: 14.0,
-                                                          backgroundColor:
-                                                          UserHelper.getColorDark(),
-                                                          child: const Icon(
-                                                              Icons.close,
-                                                              color:
-                                                                  Colors.white),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  )
-                                                ],
-                                              ),
-                                            ),
-                                          );
+                                          return SelectTime(onSelectedDate: (onSelectedDate){
+                                            setState(() {
+                                              chooseTime = onSelectedDate;
+                                            });
+                                          });
                                         });
                                   },
                                   child: Row(
@@ -1187,8 +992,18 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                         groupValue: _deliveryType,
                                         onChanged: (DeliveryType? value) {
                                           setState(() {
+                                            chooseTime = '';
                                             _deliveryType = value;
                                           });
+                                          showDialog<void>(
+                                              context: context,
+                                              builder: (context) {
+                                                return SelectTime(onSelectedDate: (onSelectedDate){
+                                                  setState(() {
+                                                    chooseTime = onSelectedDate;
+                                                  });
+                                                });
+                                              });
                                         },
                                       ),
                                       const Text(
@@ -1338,7 +1153,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                       'img/icon/svg/ic_link_black.svg',
                                       color: grey40,
                                     )),
-                                Text(
+                                const Text(
                                   'Ajouter un code promo',
                                   style: TextStyle(color: primaryColor),
                                 ),
@@ -1442,12 +1257,16 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
           setReceiver();
           break;
         case 2:
-          setState(() {
+          if(chooseTime.isNotEmpty) {
+            setState(() {
             dateFormat = DateFormat.Hms();
             currentTime = dateFormat.format(now);
             currentDate = DateFormat("yyyy-MM-dd").format(now);
             _currentStep++;
           });
+          }else{
+            showToast(context: context, text: "Veuillez choisir l'heure de livraison");
+          }
           break;
         default:
           break;

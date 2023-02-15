@@ -2,25 +2,19 @@ import 'dart:convert';
 
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:livraison_express/constant/all-constant.dart';
-import 'package:livraison_express/model/auto_gene.dart';
 import 'package:livraison_express/model/category.dart';
 import 'package:livraison_express/model/user.dart';
 import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../model/city.dart';
+import '../model/module.dart';
+import '../model/shop.dart';
+import '../views/widgets/custom_alert_dialog.dart';
 
-  showAnimModal({required BuildContext context, required Widget child}){
-    return showModal(
-      context: context,
-      configuration: const FadeScaleTransitionConfiguration(),
-      builder: (BuildContext context) {
-        return child;
-      },
-    );
-  }
 showGenDialog(context, dismissible, dialog) => showGeneralDialog(
     context: context,
     barrierColor: Colors.black54,
@@ -85,22 +79,25 @@ void showMessage({
 
 showToast(
     {required BuildContext context,
-    required String text,
-    required IconData iconData,
-    required Color color}) {
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-    content: SizedBox(
-      width: double.infinity,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [Icon(iconData), Expanded(child: Text(text))],
-      ),
-    ),
-    backgroundColor: color,
-    duration: const Duration(milliseconds: 750),
-  ));
+    required String text, IconData? iconData,
+      ToastGravity? gravity, Color? color}) {
+  Fluttertoast.showToast(msg: text,backgroundColor: color ?? UserHelper.getColor(),gravity:gravity ?? ToastGravity.BOTTOM);
 }
-
+showError({required String title, required String message,required BuildContext context,
+    String icon = 'img/icon/svg/alert_round.svg'}) {
+  UserHelper.userExitDialog(
+      context,
+      false,
+      CustomAlertDialog(
+        title: title,
+        message: message,
+        svgIcon: icon,
+        positiveText: 'Fermer',
+        onContinue: () {
+          Navigator.pop(context);
+        },
+      ));
+}
 errorDialog({required BuildContext context,required String title,required String message,required Function() onTap}){
   return showDialog(
       context: context,
@@ -112,7 +109,7 @@ errorDialog({required BuildContext context,required String title,required String
             children: [
               const FaIcon(FontAwesomeIcons.triangleExclamation,color: Color(0xffFFAE42),),
               const SizedBox(
-                width: 5,
+                width: 10,
               ),
               Text(title),
             ],
@@ -141,6 +138,7 @@ class UserHelper {
   static String selectedFavAdd = "";
   static City city = City();
   static String selectCity = '';
+  static List<String> quarters = [];
   static bool isTodayOpen = false;
   static bool isTomorrowOpen = false;
 
@@ -167,6 +165,7 @@ class UserHelper {
       context: context,
       barrierDismissible: dismissible,
       builder: (context) => dialog);
+
   static clear() {
     module = Modules();
     shops = Shops();

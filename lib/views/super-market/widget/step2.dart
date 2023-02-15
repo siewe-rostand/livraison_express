@@ -1,20 +1,14 @@
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
-import 'package:livraison_express/service/course_service.dart';
 import 'package:livraison_express/views/address_detail/map_text_field.dart';
 import 'package:livraison_express/views/address_detail/selected_fav_address.dart';
 import 'package:provider/provider.dart';
 
 import '../../../data/user_helper.dart';
-import '../../../model/address-favorite.dart';
 import '../../../model/address.dart';
 import '../../../model/quartier.dart';
-import '../../../utils/main_utils.dart';
-import '../../../utils/size_config.dart';
-import '../../MapView.dart';
 
 class Step2 extends StatefulWidget {
   final GlobalKey<FormState> step2FormKey;
@@ -32,10 +26,10 @@ class _Step2State extends State<Step2> {
   TextEditingController titleTextController = TextEditingController();
   TextEditingController quarterTextController = TextEditingController();
   Address senderAddress = Address();
-  AddressFavorite selectedFavouriteAddress = AddressFavorite();
+  Adresse selectedFavouriteAddress = Adresse();
   String? city;
   List addresses = [];
-  List<AddressFavorite> fav=[];
+  List<Adresse> fav=[];
   double? placeLat;
   double? placeLon;
   String? location;
@@ -46,7 +40,7 @@ class _Step2State extends State<Step2> {
     city =await UserHelper.getCity();
     cityDepartTextController = TextEditingController(text: city);
   }
-  bool isFavoriteAddress(AddressFavorite addressFavorite, Address address) {
+  bool isFavoriteAddress(Adresse addressFavorite, Address address) {
     if (addressFavorite.toString().isEmpty) {
       return false;
     }
@@ -90,7 +84,6 @@ class _Step2State extends State<Step2> {
                                 widget.addressReceiver.longitude=s.longitude;
                                 widget.addressReceiver.latLng=s.latLng;
                               });
-                              print(s.toJson());
                               },),
                           );
                         });
@@ -109,6 +102,7 @@ class _Step2State extends State<Step2> {
             onSaved: (value)=>widget.addressReceiver.nom=value,
           ),
           TypeAheadFormField<String>(
+            autovalidateMode: AutovalidateMode.onUserInteraction,
             textFieldConfiguration:  TextFieldConfiguration(
               controller: quarterTextController,
               decoration: const InputDecoration(
@@ -137,6 +131,16 @@ class _Step2State extends State<Step2> {
               quarterTextController.text = suggestion;
             },
             onSaved: (value)=>widget.addressReceiver.quarter=value,
+            validator: (value) {
+              List<String> douala = city=='Douala'|| city == "DOUALA"? quarter.quarterDouala:quarter.quarterYaounde;
+              if (value!.isEmpty) {
+                return "Veuillez remplir ce champ";
+              }
+              if (!(douala.contains(value))) {
+                return "Veuillez Choisir une ville svp";
+              }
+              return null;
+            },
             autoFlipDirection: true,
             hideOnEmpty: true,
           ),

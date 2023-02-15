@@ -1,17 +1,14 @@
 import 'dart:convert';
-import 'dart:developer';
 
-import 'package:badges/badges.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:livraison_express/constant/all-constant.dart';
 import 'package:livraison_express/data/user_helper.dart';
 import 'package:livraison_express/model/category.dart';
 import 'package:livraison_express/model/user.dart';
 import 'package:livraison_express/service/product_service.dart';
 import 'package:livraison_express/utils/size_config.dart';
-import 'package:livraison_express/views/main/categoryPage.dart';
 import 'package:livraison_express/views/widgets/floating_action_button.dart';
 import 'package:livraison_express/views/widgets/open_wrapper.dart';
 import 'package:livraison_express/views/widgets/search_Text_field.dart';
@@ -20,15 +17,15 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/local_db/db-helper.dart';
-import '../../model/auto_gene.dart';
 import '../../model/cart-model.dart';
-import '../../model/module_color.dart';
+import '../../model/module.dart';
 import '../../model/product.dart';
+import '../../model/shop.dart';
 import '../../provider/nav_view_model.dart';
+import '../../utils/main_utils.dart';
 import '../super-market/cart-provider.dart';
-import '../super-market/cart.dart';
+import '../cart/cart.dart';
 import '../widgets/custom_alert_dialog.dart';
-import '../widgets/custom_dialog.dart';
 
 class ProductPage extends StatefulWidget {
   const ProductPage(
@@ -43,8 +40,10 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
   late AnimationController animationController;
   DBHelper1? dbHelper = DBHelper1();
   final logger = Logger();
+  FocusNode focusNode = FocusNode();
   TextEditingController controller = TextEditingController();
   List<Products> products = [];
+  final List<Products> _searchResult = [];
   late FToast fToast;
   int page = 1, lastPage = 1;
   int perPage = 10;
@@ -78,7 +77,7 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(UserHelper.getColor()),
+              valueColor: AlwaysStoppedAnimation<Color>(UserHelper.getColorDark()),
               strokeWidth: 2.5,
             ),
           ),
@@ -88,7 +87,6 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
   }
 
   getProduct() async {
-    print("$_loading $lastPage");
     _loading = page == 1;
     if (fromCategory == true) {
       await ProductService.getProducts(
@@ -100,8 +98,6 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
           lastPage = response['last_page'];
           products.addAll(response['products']);
         });
-        // print("total $lastPage");
-        // logger.d("rest only from get product $_loading");
       }).catchError((onError){
         UserHelper.userExitDialog(context, false, CustomAlertDialog(
           svgIcon: "assets/images/smiley_sad.svg",
@@ -125,11 +121,8 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
             page: page).then((response){
           var body = json.decode(response.body);
           var rest = body['data'] as List;
-
           products =
               rest.map<Products>((json) => Products.fromJson(json)).toList();
-          print("rest only from get product from sub category  ");
-          // print('main ${stores[0]}');
         });
       } else {
         await ProductService.getProductsWithSubSubCat(
@@ -156,13 +149,16 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
     json.decode(userString!);
     AppUser1 user = AppUser1.fromJson(extractedUserData);
 
-    dbHelper!
-        .insert(CartItem1(
+    dbHelper
+        ?.insert(CartItem(
         id: index,
+        productId: int.parse(products[
+        index]
+            .id!.toString()),
         title: products[
         index]
             .libelle!,
-        quantity: ValueNotifier(1),
+        quantity: 1,
         price: products[
         index]
             .prixUnitaire!,
@@ -178,9 +174,6 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
         categoryId: products[
         index]
             .categorieId!,
-        productId: products[
-        index]
-            .id!,
         preparationTime: products[
         index]
             .tempsPreparation,
@@ -191,40 +184,25 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
         userId: user.id
     ))
         .then((value) {
-      logger.i(value.toMap());
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content:Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(25.0),
-                color: UserHelper.getColor(),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children:  [
-                  const Icon(Icons.check),
-                  SizedBox(
-                    width: getProportionateScreenWidth(12.0),
-                  ),
-                  Flexible(child: Text("${products[index].libelle!} a ete ajouter au panier")),
-                ],
-              ),
-            ),
-            duration: const Duration(milliseconds: 1500),
-            backgroundColor: Colors.transparent,
-          ));
-      Provider.of<CartProvider1>(context, listen: false)
+      Provider.of<CartProvider>(context, listen: false)
           .addTotalPrice(products[
       index]
           .prixUnitaire!.toDouble());
-      Provider.of<CartProvider1>(context, listen: false)
+      Provider.of<CartProvider>(context, listen: false)
           .addCounter();
       Navigator.of(context)
           .pop();
+      showToast(context: context, text: "${products[index].libelle} a ete bien ajouter au panier", iconData: Icons.check, color: Colors.green);
+
     }).onError((error,
         stackTrace) {
-      logger.e(' ---- $error');
+      logger.e(error);
+      _show = false;
+      showFab=true;
+      Navigator.of(context)
+          .pop();
+      showToast(context: context, text: productAlreadyInCart, iconData: Icons.check, color: Colors.redAccent);
+      // logger.e(' ---- ${error.toString()}');
     });
 
   }
@@ -307,7 +285,6 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
                         _show = false;
                         showFab=true;
                         setState(() {
-
                           addToCart(index);
                         });
 
@@ -334,7 +311,21 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
     }
   }
 
+  onSearchTextChanged(String text) async {
+    _searchResult.clear();
+    if (text.isEmpty) {
+      setState(() {});
+      return;
+    }
 
+    for (var userDetail in products) {
+    if (userDetail.libelle!.toLowerCase().contains(text.toLowerCase())) {
+      _searchResult.add(userDetail);
+    }
+    }
+
+    setState(() {});
+  }
 
   @override
   void initState() {
@@ -343,7 +334,10 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
     shops=UserHelper.shops;
     modules=UserHelper.module;
     category=UserHelper.category;
-    print(category.toJson());
+    controller.addListener(() {setState(() {});});
+    focusNode.addListener(() {
+      setState(() {});
+    });
     getProduct();
     super.initState();
     _controller.addListener(() {
@@ -369,6 +363,7 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
     _controller.dispose();
     animationController.dispose();
     controller.dispose();
+    focusNode.dispose();
   }
 
   @override
@@ -378,7 +373,7 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
           preferredSize: const Size.fromHeight(65),
           child: AppBar(
             elevation: 0,
-            backgroundColor: UserHelper.getColor(),
+            backgroundColor: colorFromHex(UserHelper.module.moduleColor!),
             title: Container(
               margin: const EdgeInsets.only(
                 top: 2,
@@ -397,7 +392,40 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
                       icon: const Icon(Icons.search,size: 28,color: Color(0xFF89dad0),))
                 ],
               ):
-              const SearchTextField(),
+               ListTile(
+                 title: TextFormField(
+                   controller: controller,
+                   decoration: InputDecoration(
+                       floatingLabelBehavior: FloatingLabelBehavior.auto,
+                       fillColor: Colors.white,
+                       filled: true,
+                       hintText: 'Rechercher',
+                       border: OutlineInputBorder(
+                           borderRadius: BorderRadius.circular(32),
+                           borderSide: BorderSide.none),
+                       contentPadding: const EdgeInsets.symmetric(vertical: 10,horizontal: 15),
+                       prefixIcon: IconButton(
+                         icon: Icon(
+                           Icons.search,
+                           color:
+                           focusNode.hasFocus ? UserHelper.getColor() : null,
+                         ),
+                         onPressed: () {
+                           onSearchTextChanged('');
+                         },
+                       ),
+                       suffixIcon: controller.text.isNotEmpty
+                           ? IconButton(
+                           color: UserHelper.getColor(),
+                           onPressed: () {
+                             controller.clear();
+                             MainUtils.hideKeyBoard(context);
+                           },
+                           icon: const Icon(Icons.clear))
+                           : null),
+                   onChanged: onSearchTextChanged,
+                 ),
+               )
             ),
           ),
         ),
@@ -411,11 +439,11 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
             Container(
                 margin: const EdgeInsets.only(top: 5),
                 color: const Color(0xffF2F2F2),
-                child: ListView.builder(
+                child:_searchResult.isEmpty && controller.text.isEmpty? ListView.builder(
                     controller: _controller,
                     itemCount: products.length,
                     itemBuilder: (context, index) {
-                      return Material(
+                            return Material(
                         shadowColor: Colors.grey,
                         child: InkWell(
                           autofocus: true,
@@ -448,15 +476,6 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
                                           return Container();
                                         },
                                       )
-                                    // Image.network(
-                                    //   products[index].image!,
-                                    //   errorBuilder: (BuildContext context,
-                                    //       Object exception,
-                                    //       StackTrace? stackTrace) {
-                                    //     return Image.asset(
-                                    //         'img/no_image.png');
-                                    //   },
-                                    // ),
                                   ),
                                 ),
                               ),
@@ -516,7 +535,105 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
                           ),
                         ),
                       );
-                    })),
+                    }):
+                ListView.builder(
+                    controller: _controller,
+                    itemCount: _searchResult.length,
+                    itemBuilder: (context, index) {
+                      return Material(
+                        shadowColor: Colors.grey,
+                        child: InkWell(
+                          autofocus: true,
+                          onTap: () {
+                            setState(() {
+                              _show=true;
+                              showFab=false;
+                            });
+                            _showBottomSheet(index: index,context: context);
+
+                          },
+                          child: Row(
+                            children: [
+                              Container(
+                                margin: const EdgeInsets.all(5),
+                                child: CircleAvatar(
+                                  radius: 40,
+                                  backgroundColor: Colors.white,
+                                  child: SizedBox(
+                                      height: getProportionateScreenHeight(60),
+                                      child: Image.network(
+                                        _searchResult[index].image!,
+                                        errorBuilder:
+                                            (BuildContext
+                                        context,
+                                            Object
+                                            exception,
+                                            StackTrace?
+                                            stackTrace) {
+                                          return Container();
+                                        },
+                                      )
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  height: getProportionateScreenHeight(80),
+                                  margin: const EdgeInsets.only(right: 5),
+                                  child: Column(
+                                    mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                        MainAxisAlignment
+                                            .spaceBetween,
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              _searchResult[index]
+                                                  .libelle
+                                                  .toString(),
+                                              style: const TextStyle(
+                                                  fontWeight:
+                                                  FontWeight.w500),
+                                            ),
+                                          ),
+                                          Container(
+                                            margin: const EdgeInsets.only(
+                                                left: 4),
+                                            child: Text(
+                                              _searchResult[index]
+                                                  .prixUnitaire
+                                                  .toString() +
+                                                  ' FCFA',
+                                              style:  TextStyle(
+                                                fontWeight:
+                                                FontWeight.w500,
+                                                color: UserHelper.getColor(),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Container(
+                                        alignment: Alignment.bottomCenter,
+                                        height: 1,
+                                        width: MediaQuery.of(context)
+                                            .size
+                                            .width,
+                                        color: Colors.black38,
+                                      )
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    })
+            ),
             loader()
           ],
         ),

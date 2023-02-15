@@ -1,21 +1,20 @@
 import 'dart:convert';
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart';
-import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/model/order.dart';
 import 'package:livraison_express/model/orders.dart';
 import 'package:logger/logger.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import '../utils/main_utils.dart';
-import 'api_auth_service.dart';
+import 'auth_service.dart';
 
 class CourseApi {
   final logger  =Logger();
-  static Future<List<Command>> getOrders() async {
+  final BuildContext context;
+  CourseApi({required this.context});
+
+  Future<List<Command>> getOrders() async {
     String url = '$baseUrl/user/delivery';
     Response response = await get(Uri.parse(url), headers: {
       "Authorization": 'Bearer $token',
@@ -28,13 +27,12 @@ class CourseApi {
       var res = body['data'] as List;
       List<Command> order;
       order=res.map((json) => Command.fromJson(json)).toList();
-      // log("message ${order.first.toJson()} //");
       return order;
     } else {
       var body = json.decode(response.body);
-      print(response.body);
+      logger.e(response.body);
       var message = body['message'];
-      throw Exception(message);
+      throw Exception(body);
     }
   }
   static Future<Response> deleteOrder({required int id}) async {
@@ -115,6 +113,49 @@ class CourseApi {
       }),
     );
     if (response.statusCode == 200) {
+      return response;
+    } else {
+      var body = json.decode(response.body);
+      logger.e("+++${body['message'].toString().contains("Point")}");
+      var mes = body['message'];
+      if(body['message'].toString().contains("Point")){
+        throw("Point de livraison non acceptable ");
+      }
+      if (response.statusCode == 401) {
+        throw onFailureMessage;
+      } else if (response.statusCode == 404 ||
+          response.statusCode == 422 ||
+          response.statusCode == 400 ||
+          response.statusCode == 499) {
+        throw onFailureMessage;
+      }
+      debugPrint('ERROR MESSAGE ${body['message']}');
+      throw (onErrorMessage);
+    }
+  }
+
+   Future<Response> validatePromoCode({
+    required String code,
+    required int magasin_id,
+    required int amount,
+    required int delivery_amount,
+  }) async {
+    String url = '$baseUrl/promotions/validate';
+    Response response = await post(
+      Uri.parse(url),
+      headers: <String, String>{
+        "Authorization": 'Bearer $token',
+        "Accept": "application/json",
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(<String, String>{
+        'code_promo': code,
+        'magasin_id': magasin_id.toString(),
+        'delivery_id': delivery_amount.toString(),
+        'cart_amount': amount.toString(),
+      }),
+    );
+    if (response.statusCode == 200) {
       var body = json.decode(response.body);
       // var res = body['data'];
       // AppUser appUsers=AppUser.fromJson(res);
@@ -172,11 +213,10 @@ class CourseApi {
     }
   }
 
-   Future<Response> commnander2({
+  /* Future<Response> commnander2({
     required Map data
   }) async {
     String url = '$baseUrl/user/purchases';
-    log("${Request("method", Uri.parse(url))}");
     Response response = await post(
       Uri.parse(url),
       headers: <String, String>{
@@ -185,31 +225,19 @@ class CourseApi {
         "Content-Type": "application/json",
         "Origin": origin
       },
-      body: jsonEncode(data),
+      body: json.encode(data),
     );
     if (response.statusCode == 200) {
-      var body = json.decode(response.body);
-      // var res = body['data'];
-      // AppUser appUsers=AppUser.fromJson(res);
       return response;
     } else {
       var body = json.decode(response.body);
-      var mes = body['message'];
-      var rw = body['data'];
-      // logger.e("+++ ${response.body}+ ${response.statusCode}");
-     log("message ${rw} //");
-      if (response.statusCode == 401 || response.statusCode ==400) {
-        throw (onErrorMessage);
-      } else if (response.statusCode == 404 ||
-          response.statusCode == 422 ||
-          response.statusCode == 400 ||
-          response.statusCode == 499) {
-        throw (onErrorMessage);
-      }
-      debugPrint('ERROR MESSAGE ${body['message']}');
-      throw (onFailureMessage);
+      logger.e(response.body);
+      var message = body['message'];
+      throw Exception(body);
     }
   }
+
+   */
 
    Future<Response>getOrderStatusHistory({required orderId})async {
      String url = '$baseUrl/user/courses/$orderId/statut-changelog';
@@ -222,7 +250,7 @@ class CourseApi {
        return response;
      } else {
        var body = json.decode(response.body);
-       print(response.body);
+       logger.e(response.body);
        var message = body['message'];
        throw Exception(message);
      }
@@ -230,28 +258,27 @@ class CourseApi {
 
 
 
-  // Future<String> commnander2({
-  //   required Map data
-  // }) async {
-  //   String url = '$baseUrl/user/purchases';
-  //   var httpClient =HttpClient();
-  //   var body =jsonEncode(data);
-  //
-  //   HttpClientRequest request = await httpClient.postUrl(Uri.parse(url));
-  //   // request.headers.set('content-type', 'application/json');
-  //   request.headers.set('content-type', 'application/json');
-  //   request.headers.set('Accept', 'application/json');
-  //   request.headers.set("Origin", origin);
-  //   request.headers.set ('Authorization', "Bearer " + token);
-  //   request.add(utf8.encode(body));
-  //   // log(body);
-  //   HttpClientResponse response = await request.close();
-  //   // todo - you should check the response.statusCode
-  //   String reply = await response.transform(utf8.decoder).join();
-  //   httpClient.close();
-  //   // logger.i(request.headers);
-  //   //logger.w(reply);
-  //   log("$reply}");
-  //   return reply;
-  // }
+  Future<String> commnander2({
+    required Map data
+  }) async {
+    String url = '$baseUrl/user/purchases';
+    var httpClient =HttpClient();
+    var body =jsonEncode(data);
+
+    HttpClientRequest request = await httpClient.postUrl(Uri.parse(url));
+    // request.headers.set('content-type', 'application/json');
+    request.headers.set('content-type', 'application/json');
+    request.headers.set('Accept', 'application/json');
+    request.headers.set("Origin", origin);
+    request.headers.set ('Authorization', "Bearer " + token);
+    request.add(utf8.encode(body));
+    // log(body);
+    HttpClientResponse response = await request.close();
+    // todo - you should check the response.statusCode
+    String reply = await response.transform(utf8.decoder).join();
+    httpClient.close();
+    // logger.i(request.headers);
+    //logger.w(reply);
+    return reply;
+  }
 }

@@ -1,4 +1,4 @@
-import 'package:livraison_express/constant/some-constant.dart';
+
 
 class City{
   int? id;
@@ -9,13 +9,6 @@ class City{
 
   City({this.name,this.id,this.longitude,this.latitude,this.isActive});
 
-  static Map<String, dynamic>toMap(City city)=>{
-    CityConstant.id:city.id,
-    CityConstant.name:city.name,
-    CityConstant.latitude:city.latitude,
-    CityConstant.longitude:city.longitude,
-    CityConstant.isActive:city.isActive
-  };
 
   City.fromJson(Map<String, dynamic> json) {
     id = json['id'];

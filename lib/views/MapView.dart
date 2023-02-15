@@ -11,9 +11,13 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_api_headers/google_api_headers.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_webservice/places.dart';
+import 'package:livraison_express/utils/main_utils.dart';
+import 'package:livraison_express/views/widgets/custom_dialog.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
+
+import '../data/user_helper.dart';
 
 class MapsView extends StatefulWidget {
   const MapsView({Key? key}) : super(key: key);
@@ -24,7 +28,8 @@ class MapsView extends StatefulWidget {
 
 class _MapsViewState extends State<MapsView> {
   final homeScaffoldKey = GlobalKey<ScaffoldState>();
-  String googleApikey = "AIzaSyBn_LS3TTqaSsByi5U7poZjoFLB8Egi2Kk";
+  String googleApikey = "AIzaSyCwNlcJfxXOzZpcw-QHx--1aZS_j84Tsk8";
+  // String googleApikey = "AIzaSyBn_LS3TTqaSsByi5U7poZjoFLB8Egi2Kk";
   CameraPosition initialPosition =
       const CameraPosition(target: LatLng(4.0511, 9.7679));
   CameraPosition? cameraPosition;
@@ -91,14 +96,17 @@ class _MapsViewState extends State<MapsView> {
               position: startLocation,
               icon: bitmapDescriptor),
         );
-        showDialog(
-            context: context,
-            builder: (context) {
-              return const AlertDialog(
-                title: Text('ERROR'),
-                content: Text('Veuillez activer la localisation svp'),
-              );
-            });
+        showGenDialog(
+            context,
+            true,
+            CustomDialog(
+                title: 'Localization Error',
+                content:
+                "Veuillez activer la localisation svp",
+                positiveBtnText: "OK",
+                positiveBtnPressed: () {
+                  Navigator.of(context).pop();
+                }));
       }
     }
 
@@ -243,7 +251,7 @@ class _MapsViewState extends State<MapsView> {
 
   void onError(PlacesAutocompleteResponse response) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(response.errorMessage!)),
+      const SnackBar(content: Text(onErrorMessage)),
     );
   }
 
@@ -352,7 +360,6 @@ class _MapsViewState extends State<MapsView> {
               "Latitude": latitude,
               "Longitude": longitude,
             };
-            print('latLng // $data / $longitude');
             Navigator.of(context).pop(data);
           },
           child: const Icon(Icons.check),

@@ -3,8 +3,9 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
-import 'package:livraison_express/service/api_auth_service.dart';
 import 'package:logger/logger.dart';
+
+import 'auth_service.dart';
 
 
 class MainApi{
@@ -32,6 +33,46 @@ class MainApi{
     var mes =body['message'];
     debugPrint('ERROR MESSAGE ${body['message']}');
     throw Exception(mes);
+  }
+}
+
+ static getModule({required String city}) async {
+  String url = '$baseUrl/modules?city=$city';
+  Response response = await get(Uri.parse(url),
+    headers: <String, String>{
+      "Accept":"application/json",
+      'Content-Type': 'application/json',
+    },
+  );
+  if (response.statusCode == 200) {
+    return response;
+  } else {
+    var body = json.decode(response.body);
+    var res = body['data'];
+    debugPrint("${response.statusCode}$res");
+    var mes =body['message'];
+    debugPrint('ERROR MESSAGE ${body['message']}');
+    throw (mes);
+  }
+}
+
+ static getQuarters() async {
+  String url = '$baseUrl/quartiers';
+  Response response = await get(Uri.parse(url),
+    headers: <String, String>{
+      "Accept":"application/json",
+      'Content-Type': 'application/json',
+    },
+  );
+  if (response.statusCode == 200) {
+    return response;
+  } else {
+    var body = json.decode(response.body);
+    var res = body['data'];
+    debugPrint("${response.statusCode}$res");
+    var mes =body['message'];
+    debugPrint('ERROR MESSAGE ${body['message']}');
+    throw (mes);
   }
 }
 
