@@ -1,6 +1,13 @@
+
+enum Environment{
+  PREPROD,
+  PROD
+}
+
+
 class AppConfig{
   final String appName;
-  final String environment;
+  final Environment environment;
 
   AppConfig({required this.appName, required this.environment});
 }

@@ -64,6 +64,23 @@ android {
 
     }
 
+    flavorDimensions "version"
+
+    productFlavors{
+        preprod {
+            dimension "version"
+            versionNameSuffix "-preprod"
+            resValue "string", "app_name", "Livraison Express Preprod"
+            applicationIdSuffix ".preprod"
+        }
+        prod{
+            dimension "version"
+            applicationIdSuffix ".prod"
+            versionNameSuffix "-prod"
+            resValue "string", "app_name", "Livraison Express"
+        }
+    }
+
 }
 
 flutter {
