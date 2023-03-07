@@ -1,0 +1,114 @@
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader('UTF-8') { reader ->
+        localProperties.load(reader)
+    }
+}
+
+def flutterRoot = localProperties.getProperty('flutter.sdk')
+if (flutterRoot == null) {
+    throw new GradleException("Flutter SDK not found. Define location with flutter.sdk in the local.properties file.")
+}
+
+def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
+if (flutterVersionCode == null) {
+    flutterVersionCode = '1'
+}
+
+def flutterVersionName = localProperties.getProperty('flutter.versionName')
+if (flutterVersionName == null) {
+    flutterVersionName = '1.0'
+}
+
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
+apply plugin: 'com.google.gms.google-services'
+
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+android {
+//    compileSdkVersion flutter.compileSdkVersion
+    compileSdkVersion 32
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    defaultConfig {
+        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
+        applicationId "com.example.livraison_express"
+//        minSdkVersion flutter.minSdkVersion
+        minSdkVersion 21
+        targetSdkVersion flutter.targetSdkVersion
+        versionCode flutterVersionCode.toInteger()
+        versionName flutterVersionName
+        multiDexEnabled true
+    }
+
+    signingConfigs {
+        release {
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+            storePassword keystoreProperties['storePassword']
+        }
+    }
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+        }
+
+    }
+
+//    flavorDimensions "version"
+//
+//    productFlavors{
+//        preprod {
+//            dimension "version"
+//            versionNameSuffix "-preprod"
+//            resValue "string", "app_name", "Livraison Express Preprod"
+//            applicationIdSuffix ".preprod"
+//        }
+//        prod{
+//            dimension "version"
+//            applicationIdSuffix ".prod"
+//            versionNameSuffix "-prod"
+//            resValue "string", "app_name", "Livraison Express"
+//        }
+//    }
+
+}
+
+flutter {
+    source '../..'
+}
+dependencies {
+    // Import the Firebase BoM
+    implementation platform('com.google.firebase:firebase-bom:30.1.0')
+
+    implementation 'com.google.firebase:firebase-analytics'
+
+    implementation 'com.google.firebase:firebase-auth'
+
+    implementation 'com.google.android.gms:play-services-auth:20.2.0'
+    implementation 'com.google.firebase:firebase-dynamic-links'
+
+    implementation 'com.facebook.android:facebook-login'
+    implementation 'com.android.support:multidex:2.0.1'
+
+}
+
+//android.applicationVariants.all { variant ->
+//    variant.outputs.all { output ->
+//        def builtType = variant.buildType.name
+//        def versionName = variant.versionName
+//        def versionCode = variant.versionCode
+//        def flavor = variant.flavorName
+//        outputFileName = "livraison-${flavor}-${builtType}-${versionName}-${versionCode}.apk"
+//    }
+//}
