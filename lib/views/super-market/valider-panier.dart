@@ -256,20 +256,6 @@ class _ValiderPanierState extends State<ValiderPanier> {
     });
   }
 
-  setDeliveryTime(bool isExpress) {
-    String deliveryTime;
-    if (isExpress) {
-      if (delay <= 59) {
-        deliveryTime = delay.toString() + " Mins";
-      } else {
-        deliveryTime =
-            (delay / 60).toString() + "H " + (delay % 60).toString() + "Mins";
-      }
-    } else {
-      deliveryTime = currentDate + " " + currentTime;
-    }
-    return deliveryTime;
-  }
 
   saveOrder(String modePaiement, String pi, String status,
       String paimentMessage) async {
@@ -351,7 +337,10 @@ class _ValiderPanierState extends State<ValiderPanier> {
       "orders": order,
       "paiement": payment,
     };
+    logger.i(info.dateLivraison);
+    log('==${info.toJson()}');
     await CourseApi(context: context).commnander2(data: data).then((response) {
+      logger.i(response.body);
       UserHelper.userExitDialog(
           context,
           false,
@@ -556,9 +545,15 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                     setState(() {
                                       isLoading1 = false;
                                     });
-                                    Fluttertoast.showToast(
-                                        msg:
-                                            "Veuillez choisir un moyen de paiement");
+                                    showToast(
+                                        context: context,
+                                        text:
+                                            "Veuillez choisir un moyen de paiement",
+                                        iconData: Icons.check,
+                                        color: UserHelper.getColor());
+                                    // Fluttertoast.showToast(
+                                    //     msg:
+                                    //         "Veuillez choisir un moyen de paiement");
                                   }
                                 },
                                 child: Container(
@@ -749,15 +744,18 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                         return Center(
                                           child: SelectTime(
                                             onSelectedDate: (selectedDate) {
+                                              logger.w(selectedDate);
                                               setState(() {
                                                 chooseTime = selectedDate;
                                                 String deliverTime =
                                                     chooseTime.substring(11);
                                                 deliveryTime =
-                                                    deliverTime + ':00';
+                                                    deliverTime;
                                                 deliveryDate =
                                                     chooseTime.substring(0, 10);
                                               });
+                                              log('$deliveryTime +++ $deliveryDate');
+                                              logger.wtf(chooseTime);
                                             },
                                           ),
                                         );
@@ -788,7 +786,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                                           chooseTime
                                                               .substring(11);
                                                       deliveryTime =
-                                                          deliverTime + ':00';
+                                                          deliverTime ;
                                                       deliveryDate = chooseTime
                                                           .substring(0, 10);
                                                     });

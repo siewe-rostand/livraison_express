@@ -137,6 +137,7 @@ class UserHelper {
   static String chooseTime = "";
   static String selectedFavAdd = "";
   static City city = City();
+  static int cartNewPrice = 0;
   static String selectCity = '';
   static List<String> quarters = [];
   static bool isTodayOpen = false;

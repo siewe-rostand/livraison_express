@@ -68,9 +68,9 @@ class _FancyFabState extends State<FancyFab>
 
     DateTime startTime = DateTime(now.year, now.month, now.day, 12, 10, 0);
     if(now.isBefore(startTime)){
-      message = 'Bonjour ! S\'il vous plait j\'ai une préocupation';
+      message = 'Bonjour ! S\'il vous plait j\'ai une préoccupation';
     }else{
-      message= "Bonne après midi !S'il vous plait j'ai une préocupation";
+      message= "Bonne après midi !S'il vous plait j'ai une préoccupation";
     }
     super.initState();
   }

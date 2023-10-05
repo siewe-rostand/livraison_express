@@ -18,6 +18,7 @@ class OrderDetailBody extends StatefulWidget {
 
 class _OrderDetailBodyState extends State<OrderDetailBody> {
   late Command _order;
+  ScrollController controller = ScrollController();
 
   @override
   void initState() {
@@ -51,7 +52,7 @@ class _OrderDetailBodyState extends State<OrderDetailBody> {
               },
               body: ScrollConfiguration(
                 behavior: const ScrollBehavior()
-                  ..buildViewportChrome(context, Container(), AxisDirection.down),
+                  ..buildOverscrollIndicator(context, Container(), ScrollableDetails(direction: AxisDirection.down, controller: controller)),
                 child: SingleChildScrollView(
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),

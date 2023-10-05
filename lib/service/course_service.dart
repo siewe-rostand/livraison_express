@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/widgets.dart';
@@ -218,7 +219,7 @@ class CourseApi {
     }
   }
 
-  /* Future<Response> commnander2({
+   Future<Response> commnander2({
     required Map data
   }) async {
     String url = '$baseUrl/user/purchases';
@@ -242,7 +243,7 @@ class CourseApi {
     }
   }
 
-   */
+
 
    Future<Response>getOrderStatusHistory({required orderId})async {
      String url = '$baseUrl/user/courses/$orderId/statut-changelog';
@@ -263,7 +264,7 @@ class CourseApi {
 
 
 
-  Future<String> commnander2({
+  /*Future<String> commnander2({
     required Map data
   }) async {
     String url = '$baseUrl/user/purchases';
@@ -277,7 +278,7 @@ class CourseApi {
     request.headers.set("Origin", origin);
     request.headers.set ('Authorization', "Bearer " + token);
     request.add(utf8.encode(body));
-    // log(body);
+    log(' ===body $body');
     HttpClientResponse response = await request.close();
     // todo - you should check the response.statusCode
     String reply = await response.transform(utf8.decoder).join();
@@ -285,5 +286,5 @@ class CourseApi {
     // logger.i(request.headers);
     //logger.w(reply);
     return reply;
-  }
+  }*/
 }
