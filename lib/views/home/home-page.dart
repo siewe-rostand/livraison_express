@@ -32,7 +32,7 @@ import '../../model/day_item.dart';
 import '../../model/module.dart';
 import '../../model/shop.dart';
 import '../livraison/commande-coursier.dart';
-import '../super-market/cart-provider.dart';
+import '../../provider/cart-provider.dart';
 import '../widgets/custom_dialog.dart';
 import '../widgets/open_wrapper.dart';
 

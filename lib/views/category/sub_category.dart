@@ -2,7 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/views/main/product_page.dart';
+import 'package:livraison_express/views/product/product_page.dart';
 import 'package:livraison_express/views/widgets/custom_sliver_app_bar.dart';
 
 import '../../model/category.dart';

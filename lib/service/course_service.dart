@@ -1,9 +1,11 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart';
 import 'package:livraison_express/model/orders.dart';
+import 'package:livraison_express/utils/handle_exception.dart';
 import 'package:logger/logger.dart';
 
 import '../utils/main_utils.dart';
@@ -97,40 +99,44 @@ class CourseApi {
     required int amount,
   }) async {
     String url = '$baseUrl/external/google/distancematrix';
-    Response response = await post(
-      Uri.parse(url),
-      headers: <String, String>{
-        "Authorization": 'Bearer $token',
-        "Accept": "application/json",
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode(<String, String>{
-        'origin': origin,
-        'destination': destination,
-        'module': module,
-        'magasin': magasin,
-        'cart_amount': amount.toString(),
-      }),
-    );
-    if (response.statusCode == 200) {
-      return response;
-    } else {
-      var body = json.decode(response.body);
-      logger.e("+++${body['message'].toString().contains("Point")}");
-      var mes = body['message'];
-      if(body['message'].toString().contains("Point")){
-        throw("Point de livraison non acceptable ");
+    try {
+      Response response = await post(
+        Uri.parse(url),
+        headers: <String, String>{
+          "Authorization": 'Bearer $token',
+          "Accept": "application/json",
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(<String, String>{
+          'origin': origin,
+          'destination': destination,
+          'module': module,
+          'magasin': magasin,
+          'cart_amount': amount.toString(),
+        }),
+      );
+      if (response.statusCode == 200) {
+        return response;
+      } else {
+        var body = json.decode(response.body);
+        logger.e("+++${body['message'].toString().contains("Point")}");
+        var mes = body['message'];
+        if(body['message'].toString().contains("Point")){
+          throw("Point de livraison non acceptable ");
+        }
+        if (response.statusCode == 401) {
+          throw onFailureMessage;
+        } else if (response.statusCode == 404 ||
+            response.statusCode == 422 ||
+            response.statusCode == 400 ||
+            response.statusCode == 499) {
+          throw onFailureMessage;
+        }
+        debugPrint('ERROR MESSAGE ${body['message']}');
+        throw (onErrorMessage);
       }
-      if (response.statusCode == 401) {
-        throw onFailureMessage;
-      } else if (response.statusCode == 404 ||
-          response.statusCode == 422 ||
-          response.statusCode == 400 ||
-          response.statusCode == 499) {
-        throw onFailureMessage;
-      }
-      debugPrint('ERROR MESSAGE ${body['message']}');
-      throw (onErrorMessage);
+    } catch (e) {
+      throw handleException(e);
     }
   }
 
@@ -213,7 +219,7 @@ class CourseApi {
     }
   }
 
-  /* Future<Response> commnander2({
+   Future<Response> commnander2({
     required Map data
   }) async {
     String url = '$baseUrl/user/purchases';
@@ -237,7 +243,7 @@ class CourseApi {
     }
   }
 
-   */
+
 
    Future<Response>getOrderStatusHistory({required orderId})async {
      String url = '$baseUrl/user/courses/$orderId/statut-changelog';
@@ -258,7 +264,7 @@ class CourseApi {
 
 
 
-  Future<String> commnander2({
+  /*Future<String> commnander2({
     required Map data
   }) async {
     String url = '$baseUrl/user/purchases';
@@ -272,7 +278,7 @@ class CourseApi {
     request.headers.set("Origin", origin);
     request.headers.set ('Authorization', "Bearer " + token);
     request.add(utf8.encode(body));
-    // log(body);
+    log(' ===body $body');
     HttpClientResponse response = await request.close();
     // todo - you should check the response.statusCode
     String reply = await response.transform(utf8.decoder).join();
@@ -280,5 +286,5 @@ class CourseApi {
     // logger.i(request.headers);
     //logger.w(reply);
     return reply;
-  }
+  }*/
 }

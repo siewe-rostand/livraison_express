@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,7 +8,8 @@ import 'package:livraison_express/model/category.dart';
 import 'package:livraison_express/provider/nav_view_model.dart';
 import 'package:livraison_express/service/shopService.dart';
 import 'package:livraison_express/utils/size_config.dart';
-import 'package:livraison_express/views/main/product_page.dart';
+import 'package:livraison_express/views/category/category-shimmer-card.dart';
+import 'package:livraison_express/views/product/product_page.dart';
 import 'package:livraison_express/views/category/sub_category.dart';
 import 'package:livraison_express/views/widgets/custom_dialog.dart';
 import 'package:livraison_express/views/widgets/custom_sliver_app_bar.dart';
@@ -36,6 +39,7 @@ class _CategoryPageState extends State<CategoryPage> {
   bool? hasChildren;
   bool isVisible = true;
   String name = '';
+  bool loading = true;
   @override
   void initState() {
     super.initState();
@@ -47,10 +51,32 @@ class _CategoryPageState extends State<CategoryPage> {
     focusNode.addListener(() {
       setState(() {});
     });
+    getCategories();
   }
 
-  getCategories() async {
+  getCategoriesFromShop() async {
     await ShopServices.getCategoriesFromShop(shopId: shops.id);
+  }
+
+  getCategories()async{
+    await ShopServices.getCategories(shopId: shops.id!).then((value){
+      setState(() {
+        loading = false;
+        fromCategory = true;
+      });
+      categories= value;
+    }).catchError((onError){
+      showGenDialog(
+          context,
+          false,
+          CustomDialog(
+              title: "ERROR!",
+              content: onError.toString(),
+              positiveBtnText: "OK",
+              positiveBtnPressed: () {
+                Navigator.of(context).pop();
+              }));
+    });
   }
 
   onSearchTextChanged(String text) {
@@ -131,136 +157,110 @@ class _CategoryPageState extends State<CategoryPage> {
                 (BuildContext context, bool innerBoxIsScrolled) {
               return [CustomSliverAppBar(title: shops.nom!)];
             },
-            body: FutureBuilder<List<Category>>(
-              future: ShopServices.getCategories(shopId: shops.id!),
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  fromCategory = true;
-                  categories = snapshot.data!;
-                  return categories.isEmpty
-                      ? const Center(
-                          child: Text(
-                          "stock épuisé dans cette ville ",
-                          style: TextStyle(fontSize: 22, color: Colors.black38),
-                        ))
-                      : Container(
-                          color: Colors.white,
-                          child: SingleChildScrollView(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  margin: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 5),
-                                  color: categories.isNotEmpty
-                                      ? const Color(0xffF2F2F2)
-                                      : Colors.white,
-                                  child: _searchResult.isNotEmpty ||
-                                          controller.text.isNotEmpty
-                                      ? GridView.builder(
-                                          shrinkWrap: true,
-                                          gridDelegate:
-                                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                                  crossAxisCount: 2),
-                                          itemCount: _searchResult.length,
-                                          physics: const ScrollPhysics(),
-                                          itemBuilder: (context, index) {
-                                            return OpenContainerWrapper(
-                                                closedBuilder: (BuildContext c,
-                                                    openContainer) {
-                                                  return InkWellOverlay(
-                                                    onTap: () {
-                                                      UserHelper.category =
-                                                          categories[index];
-                                                      openContainer();
-                                                    },
-                                                    child: items(
-                                                        category:
-                                                            categories[index]),
-                                                  );
-                                                },
-                                                onClosed: (v) async =>
-                                                    Future.delayed(
-                                                        const Duration(
-                                                            milliseconds: 500)),
-                                                nextPage: categories[index]
-                                                            .hasChildren ==
-                                                        true
-                                                    ? SubCategory(
-                                                        shopId: shops.id!,
-                                                        categoryId:
-                                                            categories[index]
-                                                                .id!,
-                                                        title: shops.slug!,
-                                                      )
-                                                    : const ProductPage());
-                                          },
-                                        )
-                                      : GridView.builder(
-                                          shrinkWrap: true,
-                                          gridDelegate:
-                                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                                  crossAxisCount: 2),
-                                          itemCount: categories.length,
-                                          physics: const ScrollPhysics(),
-                                          itemBuilder: (context, index) {
-                                            return OpenContainerWrapper(
-                                                closedBuilder: (BuildContext c,
-                                                    openContainer) {
-                                                  return InkWell(
-                                                    onTap: () {
-                                                      UserHelper.category =
-                                                          categories[index];
-                                                      openContainer();
-                                                    },
-                                                    child: items(
-                                                        category:
-                                                            categories[index]),
-                                                  );
-                                                },
-                                                onClosed: (v) async =>
-                                                    Future.delayed(
-                                                        const Duration(
-                                                            milliseconds: 500)),
-                                                nextPage: categories[index]
-                                                            .hasChildren ==
-                                                        true
-                                                    ? SubCategory(
-                                                        shopId: shops.id!,
-                                                        categoryId:
-                                                            categories[index]
-                                                                .id!,
-                                                        title: shops.slug!,
-                                                      )
-                                                    : const ProductPage());
-                                          },
-                                        ),
-                                )
-                              ],
-                            ),
-                          ),
-                        );
-                }
-                if (snapshot.hasError) {
-                  showGenDialog(
-                      context,
-                      false,
-                      CustomDialog(
-                          title: "ERROR!",
-                          content: snapshot.error.toString(),
-                          positiveBtnText: "OK",
-                          positiveBtnPressed: () {
-                            Navigator.of(context).pop();
-                          }));
-                }
-                return Center(
-                  child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                        UserHelper.getColorDark()),
-                    strokeWidth: 2.5,
-                  ),
-                );
-              },
+            body: loading ?const Center(
+              child: CategoryShimmerCard(),
+            ): categories.isEmpty
+                ? const Center(
+                child: Text(
+                  "stock épuisé dans cette ville ",
+                  style: TextStyle(fontSize: 22, color: Colors.black38),
+                ))
+                : Container(
+              color: Colors.white,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 5),
+                      color: categories.isNotEmpty
+                          ? const Color(0xffF2F2F2)
+                          : Colors.white,
+                      child: _searchResult.isNotEmpty ||
+                          controller.text.isNotEmpty
+                          ? GridView.builder(
+                        shrinkWrap: true,
+                        gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2),
+                        itemCount: _searchResult.length,
+                        physics: const ScrollPhysics(),
+                        itemBuilder: (context, index) {
+                          return OpenContainerWrapper(
+                              closedBuilder: (BuildContext c,
+                                  openContainer) {
+                                return InkWellOverlay(
+                                  onTap: () {
+                                    UserHelper.category =
+                                    _searchResult[index];
+                                    openContainer();
+                                  },
+                                  child: items(
+                                      category:
+                                      _searchResult[index]),
+                                );
+                              },
+                              onClosed: (v) async =>
+                                  Future.delayed(
+                                      const Duration(
+                                          milliseconds: 500)),
+                              nextPage: _searchResult[index]
+                                  .hasChildren ==
+                                  true
+                                  ? SubCategory(
+                                shopId: shops.id!,
+                                categoryId:
+                                _searchResult[index]
+                                    .id!,
+                                title: shops.slug!,
+                              )
+                                  : const ProductPage());
+                        },
+                      )
+                          : GridView.builder(
+                        shrinkWrap: true,
+                        gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2),
+                        itemCount: categories.length,
+                        physics: const ScrollPhysics(),
+                        itemBuilder: (context, index) {
+                          return OpenContainerWrapper(
+                              closedBuilder: (BuildContext c,
+                                  openContainer) {
+                                return InkWell(
+                                  onTap: () {
+                                    UserHelper.category =
+                                    categories[index];
+                                    openContainer();
+                                  },
+                                  child: items(
+                                      category:
+                                      categories[index]),
+                                );
+                              },
+                              onClosed: (v) async =>
+                                  Future.delayed(
+                                      const Duration(
+                                          milliseconds: 500)),
+                              nextPage: categories[index]
+                                  .hasChildren ==
+                                  true
+                                  ? SubCategory(
+                                shopId: shops.id!,
+                                categoryId:
+                                categories[index]
+                                    .id!,
+                                title: shops.slug!,
+                              )
+                                  : const ProductPage());
+                        },
+                      ),
+                    )
+                  ],
+                ),
+              ),
             ),
           ),
           floatingActionButton: OpenContainerWrapper(

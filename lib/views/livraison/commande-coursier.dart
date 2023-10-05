@@ -40,9 +40,9 @@ import '../widgets/custom_alert_dialog.dart';
 enum DeliveryType { express, heure_livraison }
 
 class CommandeCoursier extends StatefulWidget {
-  const CommandeCoursier(
-      {Key? key,})
-      : super(key: key);
+  const CommandeCoursier({
+    Key? key,
+  }) : super(key: key);
 
   @override
   State<CommandeCoursier> createState() => _CommandeCoursierState();
@@ -137,7 +137,8 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
   String? durationText;
   Shops shops = Shops();
   int delay = 0;
-  String deliveryTime = '';
+  String deliveryTime = '', deliveryDate = '';
+  String express = '';
   String commander = 'COMMANDER';
 
   //step4 variables
@@ -181,347 +182,14 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
 
   initView() async {
     shops = UserHelper.shops;
-    city =  UserHelper.city.name;
-    cityId =  UserHelper.city.id;
+    city = UserHelper.city.name;
+    cityId = UserHelper.city.id;
     isOpened(UserHelper.shops.horaires!);
     setState(() {
       cityDepartTextController = TextEditingController(text: city);
       cityDestinationTextController = TextEditingController(text: city);
     });
   }
-
-  showToday() {
-    Navigator.of(context).pop();
-    showDialog<void>(
-        context: context,
-        builder: (context) {
-          dateFormat = DateFormat.Hm();
-          selectTodayTime = dateFormat.format(t);
-          var selectTime;
-          return StatefulBuilder(builder: (context, setStateSB) {
-            return Dialog(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16.0)),
-              elevation: 0.0,
-              child: Stack(
-                children: [
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.only(top: 10, left: 6),
-                        height: 35,
-                        width: double.infinity,
-                        decoration: const BoxDecoration(
-                          borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(10),
-                              topRight: Radius.circular(5)),
-                          color: Color(0xff2A5CA8),
-                        ),
-                        child: const Text(
-                          'A quel heure svp ?',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                /**
-                                     * today's today time
-                                     */
-                                ElevatedButton(
-                                  onPressed: () {
-                                    print("Today's today");
-                                    isToday = true;
-                                    showToday();
-                                  },
-                                  child: const Text(
-                                    "AUJOUD'HUI",
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                                Row(
-                                  children: const [
-                                    Expanded(child: Divider()),
-                                    Padding(
-                                      padding: EdgeInsets.all(8.0),
-                                      child: Text('Ou'),
-                                    ),
-                                    Expanded(child: Divider()),
-                                  ],
-                                ),
-                                /**
-                                     * today's tomorrow time
-                                     */
-                                ElevatedButton(
-                                    onPressed: () {
-                                      print("today's tomorrow");
-                                      isToday == false;
-                                      showTomorrow();
-                                    },
-                                    child: const Text(
-                                      "DEMAIN",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold),
-                                    )),
-                              ],
-                            ),
-                          ),
-                          Expanded(
-                            child: DropdownButton<String>(
-                              value: selectTodayTime,
-                              icon: const Icon(Icons.arrow_drop_down_outlined),
-                              elevation: 16,
-                              style: const TextStyle(color: Color(0xA31236BD)),
-                              onChanged: (String? newValue) {
-                                setStateSB(() {
-                                  selectTodayTime = newValue!;
-                                });
-                                var nw = selectTodayTime.substring(0, 2);
-                                var a = selectTodayTime.substring(3, 5);
-                                DateTime startTime2 = DateTime(
-                                    now.year,
-                                    now.month,
-                                    now.day,
-                                    int.parse(nw),
-                                    int.parse(a),
-                                    0);
-                                selectTime = DateFormat('dd-MM-yyyy k:mm')
-                                    .format(startTime2);
-                                print(selectTime);
-                              },
-                              items: todayTime.map<DropdownMenuItem<String>>(
-                                  (String value) {
-                                return DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text(
-                                    value,
-                                    style: const TextStyle(color: Colors.black),
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                          )
-                        ],
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      ),
-                    ],
-                  ),
-                  Positioned(
-                    right: 0.0,
-                    bottom: 0.0,
-                    child: Align(
-                      alignment: Alignment.bottomRight,
-                      child: TextButton(
-                        onPressed: () {
-                          var nw = selectTodayTime.substring(0, 2);
-                          var a = selectTodayTime.substring(3, 5);
-                          DateTime startTime2 = DateTime(now.year, now.month,
-                              now.day, int.parse(nw), int.parse(a), 0);
-                          var selectTime1 =
-                              DateFormat('dd-MM-yyyy k:mm').format(startTime2);
-                          Navigator.of(context).pop();
-                          setState(() {
-                            chooseTime = selectTime ?? selectTime1;
-                          });
-                          print(chooseTime);
-                        },
-                        child: const Text('VALIDER'),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                      right: 0.0,
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: const Align(
-                          alignment: Alignment.topRight,
-                          child: CircleAvatar(
-                            radius: 14.0,
-                            backgroundColor: Color(0xff2A5CA8),
-                            child: Icon(Icons.close, color: Colors.white),
-                          ),
-                        ),
-                      ))
-                ],
-              ),
-            );
-          });
-        });
-  }
-
-  showTomorrow() {
-    Navigator.of(context).pop();
-    showDialog<void>(
-        context: context,
-        builder: (context) {
-          dateFormat = DateFormat.Hm();
-          DateTime startTime1 =
-              DateTime(now.year, now.month, now.day, 8, 30, 0);
-          String nextStart = dateFormat.format(startTime1);
-          var selectTime;
-          return StatefulBuilder(builder: (context, setStateSB) {
-            return Dialog(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16.0)),
-              elevation: 0.0,
-              child: Stack(
-                children: [
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.only(top: 10, left: 6),
-                        height: 35,
-                        width: double.infinity,
-                        decoration: const BoxDecoration(
-                          borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(10),
-                              topRight: Radius.circular(5)),
-                          color: Color(0xff2A5CA8),
-                        ),
-                        child: const Text(
-                          'A quel heure svp ?',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                /**
-                                     * tomorrow's today time
-                                     */
-                                ElevatedButton(
-                                  onPressed: () {
-                                    debugPrint("Tomorrow's today");
-                                    isToday = true;
-                                    showToday();
-                                  },
-                                  child: const Text(
-                                    "AUJOUD'HUI",
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                                Row(
-                                  children: const [
-                                    Expanded(child: Divider()),
-                                    Padding(
-                                      padding: EdgeInsets.all(8.0),
-                                      child: Text('Ou'),
-                                    ),
-                                    Expanded(child: Divider()),
-                                  ],
-                                ),
-                                /**
-                                     * tomorrow's tomorrow time
-                                     */
-                                ElevatedButton(
-                                    onPressed: () {
-                                      debugPrint("tomorrow's tomorrow");
-                                      showTomorrow();
-                                    },
-                                    child: const Text(
-                                      "DEMAIN",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold),
-                                    )),
-                              ],
-                            ),
-                          ),
-                          Expanded(
-                            child: DropdownButton<String>(
-                              value: nextStart,
-                              icon: const Icon(Icons.arrow_drop_down_outlined),
-                              elevation: 16,
-                              style: const TextStyle(color: Color(0xA31236BD)),
-                              onChanged: (String? newValue) {
-                                setStateSB(() {
-                                  nextStart = newValue!;
-                                });
-                                var nw = nextStart.substring(0, 2);
-                                var a = nextStart.substring(3, 5);
-                                DateTime startTime2 = DateTime(
-                                    now.year,
-                                    now.month,
-                                    now.day + 1,
-                                    int.parse(nw),
-                                    int.parse(a),
-                                    0);
-                                selectTime = DateFormat('dd-MM-yyyy  k:mm')
-                                    .format(startTime2);
-                                // print(selectTime);
-                              },
-                              items: timeSlots.map<DropdownMenuItem<String>>(
-                                  (String value) {
-                                return DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text(
-                                    value,
-                                    style: const TextStyle(color: Colors.black),
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                          )
-                        ],
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      ),
-                    ],
-                  ),
-                  Positioned(
-                    right: 0.0,
-                    bottom: 0.0,
-                    child: Align(
-                      alignment: Alignment.bottomRight,
-                      child: TextButton(
-                        onPressed: () {
-                          var nw = nextStart.substring(0, 2);
-                          var a = nextStart.substring(3, 5);
-                          DateTime startTime2 = DateTime(now.year, now.month,
-                              now.day + 1, int.parse(nw), int.parse(a), 0);
-                          var selectTime1 =
-                              DateFormat('dd-MM-yyyy  k:mm').format(startTime2);
-                          Navigator.of(context).pop();
-                          setState(() {
-                            chooseTime = selectTime ?? selectTime1;
-                          });
-                        },
-                        child: const Text('VALIDER'),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                      right: 0.0,
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: const Align(
-                          alignment: Alignment.topRight,
-                          child: CircleAvatar(
-                            radius: 14.0,
-                            backgroundColor: Color(0xff2A5CA8),
-                            child: Icon(Icons.close, color: Colors.white),
-                          ),
-                        ),
-                      ))
-                ],
-              ),
-            );
-          });
-        });
-  }
-
 
   setSender() {
     var providerName = "livraison-express";
@@ -533,11 +201,15 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
     senderAddress.villeId = city.id;
     senderAddress.ville = city.name;
     senderAddress.pays = "Cameroun";
+    senderAddress.providerName =
+        senderAddress.providerName ?? "livraison-express";
     // debugPrint("${sender.toJson()} ${senderAddress.providerId}");
     List<Address> addresses = [];
     addresses.add(senderAddress);
     sender.addresses = addresses;
+    sender.providerName = sender.providerName ?? "livraison-express";
     // logger.w(senderAddress.toJson());
+    logger.wtf(sender.toJson());
     log('///address ${UserHelper.city.toJson()}');
     if (mounted) {
       setState(() {
@@ -554,17 +226,21 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
     receiverAddress.villeId = cityId;
     receiverAddress.ville = city;
     receiverAddress.pays = "Cameroun";
+    receiverAddress.providerName =
+        receiverAddress.providerName ?? "livraison-express";
 
     List<Address> addresses = [];
     addresses.add(receiverAddress);
     receiver.addresses = addresses;
     String? origin = sender.addresses![0].latLng;
     String? destination = receiver.addresses![0].latLng;
-    debugPrint("distances ${sender.toJson()} // $destination");
+    receiver.providerName = receiver.providerName ?? "livraison-express";
+    logger.d(receiver.toJson());
+    // debugPrint("distances ${sender.toJson()} // $destination");
     calculateDistance();
-
   }
-  calculateDistance()async{
+
+  calculateDistance() async {
     String? origin = sender.addresses![0].latLng;
     String? destination = receiver.addresses![0].latLng;
     await CourseApi(context: context)
@@ -574,24 +250,34 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
       var message = body['message'];
       var data = body['data'];
       DistanceMatrix distanceMatrix = DistanceMatrix.fromJson(data);
-      logger.w(distanceMatrix.toJson());
+      // logger.w(distanceMatrix.toJson());
       setState(() {
         duration = distanceMatrix.duration!;
         distanceText = distanceMatrix.distanceText!;
         distance = distanceMatrix.distance!;
         durationText = distanceMatrix.durationText;
+        express = distanceMatrix.durationText!;
         deliveryPrice = distanceMatrix.prix;
         initialDeliveryPrice = distanceMatrix.prix;
         isLoading = true;
         _currentStep++;
       });
-      showToast(context: context, text: message, iconData: Icons.check, color: UserHelper.getColor());
+      showToast(
+          context: context,
+          text: message,
+          iconData: Icons.check,
+          color: UserHelper.getColor());
     }).catchError((onError) {
-      var message ="Une erreur est survenue lors du calcul de la distance. Veuillez vérifier vos informations puis réessayez.";
+      var message =
+          "Une erreur est survenue lors du calcul de la distance. Veuillez vérifier vos informations puis réessayez.";
       logger.e(onError);
-      errorDialog(context: context, title: "Distance Error", message: message, onTap: (){
-        Navigator.pop(context);
-      });
+      errorDialog(
+          context: context,
+          title: "Distance Error",
+          message: message,
+          onTap: () {
+            Navigator.pop(context);
+          });
     });
   }
 
@@ -607,18 +293,25 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
       } else if (payMode == 'card') {
         payment.paymentMode = payMode;
         var amt = deliveryPrice.toString();
-        PaymentApi(context: context).makePayment(amount: amt).then((val){
+        PaymentApi(context: context).makePayment(amount: amt).then((val) {
           setState(() {
-            isLoading1=false;
+            isLoading1 = false;
           });
-        },onError:(err){
+        }, onError: (err) {
           setState(() {
-            isLoading1=false;
+            isLoading1 = false;
           });
         });
       }
     } else {
-      showToast(context: context, text: "Veuillez choisir un moyen de paiement", iconData: Icons.check, color: UserHelper.getColor());
+      setState(() {
+        isLoading1 = false;
+      });
+      showToast(
+          context: context,
+          text: "Veuillez choisir un moyen de paiement",
+          iconData: Icons.check,
+          color: UserHelper.getColor());
       // Fluttertoast.showToast(msg: "Veuillez choisir un moyen de paiement");
     }
   }
@@ -641,10 +334,10 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
     order.commentaire = "";
     info.origin = "Livraison express";
     info.platform = "Mobile";
-    info.dateLivraison = currentDate + " " + currentTime;
-    info.dateChargement = currentDate;
+    info.dateLivraison = deliveryDate + " " + deliveryTime;
+    info.dateChargement = deliveryDate;
     info.heureLivraison = currentTime;
-    info.jourLivraison = currentDate;
+    info.jourLivraison = deliveryDate;
     info.villeLivraison = av;
     info.duration = duration;
     info.distance = distance;
@@ -664,34 +357,47 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
       "orders": order,
       "paiement": payment,
     };
-    await CourseApi(context: context).commnander(data: data).then((response) async {
+    await CourseApi(context: context)
+        .commnander(data: data)
+        .then((response) async {
+      logger.i(response.body);
       setState(() {
-        isLoading1=false;
+        isLoading1 = false;
       });
       var body = json.decode(response.body);
       var res = body['data'];
       var infos = body['message'];
-      command.Command ord =command.Command.fromJson(res);
-      log('data $res /// info ${ord.toJson()}');
-      UserHelper.userExitDialog(context, true,  CustomAlertDialog(
-        svgIcon: "img/icon/svg/smiley_happy.svg", title: "Youpiii".toUpperCase(),
-        message: "Felicitation, Commande enregistrée avec succès\nN° commande ${ord.infos?.ref} ",
-        positiveText: "OK",
-        onContinue:(){
-          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context)=>const HomePage()));
-        },
-      ));
+      command.Command ord = command.Command.fromJson(res);
+      // log('data $res /// info ${ord.toJson()}');
+      UserHelper.userExitDialog(
+          context,
+          true,
+          CustomAlertDialog(
+            svgIcon: "img/icon/svg/smiley_happy.svg",
+            title: "Youpiii".toUpperCase(),
+            message:
+                "Felicitation, Commande enregistrée avec succès\nN° commande ${ord.infos?.ref} ",
+            positiveText: "OK",
+            onContinue: () {
+              Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (context) => const HomePage()));
+            },
+          ));
     }).catchError((onError) {
       setState(() {
-        isLoading1=false;
+        isLoading1 = false;
       });
-      UserHelper.userExitDialog(context, true,  CustomAlertDialog(
-          svgIcon: "img/icon/svg/smiley_cry.svg", title: "Desole",
-          message: onErrorMessage,
-          positiveText: "OK",
-          onContinue:(){
-            Navigator.of(context).pop();
-          }));
+      UserHelper.userExitDialog(
+          context,
+          true,
+          CustomAlertDialog(
+              svgIcon: "img/icon/svg/smiley_cry.svg",
+              title: "Desole",
+              message: onErrorMessage,
+              positiveText: "OK",
+              onContinue: () {
+                Navigator.of(context).pop();
+              }));
       // log(onError);
     });
   }
@@ -850,26 +556,32 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                       (BuildContext context, ControlsDetails detail) {
                     return _currentStep >= 3
                         ? InkWell(
-                      onTap:(isLoading1 == false)? ()async{
-                        setState(() {
-                          isLoading1=true;
-                        });
-                        setPaymentMode();
-                      }:null,
-                      child: Container(
-                          height: getProportionateScreenHeight(50),
-                          decoration: BoxDecoration(
-                              color: UserHelper.getColor(),
-                              border: Border.all(color: primaryColor, width: 1.5),
-                              borderRadius: BorderRadius.circular(getProportionateScreenHeight(6))
-                          ),
-                          child: Center(
-                              child: (isLoading1 == false)
-                                  ? Text("COMMANDER", style: boldTextStyle(16, color: Colors.white))
-                                  : CupertinoActivityIndicator(radius: 15, animating: (isLoading1 == true), color: Colors.white)
+                            onTap: (isLoading1 == false)
+                                ? () async {
+                                    setState(() {
+                                      isLoading1 = true;
+                                    });
+                                    setPaymentMode();
+                                  }
+                                : null,
+                            child: Container(
+                                height: getProportionateScreenHeight(50),
+                                decoration: BoxDecoration(
+                                    color: UserHelper.getColor(),
+                                    border: Border.all(
+                                        color: primaryColor, width: 1.5),
+                                    borderRadius: BorderRadius.circular(
+                                        getProportionateScreenHeight(6))),
+                                child: Center(
+                                    child: (isLoading1 == false)
+                                        ? Text("COMMANDER",
+                                            style: boldTextStyle(16,
+                                                color: Colors.white))
+                                        : CupertinoActivityIndicator(
+                                            radius: 15,
+                                            animating: (isLoading1 == true),
+                                            color: Colors.white))),
                           )
-                      ),
-                    )
                         : SizedBox(
                             width: MediaQuery.of(context).size.width * 0.7,
                             child: ElevatedButton(
@@ -883,13 +595,17 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                   type: stepperType,
                   physics: const ScrollPhysics(),
                   currentStep: _currentStep,
-                  onStepTapped: (step) => step <= _currentStep? tapped(step):null,
+                  onStepTapped: (step) =>
+                      step <= _currentStep ? tapped(step) : null,
                   onStepContinue: continued,
                   onStepCancel: cancel,
                   steps: [
                     Step(
                       title: const Text('Depart'),
-                      subtitle: const Text("Contact de l'expéditeur",style: TextStyle(color: Colors.black38),),
+                      subtitle: const Text(
+                        "Contact de l'expéditeur",
+                        style: TextStyle(color: Colors.black38),
+                      ),
                       content: Step1(
                         addressSender: senderAddress,
                         sender: sender,
@@ -902,8 +618,15 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                     ),
                     Step(
                       title: const Text('Destination'),
-                      subtitle: const Text("Contact du destinataire",style: TextStyle(color: Colors.black38),),
-                      content: Step2(receiver: receiver,receiverAddress: receiverAddress,formKey: _formKeys[1],),
+                      subtitle: const Text(
+                        "Contact du destinataire",
+                        style: TextStyle(color: Colors.black38),
+                      ),
+                      content: Step2(
+                        receiver: receiver,
+                        receiverAddress: receiverAddress,
+                        formKey: _formKeys[1],
+                      ),
                       isActive: _currentStep >= 0,
                       state: _currentStep > 1
                           ? StepState.complete
@@ -931,13 +654,34 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                               children: [
                                 InkWell(
                                   onTap: !isTodayOpened && isTomorrowOpened
-                                      ? null
+                                      ? () {
+                                          showToast(
+                                              context: context,
+                                              text:
+                                                  "Service Momentanement indisponible",
+                                              iconData: Icons.close_rounded,
+                                              color: Colors.red);
+                                        }
                                       : () {
                                           if (isTodayOpened) {
                                             setState(() {
                                               _deliveryType =
                                                   DeliveryType.express;
-                                              chooseTime = durationText!;
+                                              chooseTime = express;
+                                              String expressTime =
+                                                  chooseTime.substring(0, 1);
+                                              DateTime addedMinutes = now.add(
+                                                  Duration(
+                                                      minutes: int.parse(
+                                                          expressTime)));
+                                              dateFormat = DateFormat.Hms();
+                                              deliveryTime = dateFormat
+                                                  .format(addedMinutes);
+                                              deliveryDate =
+                                                  DateFormat("yyyy-MM-dd")
+                                                      .format(now);
+                                              UserHelper.chooseTime =
+                                                  chooseTime;
                                             });
                                           } else {
                                             Fluttertoast.showToast(
@@ -948,18 +692,48 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                   child: Row(
                                     children: [
                                       Radio<DeliveryType>(
-                                        activeColor:
-                                            UserHelper.getColorDark(),
+                                        activeColor: UserHelper.getColorDark(),
+                                        focusColor: UserHelper.getColorDark(),
                                         value: DeliveryType.express,
                                         groupValue: _deliveryType,
                                         onChanged: !isTodayOpened &&
                                                 isTomorrowOpened
-                                            ? null
+                                            ? (DeliveryType? value) {
+                                                showToast(
+                                                    context: context,
+                                                    text:
+                                                        "Service Momentanement indisponible",
+                                                    iconData:
+                                                        Icons.close_rounded,
+                                                    color: Colors.red);
+                                              }
                                             : (DeliveryType? value) {
-                                                setState(() {
-                                                  _deliveryType = value;
-                                                  chooseTime = durationText!;
-                                                });
+                                                if (isTodayOpened) {
+                                                  setState(() {
+                                                    _deliveryType = value;
+                                                    chooseTime = express;
+                                                    String expressTime =
+                                                        chooseTime.substring(
+                                                            0, 1);
+                                                    DateTime addedMinutes =
+                                                        now.add(Duration(
+                                                            minutes: int.parse(
+                                                                expressTime)));
+                                                    dateFormat =
+                                                        DateFormat.Hms();
+                                                    deliveryTime = dateFormat
+                                                        .format(addedMinutes);
+                                                    deliveryDate =
+                                                        DateFormat("yyyy-MM-dd")
+                                                            .format(now);
+                                                    UserHelper.chooseTime =
+                                                        chooseTime;
+                                                  });
+                                                } else {
+                                                  Fluttertoast.showToast(
+                                                      msg:
+                                                          "Service Momentanement indisponible");
+                                                }
                                               },
                                       ),
                                       const Text('Livraison express'),
@@ -976,18 +750,26 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                     showDialog<void>(
                                         context: context,
                                         builder: (context) {
-                                          return SelectTime(onSelectedDate: (onSelectedDate){
+                                          return SelectTime(
+                                              onSelectedDate: (selectedDate) {
+                                            logger.w(selectedDate);
                                             setState(() {
-                                              chooseTime = onSelectedDate;
+                                              chooseTime = selectedDate;
+                                              String deliverTime =
+                                                  chooseTime.substring(11);
+                                              deliveryTime = deliverTime;
+                                              deliveryDate =
+                                                  chooseTime.substring(0, 10);
                                             });
+                                            log('$deliveryTime +++ $deliveryDate');
+                                            logger.wtf(chooseTime);
                                           });
                                         });
                                   },
                                   child: Row(
                                     children: [
                                       Radio<DeliveryType>(
-                                        activeColor:
-                                        UserHelper.getColorDark(),
+                                        activeColor: UserHelper.getColorDark(),
                                         value: DeliveryType.heure_livraison,
                                         groupValue: _deliveryType,
                                         onChanged: (DeliveryType? value) {
@@ -998,11 +780,21 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                           showDialog<void>(
                                               context: context,
                                               builder: (context) {
-                                                return SelectTime(onSelectedDate: (onSelectedDate){
-                                                  setState(() {
-                                                    chooseTime = onSelectedDate;
-                                                  });
-                                                });
+                                                return SelectTime(
+                                                  onSelectedDate:
+                                                      (selectedDate) {
+                                                    setState(() {
+                                                      chooseTime = selectedDate;
+                                                      String deliverTime =
+                                                          chooseTime
+                                                              .substring(11);
+                                                      deliveryTime =
+                                                          deliverTime;
+                                                      deliveryDate = chooseTime
+                                                          .substring(0, 10);
+                                                    });
+                                                  },
+                                                );
                                               });
                                         },
                                       ),
@@ -1050,7 +842,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                   style: TextStyle(color: grey90),
                                 ),
                                 Text(
-                                  distanceText ,
+                                  distanceText,
                                   style: const TextStyle(color: grey90),
                                 )
                               ],
@@ -1175,7 +967,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
                               InkWell(
-                                onTap: (){
+                                onTap: () {
                                   setState(() {
                                     payMode = 'cash';
                                   });
@@ -1187,6 +979,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                       setState(() {
                                         payOption = value;
                                         payMode = 'cash';
+                                        isLoading1 = false;
                                       });
                                     }),
                               ),
@@ -1257,15 +1050,17 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
           setReceiver();
           break;
         case 2:
-          if(chooseTime.isNotEmpty) {
+          if (chooseTime.isNotEmpty) {
             setState(() {
-            dateFormat = DateFormat.Hms();
-            currentTime = dateFormat.format(now);
-            currentDate = DateFormat("yyyy-MM-dd").format(now);
-            _currentStep++;
-          });
-          }else{
-            showToast(context: context, text: "Veuillez choisir l'heure de livraison");
+              dateFormat = DateFormat.Hms();
+              currentTime = dateFormat.format(now);
+              currentDate = DateFormat("yyyy-MM-dd").format(now);
+              _currentStep++;
+            });
+          } else {
+            showToast(
+                context: context,
+                text: "Veuillez choisir l'heure de livraison");
           }
           break;
         default:

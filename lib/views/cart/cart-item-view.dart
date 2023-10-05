@@ -6,7 +6,7 @@ import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 
 import '../../model/cart-model.dart';
-import '../super-market/cart-provider.dart';
+import '../../provider/cart-provider.dart';
 import '../../data/local_db/db-helper.dart';
 
 class CartItemView extends StatefulWidget {
@@ -22,6 +22,7 @@ class CartItemView extends StatefulWidget {
 class _CartItemViewState extends State<CartItemView> {
   final logger = Logger();
   DBHelper1? dbHelper = DBHelper1();
+  int? newPrice;
   @override
   Widget build(BuildContext context) {
     final cartProvider = Provider.of<CartProvider>(context);
@@ -36,7 +37,15 @@ class _CartItemViewState extends State<CartItemView> {
                 color: Colors.white38,
                 child: SizedBox(
                     height: getProportionateScreenHeight(85),
-                    child:Image.network(widget.cartItem.image)),
+                    child:Image.network(widget.cartItem.image,errorBuilder:
+                        (BuildContext
+                    context,
+                        Object
+                        exception,
+                        StackTrace?
+                        stackTrace) {
+                      return Image.asset('img/no-images.jpeg',height: getProportionateScreenHeight(70),);
+                    },)),
               ),
               flex: 2,
             ),
@@ -53,7 +62,7 @@ class _CartItemViewState extends State<CartItemView> {
                         int qty =  widget.cartItem.quantity! ;
                         int px = widget.cartItem.price!;
                         qty++;
-                        int? newPrice = px * qty;
+                        newPrice = px * qty;
                         dbHelper!.updateQuantity(
                             CartItem(
                                 id: widget.cartItem.id,
@@ -65,8 +74,6 @@ class _CartItemViewState extends State<CartItemView> {
                               productId:widget.cartItem.productId
                             )
                         ).then((value) {
-                          newPrice =0;
-                          qty=0;
                           cartProvider.addTotalPrice(double.parse(widget.cartItem.price.toString()));
                         }).onError((error, stackTrace) {
                           logger.e('error message',
@@ -77,7 +84,7 @@ class _CartItemViewState extends State<CartItemView> {
                         int qty =  widget.cartItem.quantity! ;
                         int px = widget.cartItem.price!;
                         qty--;
-                        int? newPrice = px * qty;
+                        newPrice = px * qty;
                         int total = qty*px;
                         if(qty>0){
                           dbHelper!.updateQuantity(
@@ -92,10 +99,7 @@ class _CartItemViewState extends State<CartItemView> {
                                 productId: widget.cartItem.productId
                               )
                           ).then((value) {
-                            total =0;
-                            qty=0;
                             cartProvider.removeTotalPrice(double.parse(widget.cartItem.price.toString()));
-
                           }).onError((error, stackTrace) {
                             logger.e(error);
                           });
@@ -118,6 +122,7 @@ class _CartItemViewState extends State<CartItemView> {
           alignment: Alignment.bottomRight,
           child:IconButton(
             onPressed: () async{
+              logger.i(widget.cartItem.price);
               dbHelper!.delete(widget.cartItem.productId!);
               cartProvider.removeTotalPrice(widget.cartItem.price!.toDouble());
               cartProvider.removeCounter();

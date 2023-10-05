@@ -1,8 +1,9 @@
 
 
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:livraison_express/utils/size_config.dart';
-import 'package:livraison_express/views/super-market/cart-provider.dart';
+import 'package:livraison_express/provider/cart-provider.dart';
 import 'package:livraison_express/views/super-market/valider-panier.dart';
 import 'package:livraison_express/views/cart/cart-item-view.dart';
 import 'package:logger/logger.dart';
@@ -183,13 +184,8 @@ class _CartPageState extends State<CartPage> with SingleTickerProviderStateMixin
                         builder: (BuildContext context) =>
                             ValiderPanier(
                               totalAmount: amount,
-                            ))):ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        backgroundColor: Colors.red,
-                        content:
-                        Text(text),
-                      ),
-                    );
+                            ))):Fluttertoast.showToast(
+                        msg:text);
                   },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,

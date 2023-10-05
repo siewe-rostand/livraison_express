@@ -52,6 +52,8 @@ dependencies:
   url_launcher: ^6.0.20
   firebase_auth: ^3.3.13
   firebase_core: ^1.14.0
+  firebase_core_platform_interface: 4.5.1
+  firebase_messaging: ^13.0.4
   google_sign_in: ^5.3.3
   flutter_facebook_auth: ^4.3.0
   google_fonts: ^2.3.2
@@ -71,6 +73,7 @@ dependencies:
   smooth_page_indicator: ^1.0.0+2
   flutter_svg_provider: ^1.0.3
   animations: ^2.0.1
+  shimmer: ^2.0.0
 
 
 dev_dependencies:

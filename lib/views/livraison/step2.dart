@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:contacts_service/contacts_service.dart';
 import 'package:flutter/material.dart';
@@ -30,7 +31,7 @@ class Step2 extends StatefulWidget {
 }
 
 class _Step2State extends State<Step2> {
-  Client receiver = Client();
+  // Client receiver = Client();
   TextEditingController quarterDestinationTextController =
   TextEditingController();
   TextEditingController nomDestinationTextController = TextEditingController();
@@ -47,7 +48,7 @@ class _Step2State extends State<Step2> {
   TextEditingController titleDestinationTextController =
   TextEditingController();
   final TextEditingController _typeAheadController = TextEditingController();
-  Address receiverAddress = Address();
+  // Address receiverAddress = Address();
   Adresse selectedAddressDestination = Adresse();
   double? placeLatDestination,placeLonDestination;
   String? locationDestination;
@@ -59,8 +60,8 @@ class _Step2State extends State<Step2> {
   String? city;
 
   init() async {
-    receiver =widget.receiver;
-    receiverAddress =widget.receiverAddress;
+    // receiver =widget.receiver;
+    // receiverAddress =widget.receiverAddress;
     city =await UserHelper.getCity();
     setState(() {
       cityDestinationTextController = TextEditingController(text: city);
@@ -97,6 +98,9 @@ class _Step2State extends State<Step2> {
             telephone=element.value!;
           });
           _typeAheadController.text=suggestion.displayName!;
+          widget.receiver.fullName = suggestion.displayName;
+          fname=suggestion.givenName??'';
+          name=suggestion.familyName??'';
           phoneDestinationTextController.text =telephone;
         },
         hideOnEmpty: true,
@@ -126,14 +130,16 @@ class _Step2State extends State<Step2> {
       phoneDestinationTextController.text =
           telephone;
       emailDestinationTextController.text = email;
-      receiver.name= radioSelected==0?appUser1.lastname:name;
-      receiver.surname= radioSelected==0?appUser1.firstname:fname;
+      widget.receiver.name= radioSelected==0?appUser1.lastname:name;
+      widget.receiver.surname= radioSelected==0?appUser1.firstname:fname;
       // widget.sender.id=appUser1.id;
       // sender.id = int.parse(id);
-      receiver.providerId =radioSelected==0?appUser1.providerId:'';
-      receiver.providerName =radioSelected==0?
+      widget.receiver.providerId =radioSelected==0?appUser1.providerId:'';
+      widget.receiver.providerName =radioSelected==0?
       extractedUserData['provider_name']:'livraison-express';
-      receiverAddress.providerName = "livraison-express";
+     widget.receiverAddress.providerName = "livraison-express";
+      log('===${widget.receiver.toJson()}');
+      log('---${widget.receiverAddress.toJson()}');
     });
   }
 
@@ -198,7 +204,13 @@ class _Step2State extends State<Step2> {
               ? TextFormField(
             autovalidateMode:
             AutovalidateMode.onUserInteraction,
-            onSaved: (val)=>receiver.fullName=val,
+            onSaved: (val){
+              widget.receiver.fullName=val;
+            },
+            onChanged: (val){
+              log('---$val');
+              widget.receiver.fullName=val;
+            },
             readOnly: radioSelected == 0 &&
                 nomDestinationTextController
                     .text.isNotEmpty,
@@ -214,7 +226,7 @@ class _Step2State extends State<Step2> {
           )
               : autoComplete(),
           TextFormField(
-            onSaved: (val)=>receiver.telephone=val,
+            onSaved: (val)=>widget.receiver.telephone=val,
             keyboardType: TextInputType.phone,
             readOnly: radioSelected == 0 &&
                 phoneDestinationTextController
@@ -237,7 +249,7 @@ class _Step2State extends State<Step2> {
                 : null,
           ),
           TextFormField(
-            onSaved: (val)=>receiver.telephoneAlt=val,
+            onSaved: (val)=>widget.receiver.telephoneAlt=val,
             readOnly: radioSelected == 0 &&
                 phone2DestinationTextController
                     .text.isNotEmpty,
@@ -249,7 +261,7 @@ class _Step2State extends State<Step2> {
             controller: phone2DestinationTextController,
           ),
           TextFormField(
-            onSaved: (val)=>receiver.email=val,
+            onSaved: (val)=>widget.receiver.email=val,
             readOnly: radioSelected == 0 &&
                 emailDestinationTextController
                     .text.isNotEmpty,
@@ -289,9 +301,9 @@ class _Step2State extends State<Step2> {
                             addressDestinationTextController.text=a.nom??'';
                             descDestinationTextController.text=a.description??'';
                             setState(() {
-                              receiverAddress.latitude=a.latitude;
-                              receiverAddress.longitude=a.longitude;
-                              receiverAddress.latLng=a.latLng;
+                              widget.receiverAddress.latitude=a.latitude;
+                              widget.receiverAddress.longitude=a.longitude;
+                              widget.receiverAddress.latLng=a.latLng;
                             });
                             print(a.toJson());;
                           },
@@ -314,7 +326,7 @@ class _Step2State extends State<Step2> {
             ),
           ),
           TextFormField(
-            onSaved: (val)=>receiverAddress.ville=val,
+            onSaved: (val)=>widget.receiverAddress.ville=val,
             autovalidateMode:
             AutovalidateMode.onUserInteraction,
             decoration:
@@ -355,14 +367,14 @@ class _Step2State extends State<Step2> {
             hideOnEmpty: true,
           ),
           TextFormField(
-            onSaved: (val)=>receiverAddress.description=val,
+            onSaved: (val)=>widget.receiverAddress.description=val,
             autovalidateMode:
             AutovalidateMode.onUserInteraction,
             decoration: const InputDecoration(
                 labelText: 'Description du lieu '),
             controller: descDestinationTextController,
           ),
-          MapTextField(address: receiverAddress,textController: addressDestinationTextController,),
+          MapTextField(address: widget.receiverAddress,textController: addressDestinationTextController,),
           Visibility(
               visible: isChecked,
               child: Column(
@@ -371,8 +383,8 @@ class _Step2State extends State<Step2> {
                     autovalidateMode:
                     AutovalidateMode.onUserInteraction,
                     onSaved: (val){
-                      receiverAddress.titre=val;
-                      receiverAddress.surnom=val;
+                      widget.receiverAddress.titre=val;
+                      widget.receiverAddress.surnom=val;
                     },
                     decoration: const InputDecoration(
                         hintText: "Titre d'adresse *"),
@@ -407,8 +419,8 @@ class _Step2State extends State<Step2> {
             onChanged: (value) {
               setState(() {
                 isChecked = value!;
-                receiverAddress.isFavorite = true;
-                receiverAddress.titre =
+                widget.receiverAddress.isFavorite = true;
+                widget.receiverAddress.titre =
                     titleDestinationTextController.text;
               });
               print(isChecked);

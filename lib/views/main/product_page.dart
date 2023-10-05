@@ -9,6 +9,7 @@ import 'package:livraison_express/model/category.dart';
 import 'package:livraison_express/model/user.dart';
 import 'package:livraison_express/service/product_service.dart';
 import 'package:livraison_express/utils/size_config.dart';
+import 'package:livraison_express/views/product/product-shimmer-card.dart';
 import 'package:livraison_express/views/widgets/floating_action_button.dart';
 import 'package:livraison_express/views/widgets/open_wrapper.dart';
 import 'package:livraison_express/views/widgets/search_Text_field.dart';
@@ -23,7 +24,7 @@ import '../../model/product.dart';
 import '../../model/shop.dart';
 import '../../provider/nav_view_model.dart';
 import '../../utils/main_utils.dart';
-import '../super-market/cart-provider.dart';
+import '../../provider/cart-provider.dart';
 import '../cart/cart.dart';
 import '../widgets/custom_alert_dialog.dart';
 
@@ -429,10 +430,7 @@ class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin
             ),
           ),
         ),
-        body:_loading? Center(child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(UserHelper.getColor()),
-          strokeWidth: 2.5,
-        )):
+        body:_loading? const Center(child: ProductShimmerCard()):
         Stack(
           alignment: Alignment.center,
           children: [

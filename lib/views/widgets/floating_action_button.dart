@@ -1,9 +1,9 @@
-import 'package:badges/badges.dart';
+import 'package:badges/badges.dart' as badge;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/user_helper.dart';
-import '../super-market/cart-provider.dart';
+import '../../provider/cart-provider.dart';
 
 class CustomFloatingButton extends StatelessWidget {
   const CustomFloatingButton({Key? key, required this.onTap}) : super(key: key);
@@ -16,10 +16,10 @@ class CustomFloatingButton extends StatelessWidget {
       child: CircleAvatar(
         backgroundColor: Colors.white,
         radius: 32,
-        child: Badge(
+        child: badge.Badge(
           padding: const EdgeInsets.all(10),
           badgeColor: UserHelper.getColorDark(),
-          animationType: BadgeAnimationType.scale,
+          animationType: badge.BadgeAnimationType.scale,
           badgeContent: Consumer<CartProvider>(
             builder: (context, cart, child) {
               return Text(

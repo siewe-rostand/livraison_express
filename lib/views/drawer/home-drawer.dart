@@ -9,7 +9,7 @@ import 'package:livraison_express/views/order_confirmation/command_history.dart'
 import 'package:livraison_express/views/main/about.dart';
 import 'package:livraison_express/views/login/login.dart';
 import 'package:livraison_express/views/main/profil.dart';
-import 'package:livraison_express/views/super-market/cart-provider.dart';
+import 'package:livraison_express/provider/cart-provider.dart';
 import 'package:livraison_express/views/widgets/custom_alert_dialog.dart';
 import 'package:livraison_express/views/address_detail/selected_fav_address.dart';
 import 'package:provider/provider.dart';

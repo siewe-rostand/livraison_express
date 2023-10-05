@@ -33,8 +33,8 @@ class CommandLists extends StatefulWidget {
 
 class _CommandListsState extends State<CommandLists> {
   Logger logger = Logger();
-  List<Command> command=[];
-  List orders=[];
+  List<Command> command = [];
+  List orders = [];
   late SharedPreferences prefs;
 
   Future<void> _downloadBill(Uri url) async {
@@ -42,26 +42,26 @@ class _CommandListsState extends State<CommandLists> {
       url,
       mode: LaunchMode.externalApplication,
     )) {
-      showToast(context: context, text: "Impossible de télécharger cette facture.");
+      showToast(
+          context: context, text: "Impossible de télécharger cette facture.");
     }
   }
 
-
-  getCourse() async{
-    prefs =await SharedPreferences.getInstance();
-    await CourseApi(context: context).getOrders().
-    then((value) {
+  getCourse() async {
+    prefs = await SharedPreferences.getInstance();
+    await CourseApi(context: context).getOrders().then((value) {
       if (mounted) {
         setState(() {
-          command=value;
-          var order=json.encode(command);
+          command = value;
+          var order = json.encode(command);
           orders.add(command);
           prefs.setString("orders", order);
         });
       }
     });
   }
-  deleteCourse(int id)async{
+
+  deleteCourse(int id) async {
     await CourseApi.deleteOrder(id: id).then((value) {
       var body = json.decode(value.body);
       var res = body['message'];
@@ -69,24 +69,30 @@ class _CommandListsState extends State<CommandLists> {
         getCourse();
       });
       Navigator.of(context).pop();
-      showToast(context: context, text: res, iconData: Icons.check, color: Colors.green);
+      showToast(
+          context: context,
+          text: res,
+          iconData: Icons.check,
+          color: Colors.green);
     });
   }
 
-  getCourseStatus(int id){
-    CourseApi(context: context).getOrderStatusHistory(orderId: id).then((value){
+  getCourseStatus(int id) {
+    CourseApi(context: context)
+        .getOrderStatusHistory(orderId: id)
+        .then((value) {
       var body = json.decode(value.body);
       var res = body['data'] as List;
       List<OrderStatus> or;
-      or= res.map((e) =>OrderStatus.fromJson(e)).toList();
-    }).catchError((onError){
+      or = res.map((e) => OrderStatus.fromJson(e)).toList();
+    }).catchError((onError) {
       logger.e("on error $onError");
     });
   }
 
-  getModuleColor(String slug){
-    if(slug.isNotEmpty){
-      switch(slug){
+  getModuleColor(String slug) {
+    if (slug.isNotEmpty) {
+      switch (slug) {
         case "restaurant":
           return redDarker;
         case "gas":
@@ -102,55 +108,61 @@ class _CommandListsState extends State<CommandLists> {
       }
     }
   }
+
   @override
   void initState() {
     // TODO: implement initState
     getCourse();
     super.initState();
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Mes Commandes',style: TextStyle(color: Colors.black54),),
-        backgroundColor: Colors.white,
-        automaticallyImplyLeading: true,
-        iconTheme: const IconThemeData(
-            color: Colors.black54
+        appBar: AppBar(
+          title: const Text(
+            'Mes Commandes',
+            style: TextStyle(color: Colors.black54),
+          ),
+          backgroundColor: Colors.white,
+          automaticallyImplyLeading: true,
+          iconTheme: const IconThemeData(color: Colors.black54),
         ),
-      ),
-      body:
-          orders.isEmpty?const Center(child: CircularProgressIndicator()):command.isEmpty?
-           Center(
-            child:  Text(
-              "Vous n'avez encore aucune\ncommande.",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: getProportionateScreenWidth(16)),
-            ),
-          ):
-          ListView.builder(
-              itemCount: command.length,
-              itemBuilder: (context, index) {
-                prefs.getString('orders');
-                Command order =command[index];
+        body: orders.isEmpty
+            ? const Center(child: CircularProgressIndicator())
+            : command.isEmpty
+                ? Center(
+                    child: Text(
+                      "Vous n'avez encore aucune\ncommande.",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: getProportionateScreenWidth(16)),
+                    ),
+                  )
+                : ListView.builder(
+                    itemCount: command.length,
+                    itemBuilder: (context, index) {
+                      prefs.getString('orders');
+                      Command order = command[index];
 
-                return OpenContainerWrapper(
-                  transitionType: ContainerTransitionType.fade,
-                  nextPage: OrderDetailScreen(order),
-                  closedBuilder: (BuildContext _, VoidCallback openContainer){
-                    return InkWellOverlay(
-                      onTap: openContainer,
-                      child: _items(order: order,),
-                    );
-                  },
-                );
-              })
-    );
+                      return OpenContainerWrapper(
+                        transitionType: ContainerTransitionType.fade,
+                        nextPage: OrderDetailScreen(order),
+                        closedBuilder:
+                            (BuildContext _, VoidCallback openContainer) {
+                          return InkWellOverlay(
+                            onTap: openContainer,
+                            child: _items(
+                              order: order,
+                            ),
+                          );
+                        },
+                      );
+                    }));
   }
 
-  _items({required Command order}){
+  _items({required Command order}) {
     return Card(
       elevation: 4.0,
       child: Column(
@@ -158,49 +170,63 @@ class _CommandListsState extends State<CommandLists> {
           Row(
             children: [
               Container(
-                margin: const EdgeInsets.only(left: 5,right: 5),
+                margin: const EdgeInsets.only(left: 5, right: 5),
                 height: getProportionateScreenHeight(30),
                 width: getProportionateScreenWidth(30),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(30),
-                  color:getModuleColor(order.orders!.module!),
+                  color: getModuleColor(order.orders!.module!),
                 ),
               ),
               Text(order.infos!.ref!),
               const Spacer(),
               PopupMenuButton<Menu>(
-                onSelected: (Menu item){
-                  if(item.name =="detail"){
-                    Navigator.of(context).push(MaterialPageRoute(builder: (context)=>OrderStatusDialog(command: order,)));
+                onSelected: (Menu item) {
+                  if (item.name == "detail") {
+                    // Navigator.of(context).push(MaterialPageRoute(builder: (context)=>OrderStatusDialog(command: order,)));
+                    showDialog(
+                      barrierDismissible: false,
+                        context: context,
+                        builder: (context) => OrderStatusDialog(
+                              command: order,
+                            ));
                   }
-                  if(item.name =='delete'){
-                    String message='Cette commande sera annulée et ne sera plus présente dans cette liste.';
-                    errorDialog(context: context, title: "Attention!", message: message,onTap: (){
-                      deleteCourse(order.infos!.id!);
-                    });
-
+                  if (item.name == 'delete') {
+                    String message =
+                        'Cette commande sera annulée et ne sera plus présente dans cette liste.';
+                    errorDialog(
+                        context: context,
+                        title: "Attention!",
+                        message: message,
+                        onTap: () {
+                          deleteCourse(order.infos!.id!);
+                        });
                   }
-                  if(item.name =='edit'){
-                    String message='Vous serez redirigé vers la page de téléchargement';
-                    showGenDialog(context, true, CustomDialog(
-                      title: 'Ooooops',
-                      content:
-                      message,
-                      positiveBtnText: "OK",
-                      positiveBtnPressed: () {
-                        _downloadBill(Uri.parse(order.extra!.factureDownload!));
-                        Navigator.of(context).pop();
-                      },
-                      negativeBtnText: 'Annuler',
-                    ));
-
+                  if (item.name == 'edit') {
+                    String message =
+                        'Vous serez redirigé vers la page de téléchargement';
+                    showGenDialog(
+                        context,
+                        true,
+                        CustomDialog(
+                          title: 'OK',
+                          content: message,
+                          positiveBtnText: "OK",
+                          positiveBtnPressed: () {
+                            _downloadBill(
+                                Uri.parse(order.extra!.factureDownload!));
+                            Navigator.of(context).pop();
+                          },
+                          negativeBtnText: 'Annuler',
+                        ));
                   }
                 },
-                itemBuilder:(BuildContext context){
+                itemBuilder: (BuildContext context) {
                   return <PopupMenuEntry<Menu>>[
-                    buildPopupMenuItem('Suivre', Icons.settings,Menu.detail),
-                    buildPopupMenuItem('Télécharger la facture', Icons.save,Menu.edit),
-                    buildPopupMenuItem('Annuler', Icons.delete,Menu.delete),
+                    buildPopupMenuItem('Suivre', Icons.settings, Menu.detail),
+                    buildPopupMenuItem(
+                        'Télécharger la facture', Icons.save, Menu.edit),
+                    buildPopupMenuItem('Annuler', Icons.delete, Menu.delete),
                   ];
                 },
               ),
@@ -210,14 +236,12 @@ class _CommandListsState extends State<CommandLists> {
             height: getProportionateScreenHeight(4),
           ),
           Container(
-            margin: EdgeInsets.only(
-                left: getProportionateScreenWidth(30)),
+            margin: EdgeInsets.only(left: getProportionateScreenWidth(30)),
             padding: EdgeInsets.symmetric(
                 horizontal: getProportionateScreenWidth(10),
                 vertical: getProportionateScreenHeight(10)),
             decoration: BoxDecoration(
-                color: kOverlay10,
-                borderRadius: BorderRadius.circular(5)),
+                color: kOverlay10, borderRadius: BorderRadius.circular(5)),
             child: Text(order.infos!.statutHuman!),
           ),
           SizedBox(
@@ -226,9 +250,10 @@ class _CommandListsState extends State<CommandLists> {
           Padding(
             padding: EdgeInsets.symmetric(
                 horizontal: getProportionateScreenWidth(20)),
-            child: Container(decoration: const BoxDecoration(
-                border: Border(bottom: BorderSide())
-            ),),
+            child: Container(
+              decoration:
+                  const BoxDecoration(border: Border(bottom: BorderSide())),
+            ),
           ),
           SizedBox(
             height: getProportionateScreenHeight(8),
@@ -238,52 +263,66 @@ class _CommandListsState extends State<CommandLists> {
             children: [
               Expanded(
                   child: Text(
-                    order.sender!.addresses![0].quarter??order.receiver!.addresses![0].quarter!,
-                    textAlign: TextAlign.center,
-                  )),
+                order.sender!.addresses![0].quarter ??
+                    order.receiver!.addresses![0].quarter!,
+                textAlign: TextAlign.center,
+              )),
               Icon(
                 Icons.arrow_forward,
                 color: Colors.grey[400],
               ),
               Expanded(
                   child: Text(
-                    order.receiver!.addresses![0].quarter!,
-                    textAlign: TextAlign.center,
-                  )),
+                order.receiver!.addresses![0].quarter!,
+                textAlign: TextAlign.center,
+              )),
             ],
           ),
           SizedBox(
             height: getProportionateScreenHeight(4),
           ),
           Container(
-            margin: const EdgeInsets.only(bottom: 2,left: 6),
+            margin: const EdgeInsets.only(bottom: 2, left: 6),
             child: Row(
               children: [
                 Expanded(
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        SizedBox(width: getProportionateScreenWidth(2),),
-                        Icon(Icons.today_outlined, size: getProportionateScreenWidth(12),),
-                        SizedBox(width: getProportionateScreenWidth(4),),
-                        Expanded(
-                          child: Text(
-                            order.infos!.dateLivraison!,
-                            style: const TextStyle(),
-                            textAlign: TextAlign.center,
-                          ),
-                        )
-                      ],
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: getProportionateScreenWidth(2),
+                    ),
+                    Icon(
+                      Icons.today_outlined,
+                      size: getProportionateScreenWidth(12),
+                    ),
+                    SizedBox(
+                      width: getProportionateScreenWidth(4),
+                    ),
+                    Expanded(
+                      child: Text(
+                        order.infos!.dateLivraison!,
+                        style: const TextStyle(),
+                        textAlign: TextAlign.center,
+                      ),
                     )
+                  ],
+                )),
+                SizedBox(
+                  width: getProportionateScreenWidth(20),
                 ),
-                SizedBox(width: getProportionateScreenWidth(20),),
                 Expanded(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.monetization_on, size: getProportionateScreenWidth(15),),
-                      SizedBox(width: getProportionateScreenWidth(4),),
+                      Icon(
+                        Icons.monetization_on,
+                        size: getProportionateScreenWidth(15),
+                      ),
+                      SizedBox(
+                        width: getProportionateScreenWidth(4),
+                      ),
                       Text(
                         '${order.paiement!.totalAmount} FCFA',
                       )

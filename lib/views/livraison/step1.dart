@@ -143,35 +143,11 @@ class _Step1State extends State<Step1> {
       widget.sender.providerName =radioSelected==0?
       extractedUserData['provider_name']:'livraison-express';
       widget.addressSender.providerName = "livraison-express";
+      logger.d(widget.addressSender.toJson());
+      logger.d(widget.sender.toJson());
     });
   }
-  setSender(){
-    var providerName="livraison-express";
-    sender.fullName = nomDepartTextController.text;
-    sender.telephone = phoneDepartTextController.text;
-    sender.telephoneAlt = phone2DepartTextController.text;
-    sender.email = emailDepartTextController.text;
-    senderAddress.nom = location;
-    senderAddress.quarter = quartierDepart;
-    senderAddress.description = descDepartTextController.text;
-    senderAddress.latitude = placeLatDepart.toString();
-    senderAddress.longitude = placeLonDepart.toString();
-    senderAddress.latLng =
-        senderAddress.latitude! + ',' + senderAddress.longitude!;
-    if(selectedAddressDepart.toString().isNotEmpty){
-      senderAddress.id=selectedAddressDepart.id;
-      senderAddress.providerId=selectedAddressDepart.id;
-      senderAddress.providerName=selectedAddressDepart.providerName;
-    }
-    senderAddress.providerName="livraison-express";
-    debugPrint("${sender.name} ${senderAddress.providerName}");
-    List<Address> addresses = [];
-    addresses.add(senderAddress);
-    sender.addresses = addresses;
-    logger.w(sender.toJson());
-    print('///address${sender.addresses![0].toJson()}');
 
-  }
 
   Future<List<Contact>> getContacts(String query) async {
     //We already have permissions for contact when we get to this page, so we

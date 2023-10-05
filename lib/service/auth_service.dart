@@ -346,7 +346,7 @@ class ApiAuthService {
       } else {
         progressDialog!.hide();
         var body = json.decode(response.body);
-        logger.e(response.statusCode);
+        logger.e(response.body);
         var mes = body['message'];
         var err = body['errors'];
         if (response.statusCode == 401) {
@@ -514,7 +514,7 @@ class ApiAuthService {
             CustomDialog(
                 title: 'Ooooops',
                 content:
-                    "Une erreur est survenu. Veuillez verifier votre Email",
+                    "Il n'y a pas d'enregistrement d'utilisateur correspondant à cet identifiant. L'utilisateur peut avoir été supprimé",
                 positiveBtnText: "OK",
                 positiveBtnPressed: () {
                   Navigator.of(context).pop();
@@ -532,7 +532,7 @@ class ApiAuthService {
                   Navigator.of(context).pop();
                 }));
       }
-      logger.e(e.code);
+      logger.e(e.message);
     }on SocketException catch (_) {
       progressDialog!.hide();
       showGenDialog(
