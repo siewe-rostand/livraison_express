@@ -188,7 +188,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                                     },
                                     initialCountryCode: 'CM',
                                     invalidNumberMessage:
-                                        invalid_phone,
+                                        invalidPhone,
                                   ),
                                   IntlPhoneField(
                                     showCountryFlag: false,
@@ -203,7 +203,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                                     },
                                     initialCountryCode: 'CM',
                                     invalidNumberMessage:
-                                      invalid_phone,
+                                      invalidPhone,
                                   ),
                                 ],
                               )),

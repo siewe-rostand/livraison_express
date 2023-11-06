@@ -19,7 +19,6 @@ class Products {
   int? prixUnitaire;
   dynamic subTotalAmount;
   int? quantiteDispo;
-  Null? disponibiliteGeneral;
   String? brandName;
   String? brandLogo;
   String? tags;
@@ -28,16 +27,10 @@ class Products {
   String? typeHuman;
   List<Image>? images;
   bool? isActive;
-  Null? isAvailable;
   int? tempsPreparation;
-  Null? maxOption;
-  List<Null>? horaires;
   List<Attributes>? attributes;
-  List<Null>? availableInCities;
   String? createdAt;
   String? updatedAt;
-  Null? deletedAt;
-  List<Null>? extra;
 
   Products(
       {this.id,
@@ -51,7 +44,6 @@ class Products {
         this.slug,
         this.prixUnitaire,
         this.quantiteDispo,
-        this.disponibiliteGeneral,
         this.brandName,
         this.brandLogo,
         this.tags,
@@ -60,16 +52,10 @@ class Products {
         this.typeHuman,
         this.images,
         this.isActive,
-        this.isAvailable,
         this.tempsPreparation,
-        this.maxOption,
-        this.horaires,
         this.attributes,
-        this.availableInCities,
         this.createdAt,
         this.updatedAt,
-        this.deletedAt,
-        this.extra,
         this.totalPrice,
         this.subTotalAmount,
         this.quantity
@@ -89,20 +75,16 @@ class Products {
     slug = json['slug'];
     prixUnitaire = json['prix_unitaire'];
     quantiteDispo = json['quantite_dispo'];
-    disponibiliteGeneral = json['disponibilite_general'];
     brandName = json['brand_name'];
     tags = json['tags'];
     type = json['type'];
     image = json['image'];
     typeHuman = json['type_human'];
     isActive = json['is_active'];
-    isAvailable = json['is_available'];
     subTotalAmount = json['montant_soustotal'];
     tempsPreparation = json['temps_preparation'];
-    maxOption = json['max_option'];
     createdAt = json['created_at'];
     updatedAt = json['updated_at'];
-    deletedAt = json['deleted_at'];
     attributes=json["attributes"]==null ? null : (json["attributes"] as List).map((e)=>Attributes.fromJson(e)).toList();
     images=json["images"]==null ? null : (json["images"] as List).map((e)=>Image.fromJson(e)).toList();
   }
@@ -123,7 +105,6 @@ class Products {
     data['slug'] = slug;
     data['prix_unitaire'] = prixUnitaire;
     data['quantite_dispo'] = quantiteDispo;
-    data['disponibilite_general'] = disponibiliteGeneral;
     data['brand_name'] = brandName;
     data['brand_logo'] = brandLogo;
     data['tags'] = tags;
@@ -131,12 +112,9 @@ class Products {
     data['image'] = image;
     data['type_human'] = typeHuman;
     data['is_active'] = isActive;
-    data['is_available'] = isAvailable;
     data['temps_preparation'] = tempsPreparation;
-    data['max_option'] = maxOption;
     data['created_at'] = createdAt;
     data['updated_at'] = updatedAt;
-    data['deleted_at'] = deletedAt;
     if(attributes != null) {
         data["attributes"] = attributes?.map((e)=>e.toJson()).toList();
     }

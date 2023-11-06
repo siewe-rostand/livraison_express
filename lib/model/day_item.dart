@@ -15,7 +15,7 @@ class DayItem {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = Map<String, dynamic>();
+    final Map<String, dynamic> data = <String, dynamic>{};
     data['enabled'] = enabled;
     data['opened'] = opened;
     data['opened_at'] = openedAt;

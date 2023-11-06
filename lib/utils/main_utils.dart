@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../constant/color-constant.dart';
 
@@ -34,6 +35,7 @@ TextTheme textTheme(){
     bodyText2: TextStyle(color: kTextColor),
   );
 }
+
 TextStyle boldTextStyle(
     double size, {
       Color? color,
@@ -44,6 +46,7 @@ TextStyle boldTextStyle(
       fontWeight: FontWeight.bold,
       fontFamily: fontFamily,
     );
+
 /// Thin text style - w100
 TextStyle thinTextStyle(
     double size, {
@@ -58,6 +61,32 @@ TextStyle thinTextStyle(
       color: color,
       height: height,
     );
+ ButtonStyle primaryButtonStyle()=>ButtonStyle(
+     shape:
+     MaterialStateProperty.all<RoundedRectangleBorder>(
+         RoundedRectangleBorder(
+           borderRadius: BorderRadius.circular(5.0),
+         )),
+     backgroundColor:
+     MaterialStateProperty.all(primaryColor));
+
+ ButtonStyle loginButtonStyle()=>ButtonStyle(
+     shape: MaterialStateProperty.all<
+         RoundedRectangleBorder>(
+         RoundedRectangleBorder(
+           borderRadius: BorderRadius.circular(25.0),
+         )));
+
+InputDecoration inputDecoration({required String labelText, Widget? suffixIcon}){
+  return InputDecoration(
+    labelText: labelText,
+    contentPadding:  EdgeInsets.all(10.r),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16.r),
+    ),
+    suffixIcon: suffixIcon
+  );
+}
 
 class MainUtils {
   static hideKeyBoard(BuildContext context) {

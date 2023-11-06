@@ -34,7 +34,7 @@ class Horaires {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
+    final Map<String, dynamic> data = <String, dynamic>{};
     if (items != null) {
       data['items'] = items!.map((v) => v.toJson()).toList();
     }

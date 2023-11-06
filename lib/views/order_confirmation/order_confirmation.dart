@@ -1,6 +1,6 @@
 
 import 'package:flutter/material.dart';
-import 'package:flutter_svg_provider/flutter_svg_provider.dart' as provider;
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:livraison_express/utils/size_config.dart';
 
 import '../../model/orders.dart';
@@ -17,15 +17,10 @@ class OrderConfirmation extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
+            SizedBox(
               height: SizeConfig.screenHeight!*0.35,
               width: SizeConfig.screenWidth!*0.7,
-              decoration:  BoxDecoration(
-                border: Border.all(),
-                image: const DecorationImage(
-                  image: provider.Svg("img/icon/svg/ic_done_white.svg",color: Colors.green)
-                )
-              ),
+              child: SvgPicture.asset("img/icon/svg/ic_done_white.svg",color: Colors.green),
             ),
             const SizedBox(height: 10,),
             const Center(child: Text("Commande enregistrée avec succès")),

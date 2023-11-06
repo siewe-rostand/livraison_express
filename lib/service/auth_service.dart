@@ -1,4 +1,5 @@
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
@@ -10,6 +11,7 @@ import 'package:http/http.dart';
 import 'package:livraison_express/data/user_helper.dart';
 import 'package:livraison_express/model/user.dart';
 import 'package:livraison_express/utils/main_utils.dart';
+import 'package:livraison_express/utils/string_manager.dart';
 import 'package:livraison_express/views/home/home-page.dart';
 import 'package:livraison_express/views/login/login.dart';
 import 'package:logger/logger.dart';
@@ -126,18 +128,46 @@ class ApiAuthService {
     }
   }
 
-  Future<Response> requestCode(String tokens) async {
+  Future<void> requestCode(String tokens) async {
+    progressDialog!.show();
     String url = '$baseUrl/user/phone/verify';
     Response response = await get(Uri.parse(url), headers: {
       "Authorization": 'Bearer $tokens',
       "Accept": "application/json",
     });
     if (response.statusCode == 200) {
-      return response;
+      if(progressDialog!.isShowing()){
+        progressDialog!.hide();
+      }
+      showGenDialog(
+          context,
+          false,
+          CustomDialog(
+            title: 'success',
+            content:
+            "un nouveau code a été envoyé à votre adresse e-mail, veuillez vérifier",
+            positiveBtnText: "OK",
+            positiveBtnPressed: () {
+              Navigator.of(context).pop();
+            },
+          ));
     } else {
+      if(progressDialog!.isShowing()){
+        progressDialog!.hide();
+      }
       print(response.body);
       logger.e(response.body);
-      throw ('Error in loading user data');
+      showGenDialog(
+          context,
+          false,
+          CustomDialog(
+            title: 'Ooooops',
+            content: onErrorMessage,
+            positiveBtnText: "OK",
+            positiveBtnPressed: () {
+              Navigator.of(context).pop();
+            },
+          ));
     }
   }
 
@@ -493,7 +523,9 @@ class ApiAuthService {
         progressDialog!.hide();
       }
     } on FirebaseAuthException catch (e) {
-      progressDialog!.hide();
+      if (progressDialog!.isShowing()) {
+        progressDialog!.hide();
+      }
       if (e.code == "wrong-password") {
         showGenDialog(
             context,
@@ -507,7 +539,7 @@ class ApiAuthService {
                   Navigator.of(context).pop();
                 }));
       }
-      if (e.code == "user-not-found") {
+     else if (e.code == "user-not-found") {
         showGenDialog(
             context,
             true,
@@ -520,7 +552,7 @@ class ApiAuthService {
                   Navigator.of(context).pop();
                 }));
       }
-      if(e.code == 'network-request-failed'){
+      else if(e.code == 'network-request-failed'){
         showGenDialog(
             context,
             true,
@@ -532,9 +564,23 @@ class ApiAuthService {
                   Navigator.of(context).pop();
                 }));
       }
+      else{
+        showGenDialog(
+            context,
+            true,
+            CustomDialog(
+                title: 'Ooooops',
+                content: onErrorMessage,
+                positiveBtnText: "OK",
+                positiveBtnPressed: () {
+                  Navigator.of(context).pop();
+                }));
+      }
       logger.e(e.message);
     }on SocketException catch (_) {
-      progressDialog!.hide();
+      if (progressDialog!.isShowing()) {
+        progressDialog!.hide();
+      }
       showGenDialog(
           context,
           true,
@@ -547,7 +593,9 @@ class ApiAuthService {
               }));
       logger.e('socket error');
     } on HttpException catch (_) {
-      progressDialog!.hide();
+      if (progressDialog!.isShowing()) {
+        progressDialog!.hide();
+      }
       showGenDialog(
           context,
           true,
@@ -559,7 +607,9 @@ class ApiAuthService {
                 Navigator.of(context).pop();
               }));
     } on FormatException catch (_) {
-      progressDialog!.hide();
+      if (progressDialog!.isShowing()) {
+        progressDialog!.hide();
+      }
       showGenDialog(
           context,
           true,
@@ -572,7 +622,9 @@ class ApiAuthService {
               }));
       logger.e('format error');
     } catch (e) {
-      progressDialog!.hide();
+      if (progressDialog!.isShowing()) {
+        progressDialog!.hide();
+      }
       showGenDialog(
           context,
           true,
@@ -587,7 +639,7 @@ class ApiAuthService {
     }
   }
 
-  Future<Response> forgotPasswordCode({
+  Future<void> forgotPasswordCode({
     required String telephone,
     required String countryCode,
   }) async {
@@ -606,18 +658,51 @@ class ApiAuthService {
     );
     if (response.statusCode == 200) {
       progressDialog!.hide();
-      return response;
+      var body = json.decode(response.body);
+      var data = body['data'];
+      var phone = data['phone'];
+      var email = data['email'];
+      Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+              builder: (BuildContext context) =>
+                  VerificationCode(
+                    phone: phone,
+                    resetPassword: true,
+                    email: email,
+                  )));
     } else {
       progressDialog!.hide();
       var body = json.decode(response.body);
       logger.e(response.body);
       var mes = body['message'];
+      if (mes == "User not found") {
+        showGenDialog(
+            context,
+            true,
+            CustomDialog(
+                title: StringManager.unFoundUser,
+                content: StringManager.noUserAssociateToAccount,
+                positiveBtnText: "OK",
+                positiveBtnPressed: () {
+                  Navigator.of(context).pop();
+                }));
+      } else {
+        showGenDialog(
+            context,
+            true,
+            CustomDialog(
+                title: 'Alert',
+                content: StringManager.UnknownContactError,
+                positiveBtnText: "OK",
+                positiveBtnPressed: () {
+                  Navigator.of(context).pop();
+                }));
+      }
       logger.e('ERROR MESSAGE ${body['message']}');
-      throw (mes);
     }
   }
 
-  Future<Response> forgotPasswordCodeEmail({required String email}) async {
+  Future<void> forgotPasswordCodeEmail({required String email}) async {
     progressDialog!.show();
     String url = '$baseUrl/password/code';
     Response response = await post(
@@ -632,17 +717,50 @@ class ApiAuthService {
     );
     if (response.statusCode == 200) {
       progressDialog!.hide();
-      return response;
+      var body = json.decode(response.body);
+      var data = body['data'];
+      var phone = data['phone'];
+      var email = data['email'];
+      Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+              builder: (BuildContext context) =>
+                  VerificationCode(
+                    phone: phone,
+                    resetPassword: true,
+                    email: email,
+                  )));
     } else {
       progressDialog!.hide();
       var body = json.decode(response.body);
       logger.e(body);
       var mes = body['message'];
-      throw (mes);
+      if (mes == "User not found") {
+        showGenDialog(
+            context,
+            true,
+            CustomDialog(
+                title: StringManager.unFoundUser,
+                content: StringManager.noUserAssociateToAccount,
+                positiveBtnText: "OK",
+                positiveBtnPressed: () {
+                  Navigator.of(context).pop();
+                }));
+      } else {
+        showGenDialog(
+            context,
+            true,
+            CustomDialog(
+                title: 'Alert',
+                content: StringManager.UnknownContactError,
+                positiveBtnText: "OK",
+                positiveBtnPressed: () {
+                  Navigator.of(context).pop();
+                }));
+      }
     }
   }
 
-  Future verifyResetCode({
+  Future<void> verifyResetCode({
     required String telephone,
     required String countryCode,
     required String email,
@@ -670,12 +788,11 @@ class ApiAuthService {
               code: countryCode,
               telephone: telephone,
             )));
-        return response;
       } else {
         progressDialog!.hide();
         var body = json.decode(response.body);
         var res = body['message'];
-        logger.e(body);
+        logger.e(res);
         print('// ${response.body.isNotEmpty}');
         throw (res);
       }
@@ -721,6 +838,18 @@ class ApiAuthService {
       print('format error');
     } catch (e) {
       progressDialog!.hide();
+      if (e == "Le code invalide ou expiré, veuillez recommencer!"){
+        showGenDialog(
+            context,
+            true,
+            CustomDialog(
+                title: 'Code Invalide',
+                content: "le code saisi est incorrect ou a expiré. veuillez saisir à nouveau le code ou en demander un nouveau.",
+                positiveBtnText: "OK",
+                positiveBtnPressed: () {
+                  Navigator.of(context).pop();
+                }));
+      }else{
       showGenDialog(
           context,
           true,
@@ -731,7 +860,8 @@ class ApiAuthService {
               positiveBtnPressed: () {
                 Navigator.of(context).pop();
               }));
-      print('eer error');
+      }
+      print('eer ${e.toString()}');
     }
   }
 
@@ -840,7 +970,7 @@ class ApiAuthService {
     }
   }
 
-  Future<Response> resetPassword({
+  Future resetPassword({
     required String email,
     required String telephone,
     required String code,
@@ -849,32 +979,108 @@ class ApiAuthService {
   }) async {
     progressDialog!.show();
     String url = "$baseUrl/password/reset";
-    Response response = await post(
-      Uri.parse(url),
-      body: jsonEncode(<String, String>{
-        'email': email,
-        'password': newPassword,
-        'password_confirmation': newPasswordConfirmation,
-        'telephone': telephone,
-        'code': code
-      }),
-      headers: <String, String>{
-        "Accept": "application/json",
-        'Content-Type': 'application/json',
-        "Origin": origin,
-        "Authorization": 'Bearer $token',
-      },
-    );
+    try {
+      Response response = await post(
+        Uri.parse(url),
+        body: jsonEncode(<String, String>{
+          'email': email,
+          'password': newPassword,
+          'password_confirmation': newPasswordConfirmation,
+          'telephone': telephone,
+          'code': code
+        }),
+        headers: <String, String>{
+          "Accept": "application/json",
+          'Content-Type': 'application/json',
+          "Origin": origin,
+          "Authorization": 'Bearer $token',
+        },
+      );
 
-    if (response.statusCode == 200) {
+      if (response.statusCode == 200) {
+        progressDialog!.hide();
+        logger.i(response);
+        Fluttertoast.showToast(
+            msg: 'Mot de passe réinitialisé avec succès',backgroundColor: Colors.green);
+        Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+                builder: (BuildContext context) =>
+                const LoginScreen()));
+      } else {
+        progressDialog!.hide();
+        var body = json.decode(response.body);
+        String message = '';
+        String errorMessage = body['message'];
+        if (errorMessage.contains('user record')){
+          message = StringManager.noCorrespondingUser;
+        }else {
+          message = onErrorMessage;
+        }
+        logger.e(message);
+        throw (message);
+      }
+    } on SocketException catch (_) {
       progressDialog!.hide();
-      // print("/// ${response.body}");
-      var body = json.decode(response.body);
-      return response;
-    } else {
+      showGenDialog(
+          context,
+          true,
+          CustomDialog(
+              title: 'Ooooops',
+              content: onFailureMessage,
+              positiveBtnText: "OK",
+              positiveBtnPressed: () {
+                Navigator.of(context).pop();
+              }));
+      print('socket error');
+    } on HttpException catch (_) {
       progressDialog!.hide();
-      logger.e(response.body);
-      throw ('edit error//');
+      showGenDialog(
+          context,
+          true,
+          CustomDialog(
+              title: 'Ooooops',
+              content: onErrorMessage,
+              positiveBtnText: "OK",
+              positiveBtnPressed: () {
+                Navigator.of(context).pop();
+              }));
+      print('http error');
+    } on FormatException catch (e) {
+      progressDialog!.hide();
+      showGenDialog(
+          context,
+          true,
+          CustomDialog(
+              title: 'Ooooops',
+              content: onErrorMessage,
+              positiveBtnText: "OK",
+              positiveBtnPressed: () {
+                Navigator.of(context).pop();
+              }));
+      logger.e("message$e");
+      print('format error $e');
+    } catch (e) {
+      progressDialog!.hide();
+      showGenDialog(
+          context,
+          true,
+          CustomDialog(
+              title: 'Ooooops',
+              content: e.toString(),
+              positiveBtnText: "OK",
+              positiveBtnPressed: () {
+                Navigator.of(context).pop();
+              }));
+      Timer(
+          const Duration(seconds: 3),
+              () {
+                Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                        builder: (BuildContext context) =>
+                        const LoginScreen()));});
+      print('eer ${e.toString()}');
     }
   }
+
+
 }

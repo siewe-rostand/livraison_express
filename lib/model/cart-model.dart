@@ -1,5 +1,3 @@
-import 'package:flutter/cupertino.dart';
-import 'package:livraison_express/model/product.dart';
 
 class CartItem {
   int? id;

@@ -2,6 +2,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:livraison_express/constant/all-constant.dart';
 import 'package:livraison_express/model/quartier.dart';
@@ -35,17 +36,22 @@ class MyApp extends StatelessWidget {
       ChangeNotifierProvider(create: (context)=>CartProvider()),
       ChangeNotifierProvider(create: (context)=>QuarterProvider()),
     ],
-    child: MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Livraison Express',
-      theme: theme().copyWith(
-        pageTransitionsTheme: const PageTransitionsTheme(
-          builders: <TargetPlatform, PageTransitionsBuilder>{
-            TargetPlatform.android: ZoomPageTransitionsBuilder()
-          },
-        )
-      ),
-      home: const SplashScreen(),
+    child: ScreenUtilInit(
+      builder: (BuildContext context, Widget? child) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Livraison Express',
+          theme: theme().copyWith(
+              pageTransitionsTheme: const PageTransitionsTheme(
+                builders: <TargetPlatform, PageTransitionsBuilder>{
+                  TargetPlatform.android: ZoomPageTransitionsBuilder()
+                },
+              )
+          ),
+          home: child,
+        );
+      },
+      child:  const SplashScreen(),
     ),);
   }
 }

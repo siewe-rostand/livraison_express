@@ -1,7 +1,6 @@
 
 import 'package:livraison_express/model/client.dart';
 
-import 'address-favorite.dart';
 import 'address.dart';
 import 'horaire.dart';
 
@@ -15,7 +14,6 @@ class Shops {
   String? nom;
   String? slug;
   Client? contact;
-  dynamic? cautionIncrementationCoursesDistribuable;
   int? displayRank;
   String? description;
   int? contactId;
@@ -31,13 +29,11 @@ class Shops {
   int? baseDeliveryAmount;
   int? baseDeliveryMetersAsStepUnit;
   int? baseDeliveryAmountPerStep;
-  dynamic? freeShippingCartAmount;
   int? shippingPreparationTime;
   int? shippingDurationMaxAcceptMinutes;
   int? shippingDistanceMaxAcceptMeters;
   String? createdAt;
   String? updatedAt;
-  dynamic? deletedAt;
   Adresse? adresse;
   Adresse? adresseFavorite;
   Client? client;
@@ -51,7 +47,6 @@ class Shops {
         this.moduleId,
         this.nom,
         this.slug,
-        this.cautionIncrementationCoursesDistribuable,
         this.displayRank,
         this.description,
         this.contactId,
@@ -67,13 +62,11 @@ class Shops {
         this.baseDeliveryAmount,
         this.baseDeliveryMetersAsStepUnit,
         this.baseDeliveryAmountPerStep,
-        this.freeShippingCartAmount,
         this.shippingPreparationTime,
         this.shippingDurationMaxAcceptMinutes,
         this.shippingDistanceMaxAcceptMeters,
         this.createdAt,
         this.updatedAt,
-        this.deletedAt,
         this.adresse,
         this.client,
         this.contact});
@@ -87,8 +80,6 @@ class Shops {
     moduleId = json['module_id'];
     nom = json['nom'];
     slug = json['slug'];
-    cautionIncrementationCoursesDistribuable =
-    json['caution_incrementation_courses_distribuable'];
     displayRank = json['display_rank'];
     description = json['description'];
     contactId = json['contact_id'];
@@ -106,7 +97,6 @@ class Shops {
     baseDeliveryAmount = json['base_delivery_amount'];
     baseDeliveryMetersAsStepUnit = json['base_delivery_meters_as_step_unit'];
     baseDeliveryAmountPerStep = json['base_delivery_amount_per_step'];
-    freeShippingCartAmount = json['free_shipping_cart_amount'];
     shippingPreparationTime = json['shipping_preparation_time'];
     shippingDurationMaxAcceptMinutes =
     json['shipping_duration_max_accept_minutes'];
@@ -114,7 +104,6 @@ class Shops {
     json['shipping_distance_max_accept_meters'];
     createdAt = json['created_at'];
     updatedAt = json['updated_at'];
-    deletedAt = json['deleted_at'];
     adresse =
     json['adresse'] != null ? Adresse.fromJson(json['adresse']) : null;
     adresseFavorite = json["adresse"] == null ? null : Adresse.fromJson(json["adresse"]);
@@ -133,8 +122,6 @@ class Shops {
     data['module_id'] = moduleId;
     data['nom'] = nom;
     data['slug'] = slug;
-    data['caution_incrementation_courses_distribuable'] =
-        cautionIncrementationCoursesDistribuable;
     data['display_rank'] = displayRank;
     data['description'] = description;
     data['contact_id'] = contactId;
@@ -153,7 +140,6 @@ class Shops {
     data['base_delivery_meters_as_step_unit'] =
         baseDeliveryMetersAsStepUnit;
     data['base_delivery_amount_per_step'] = baseDeliveryAmountPerStep;
-    data['free_shipping_cart_amount'] = freeShippingCartAmount;
     data['shipping_preparation_time'] = shippingPreparationTime;
     data['shipping_duration_max_accept_minutes'] =
         shippingDurationMaxAcceptMinutes;
@@ -161,7 +147,6 @@ class Shops {
         shippingDistanceMaxAcceptMeters;
     data['created_at'] = createdAt;
     data['updated_at'] = updatedAt;
-    data['deleted_at'] = deletedAt;
     if (adresse != null) {
       data['adresse'] = adresse!.toJson();
     }

@@ -78,7 +78,7 @@ class _HomePageState extends State<HomePage> {
   }
   void toast({required BuildContext context, required String text}){
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text,textAlign: TextAlign.center,),
-      behavior: SnackBarBehavior.floating, backgroundColor: Colors.blueGrey,
+      behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
     ));
 

@@ -8,13 +8,9 @@ class Modules {
   String? libelle;
   String? slug;
   int? displayRank;
-  dynamic? information;
   String? heureOuverture;
   String? heureFermeture;
-  dynamic? baseDeliveryMeters;
-  dynamic? baseDeliveryAmountPerStep;
   int? baseDeliveryMetersAsStepUnit;
-  dynamic? freeShippingCartAmount;
   int? isOpen;
   int? isActive;
   int? isAvailable;
@@ -23,10 +19,8 @@ class Modules {
   List<Shops>? shops;
   String? moduleColor;
   List<String>? availableInCities;
-  dynamic? baseDeliveryAmount;
   String? createdAt;
   String? updatedAt;
-  dynamic? deletedAt;
   Extra? extra;
 
   Modules(
@@ -34,13 +28,9 @@ class Modules {
         this.libelle,
         this.slug,
         this.displayRank,
-        this.information,
         this.heureOuverture,
         this.heureFermeture,
-        this.baseDeliveryMeters,
-        this.baseDeliveryAmountPerStep,
         this.baseDeliveryMetersAsStepUnit,
-        this.freeShippingCartAmount,
         this.isOpen,
         this.isActive,
         this.isAvailable,
@@ -49,10 +39,8 @@ class Modules {
         this.shops,
         this.moduleColor,
         this.availableInCities,
-        this.baseDeliveryAmount,
         this.createdAt,
         this.updatedAt,
-        this.deletedAt,
         this.extra});
 
   Modules.fromJson(Map<String, dynamic> json) {
@@ -60,13 +48,9 @@ class Modules {
     libelle = json['libelle'];
     slug = json['slug'];
     displayRank = json['display_rank'];
-    information = json['information'];
     heureOuverture = json['heure_ouverture'];
     heureFermeture = json['heure_fermeture'];
-    baseDeliveryMeters = json['base_delivery_meters'];
-    baseDeliveryAmountPerStep = json['base_delivery_amount_per_step'];
     baseDeliveryMetersAsStepUnit = json['base_delivery_meters_as_step_unit'];
-    freeShippingCartAmount = json['free_shipping_cart_amount'];
     isOpen = json['is_open'];
     isActive = json['is_active'];
     isAvailable = json['is_available'];
@@ -80,10 +64,8 @@ class Modules {
     }
     moduleColor = json['module_color'];
     availableInCities = json['available_in_cities'].cast<String>();
-    baseDeliveryAmount = json['base_delivery_amount'];
     createdAt = json['created_at'];
     updatedAt = json['updated_at'];
-    deletedAt = json['deleted_at'];
     extra = json['extra'] != null ? Extra.fromJson(json['extra']) : null;
   }
 
@@ -93,14 +75,10 @@ class Modules {
     data['libelle'] = libelle;
     data['slug'] = slug;
     data['display_rank'] = displayRank;
-    data['information'] = information;
     data['heure_ouverture'] = heureOuverture;
     data['heure_fermeture'] = heureFermeture;
-    data['base_delivery_meters'] = baseDeliveryMeters;
-    data['base_delivery_amount_per_step'] = baseDeliveryAmountPerStep;
     data['base_delivery_meters_as_step_unit'] =
         baseDeliveryMetersAsStepUnit;
-    data['free_shipping_cart_amount'] = freeShippingCartAmount;
     data['is_open'] = isOpen;
     data['is_active'] = isActive;
     data['is_available'] = isAvailable;
@@ -111,10 +89,8 @@ class Modules {
     }
     data['module_color'] = moduleColor;
     data['available_in_cities'] = availableInCities;
-    data['base_delivery_amount'] = baseDeliveryAmount;
     data['created_at'] = createdAt;
     data['updated_at'] = updatedAt;
-    data['deleted_at'] = deletedAt;
     if (extra != null) {
       data['extra'] = extra!.toJson();
     }

@@ -1,17 +1,25 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl_phone_field/country_picker_dialog.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:livraison_express/constant/all-constant.dart';
 import 'package:livraison_express/data/user_helper.dart';
 import 'package:livraison_express/service/auth_service.dart';
+import 'package:livraison_express/utils/app_extension.dart';
+import 'package:livraison_express/utils/asset_manager.dart';
+import 'package:livraison_express/utils/main_utils.dart';
 import 'package:livraison_express/utils/size_config.dart';
+import 'package:livraison_express/utils/string_manager.dart';
+import 'package:livraison_express/views/login/forgotten_password.dart';
 import 'package:livraison_express/views/login/register.dart';
 import 'package:livraison_express/views/login/verification_code.dart';
+import 'package:livraison_express/views/widgets/custom_textfield.dart';
 import 'package:livraison_express/views/widgets/social-card.dart';
 
 import '../../model/city.dart';
@@ -50,13 +58,32 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  void printScreenInformation(BuildContext context) {
+    print('Device Size:${Size(1.sw, 1.sh)}');
+    print('Device pixel density:${ScreenUtil().pixelRatio}');
+    print('Bottom safe zone distance dp:${ScreenUtil().bottomBarHeight}dp');
+    print('Status bar height dp:${ScreenUtil().statusBarHeight}dp');
+    print('The ratio of actual width to UI design:${ScreenUtil().scaleWidth}');
+    print(
+        'The ratio of actual height to UI design:${ScreenUtil().scaleHeight}');
+    print('System font scaling:${ScreenUtil().textScaleFactor}');
+    print('0.5 times the screen width:${0.5.sw}dp');
+    print('0.5 times the screen height:${0.5.sh}dp');
+    print('Screen orientation:${ScreenUtil().orientation}');
+  }
+
   @override
   Widget build(BuildContext context) {
+    // printScreenInformation(context);
     SizeConfig().init(context);
     return AnnotatedRegion(
       value: const SystemUiOverlayStyle(statusBarColor: primaryColor),
-      child: Scaffold(
-        body: Container(
+      child: GestureDetector(
+        onTap: () {
+          FocusScope.of(context).unfocus();
+        },
+        child: Scaffold(
+          body: Container(
             margin: const EdgeInsets.all(15),
             child: ListView(
               children: [
@@ -72,7 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 emailTextController.clear();
                               });
                             },
-                            child: const Text("Se connecter avec l'email ?"))
+                            child: const Text(StringManager.connectWithEmail))
                         : TextButton(
                             onPressed: () {
                               setState(() {
@@ -81,66 +108,49 @@ class _LoginScreenState extends State<LoginScreen> {
                                 _phoneTextController.clear();
                               });
                             },
-                            child: const Text(
-                                "Se connecter avec le numero de telephone ?"))),
-                const SizedBox(
-                  height: 10,
-                ),
+                            child: const Text(StringManager.connectWithPhone))),
+                10.sBH,
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     _isPhone
                         ? IntlPhoneField(
                             controller: _phoneTextController,
+                            pickerDialogStyle: PickerDialogStyle(
+                              searchFieldInputDecoration: inputDecoration(
+                                  labelText: 'Chercher le pays'),
+                            ),
                             disableLengthCheck: true,
                             autovalidateMode:
                                 AutovalidateMode.onUserInteraction,
-                            decoration: InputDecoration(
-                              labelText: 'Telephone',
-                              contentPadding: const EdgeInsets.symmetric(vertical: 15.0,horizontal: 10),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                            ),
+                            decoration: inputDecoration(labelText: StringManager.phoneNumber),
                             onChanged: (phone) {
                               countryCode = phone.countryCode;
                             },
                             initialCountryCode: 'CM',
                           )
-                        : TextFormField(
+                        : CustomTextField(
                             keyboardType: TextInputType.emailAddress,
-                            decoration: InputDecoration(
-                              floatingLabelBehavior: FloatingLabelBehavior.auto,
-                              labelText: 'Email',
-                              contentPadding: const EdgeInsets.symmetric(vertical: 15.0,horizontal: 10),
-                              border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16)),
-                            ),
+                            labelText: StringManager.email,
                             controller: emailTextController,
                           ),
                     const SizedBox(
                       height: 10,
                     ),
-                    TextFormField(
-                      decoration: InputDecoration(
-                        floatingLabelBehavior: FloatingLabelBehavior.auto,
-                        labelText: 'Mot de passe',
-                        contentPadding: const EdgeInsets.symmetric(vertical: 15.0,horizontal: 10),
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16)),
-                        suffixIcon: IconButton(
-                          icon: isObscureText
-                              ? const Icon(Icons.visibility)
-                              : const Icon(Icons.visibility_off),
-                          onPressed: () {
-                            setState(() {
-                              isObscureText = !isObscureText;
-                            });
-                          },
-                        ),
-                      ),
-                      obscureText: isObscureText,
+                    CustomTextField(
+                      labelText: StringManager.password,
+                      isPassword: isObscureText,
                       controller: passwordTextController,
+                      suffixIcon: IconButton(
+                        icon: isObscureText
+                            ? const Icon(Icons.visibility)
+                            : const Icon(Icons.visibility_off_rounded),
+                        onPressed: () {
+                          setState(() {
+                            isObscureText = !isObscureText;
+                          });
+                        },
+                      ),
                     ),
                     Align(
                       alignment: Alignment.centerRight,
@@ -148,9 +158,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           onPressed: () {
                             Navigator.of(context).push(MaterialPageRoute(
                                 builder: (BuildContext context) =>
-                                    const MotDePasse()));
+                                    const ForgottenPasswordScreen()));
                           },
-                          child: const Text("Mot de passe oublie ?")),
+                          child: const Text(StringManager.forgottenPassword)),
                     ),
                     !_isProcessing
                         ? Container()
@@ -159,12 +169,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       height: getProportionateScreenHeight(45),
                       width: double.infinity,
                       child: ElevatedButton(
-                          style: ButtonStyle(
-                              shape: MaterialStateProperty.all<
-                                      RoundedRectangleBorder>(
-                                  RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(25.0),
-                          ))),
+                          style: loginButtonStyle(),
                           onPressed: () async {
                             if (_phoneTextController.text.isNotEmpty) {
                               await ApiAuthService(
@@ -185,7 +190,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                           getProgressDialog(context: context))
                                   .signInWithEmail(emailTextController.text,
                                       passwordTextController.text);
-
                             }
                           },
                           child: const Text(
@@ -219,22 +223,29 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      SocialCard(icon: 'img/social/ic_google_icon.svg', press: () async {
-                        await FireAuth(
-                            progressDialog:
-                            getProgressDialog(context: context))
-                            .signInwithGoogle(context: context);
-                      }),
-                      SocialCard(icon: 'img/social/ic_facebook_logo.svg', press: () async {
-                        await FireAuth(
-                            progressDialog:
-                            getProgressDialog(context: context))
-                            .signInWithFacebook(context: context);
-                      }),
-                      SocialCard(icon: 'assets/images/ic_yahoo.svg', press: () async {
-                        await FireAuth.performLogin('yahoo.com',
-                            ['openid mail-r'], {'language': 'fr'});
-                      },)
+                      SocialCard(
+                          icon: AssetManager.googleIcon,
+                          press: () async {
+                            await FireAuth(
+                                    progressDialog:
+                                        getProgressDialog(context: context))
+                                .signInwithGoogle(context: context);
+                          }),
+                      SocialCard(
+                          icon: AssetManager.facebookIcon,
+                          press: () async {
+                            await FireAuth(
+                                    progressDialog:
+                                        getProgressDialog(context: context))
+                                .signInWithFacebook(context: context);
+                          }),
+                      SocialCard(
+                        icon: AssetManager.yahooIcon,
+                        press: () async {
+                          await FireAuth.performLogin('yahoo.com',
+                              ['openid mail-r'], {'language': 'fr'});
+                        },
+                      )
                     ],
                   ),
                 ),
@@ -242,7 +253,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Text(
-                      'Vous etes nouveau?',
+                      'Vous êtes nouveau?',
                       style: TextStyle(color: Colors.black38),
                     ),
                     TextButton(
@@ -252,245 +263,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                   builder: (context) =>
                                       const RegistrationPage()));
                         },
-                        child: const Text("creer un compte"))
+                        child: const Text(StringManager.createAccount))
                   ],
-                )
-              ],
-            ),
-            ),
-      ),
-    );
-  }
-}
-
-class MotDePasse extends StatefulWidget {
-  const MotDePasse({Key? key}) : super(key: key);
-
-  @override
-  State<MotDePasse> createState() => _MotDePasseState();
-}
-
-class _MotDePasseState extends State<MotDePasse> {
-  bool _isPhone = false;
-  String countryCode = '';
-  TextEditingController phoneController = TextEditingController();
-  TextEditingController emailController = TextEditingController();
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  void showMessage({required String message, required String title}) {
-    showDialog(
-        context: context,
-        builder: (BuildContext buildContext) {
-          return AlertDialog(
-            title: Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SvgPicture.asset(
-                  'img/icon/svg/ic_warning_yellow.svg',
-                  color: const Color(0xffFFAE42),
-                ),
-                Text(title)
-              ],
-            ),
-            content: Text(message),
-            actions: [
-              TextButton(
-                child: const Text("OK"),
-                onPressed: () {
-                  Navigator.of(buildContext).pop();
-                },
-              ),
-            ],
-          );
-        });
-  }
-
-  @override
-  void initState() {
-    _isPhone = true;
-    super.initState();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnnotatedRegion(
-      value: const SystemUiOverlayStyle(statusBarColor: primaryColor),
-      child: Scaffold(
-        body: Container(
-          margin: const EdgeInsets.only(top: 100, left: 20, right: 20),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                const Text(
-                  'Mot de Passe oublie.',
-                  style: TextStyle(fontWeight: FontWeight.bold, color: grey80),
-                ),
-                SvgPicture.asset(
-                  'img/icon/svg/ic_forgot_password.svg',
-                  color: primaryColor,
-                  height: 100,
-                  width: 100,
-                ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: _isPhone
-                      ? TextButton(
-                          onPressed: () {
-                            setState(() {
-                              _isPhone = !_isPhone;
-                            });
-                          },
-                          child: const Text(
-                            "Utiliser l'adresse email ?",
-                            style: TextStyle(color: primaryColor),
-                          ))
-                      : TextButton(
-                          onPressed: () {
-                            setState(() {
-                              _isPhone = !_isPhone;
-                            });
-                          },
-                          child: const Text(
-                              "Se connecter avec le numero de telephone ?",
-                              style: TextStyle(color: primaryColor))),
-                ),
-                _isPhone
-                    ? IntlPhoneField(
-                        controller: phoneController,
-                        pickerDialogStyle: PickerDialogStyle(
-                            searchFieldInputDecoration: const InputDecoration(
-                                hintText: 'Chercher le pays')),
-                        dropdownIconPosition: IconPosition.trailing,
-                        showCountryFlag: false,
-                        decoration: const InputDecoration(
-                          labelText: 'Téléphone',
-                        ),
-                        onChanged: (phone) {
-                          countryCode = phone.countryCode;
-                        },
-                        autovalidateMode: AutovalidateMode.onUserInteraction,
-                        initialCountryCode: 'CM',
-                        validator: (val) {
-                          if (val!.toString().isEmpty) {
-                            return "Veuillez remplir ce champ";
-                          }
-                          return null;
-                        },
-                      )
-                    : TextFormField(
-                        controller: emailController,
-                        autovalidateMode: AutovalidateMode.onUserInteraction,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: const InputDecoration(
-                          floatingLabelBehavior: FloatingLabelBehavior.auto,
-                          fillColor: Colors.white,
-                          filled: true,
-                          labelText: 'Email',
-                        ),
-                        validator: (val) {
-                          if (val!.isEmpty) {
-                            return "Veuillez remplir ce champ";
-                          }
-                          return null;
-                        },
-                      ),
-                SizedBox(
-                  height: getProportionateScreenHeight(20),
-                ),
-                SizedBox(
-                  height: getProportionateScreenHeight(45),
-                  width: double.infinity,
-                  child: ElevatedButton(
-                      style: ButtonStyle(
-                          shape:
-                              MaterialStateProperty.all<RoundedRectangleBorder>(
-                                  RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(5.0),
-                          )),
-                          backgroundColor:
-                              MaterialStateProperty.all(primaryColor)),
-                      onPressed: () async {
-                        if (_isPhone) {
-                          try {
-                            await ApiAuthService(
-                                    context: context,
-                                    fromLogin: true,
-                                    progressDialog:
-                                        getProgressDialog(context: context))
-                                .forgotPasswordCode(
-                                    telephone: phoneController.text,
-                                    countryCode: countryCode)
-                                .then((response) {
-                              var body = json.decode(response.body);
-                              var data = body['data'];
-                              var phone = data['phone'];
-                              var email = data['email'];
-                              debugPrint('true/// $phone');
-                              debugPrint('true $email');
-                              Navigator.of(context).pushReplacement(
-                                  MaterialPageRoute(
-                                      builder: (BuildContext context) =>
-                                          VerificationCode(
-                                            phone: phone,
-                                            resetPassword: true,
-                                            email: email,
-                                          )));
-                            }).catchError((onError) {
-                              print(onError);
-                              // showMessage(message: onError.toString(), title: "Alerte");
-                              showMessage(
-                                  message:
-                                      "Vérifiez votre connexion internet puis réessayez. Si l'erreur persiste veuillez nous contacter au 695461461",
-                                  title: "Alerte");
-                            });
-                          } on Exception catch (e) {
-                            print('exception $e');
-                            showMessage(
-                                message:
-                                    "Veuillez réessayer plustard ou contactez nous au 695461461",
-                                title: 'Erreur');
-                          }
-                        } else {
-                          try {
-                            await ApiAuthService(context: context)
-                                .forgotPasswordCodeEmail(
-                                    email: emailController.text)
-                                .then((response) {
-                              var body = json.decode(response.body);
-                              var data = body['data'];
-                              var phone = data['phone'];
-                              var email = data['email'];
-                              debugPrint('true/// $phone');
-                              debugPrint('true $email');
-                              Navigator.of(context).pushReplacement(
-                                  MaterialPageRoute(
-                                      builder: (BuildContext context) =>
-                                          VerificationCode(
-                                            phone: phone,
-                                            resetPassword: true,
-                                            email: email,
-                                          )));
-                            }).catchError((onError) {
-                              // showMessage(message: onError.toString(), title: "Alerte");
-                              showMessage(
-                                  message:
-                                      "Vérifiez votre connexion internet puis réessayez. Si l'erreur persiste veuillez nous contacter au 695461461",
-                                  title: "Alerte");
-                            });
-                          } on Exception catch (e) {
-                            print('exception $e');
-                            showMessage(
-                                message:
-                                    "Veuillez réessayer plustard ou contactez nous au 695461461",
-                                title: 'Erreur');
-                          }
-                        }
-                      },
-                      child: const Text(
-                        'VALIDER',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      )),
                 )
               ],
             ),
@@ -500,4 +274,3 @@ class _MotDePasseState extends State<MotDePasse> {
     );
   }
 }
-

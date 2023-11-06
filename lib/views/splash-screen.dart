@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:livraison_express/model/user.dart';
 import 'package:livraison_express/views/login/login.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
