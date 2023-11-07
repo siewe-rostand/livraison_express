@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:livraison_express/model/client.dart';
+import 'package:livraison_express/utils/asset_manager.dart';
+import 'package:livraison_express/utils/string_manager.dart';
 import 'package:livraison_express/views/address_detail/map_text_field.dart';
 import 'package:livraison_express/views/address_detail/selected_fav_address.dart';
 import 'package:logger/logger.dart';
@@ -73,7 +75,7 @@ class _Step1State extends State<Step1> {
         getImmediateSuggestions: true,
         autovalidateMode: AutovalidateMode.onUserInteraction,
         textFieldConfiguration:  TextFieldConfiguration(
-          decoration: const InputDecoration(labelText: 'Nom et prenom *'),
+          decoration: const InputDecoration(labelText: StringManager.nameAndSurname),
           controller: _typeAheadController,
         ),
         suggestionsCallback: (pattern) {
@@ -107,12 +109,13 @@ class _Step1State extends State<Step1> {
         autoFlipDirection: true,
         validator: (value) {
           if (value!.isEmpty) {
-            return "Veuillez remplir ce champ";
+            return StringManager.errorMessage;
           }
           return null;
         },
       );
   }
+
   getStoredUserInfo(int value)async{
     radioSelected = value;
     SharedPreferences sharedPreferences =
@@ -193,7 +196,7 @@ class _Step1State extends State<Step1> {
         children: [
           Container(
             child: const Text(
-              "Contact de l'expediteur",
+              StringManager.senderContact,
               style: TextStyle(color: Colors.black38),
             ),
             alignment: Alignment.topLeft,
@@ -225,11 +228,11 @@ class _Step1State extends State<Step1> {
             onSaved: (value)=>widget.sender.fullName=value,
             readOnly: radioSelected==0 && nomDepartTextController.text.isNotEmpty,
             decoration: const InputDecoration(
-                labelText: 'Nom et prenom *'),
+                labelText: StringManager.nameAndSurname),
             controller: nomDepartTextController,
             validator: (value) {
               if (value!.isEmpty) {
-                return "Veuillez remplir ce champ";
+                return StringManager.errorMessage;
               }
               return null;
             },
@@ -242,11 +245,11 @@ class _Step1State extends State<Step1> {
             AutovalidateMode.onUserInteraction,
             readOnly: radioSelected==0 && phoneDepartTextController.text.isNotEmpty,
             decoration: const InputDecoration(
-                labelText: 'Telephone 1 *'),
+                labelText: '${StringManager.phoneNumber} 1 *'),
             controller: phoneDepartTextController,
             validator: (value) {
               if (value!.isEmpty) {
-                return "Veuillez remplir ce champ";
+                return StringManager.errorMessage;
               }
               return null;
             },
@@ -257,7 +260,7 @@ class _Step1State extends State<Step1> {
             autovalidateMode:
             AutovalidateMode.onUserInteraction,
             decoration: const InputDecoration(
-                labelText: 'Telephone 2 *'),
+                labelText: '${StringManager.phoneNumber} 2 *'),
             controller: phone2DepartTextController,
           ),
           TextFormField(
@@ -267,11 +270,11 @@ class _Step1State extends State<Step1> {
             autovalidateMode:
             AutovalidateMode.onUserInteraction,
             decoration:radioSelected==0?
-            const InputDecoration(labelText: 'Email *'):const InputDecoration(labelText: 'Email '),
+            const InputDecoration(labelText: '${StringManager.email} *'):const InputDecoration(labelText: StringManager.email),
             controller: emailDepartTextController,
             validator:radioSelected==0? (value) {
               if (value!.isEmpty) {
-                return "Veuillez remplir ce champ";
+                return StringManager.errorMessage;
               }
               return null;
             }:null,
@@ -279,7 +282,7 @@ class _Step1State extends State<Step1> {
           Container(
               alignment: Alignment.centerLeft,
               child: const Text(
-                "Adresse de l'expediteur",
+               StringManager.receiverAddress,
                 style: TextStyle(color: Colors.black38),
               )),
           InkWell(
@@ -299,7 +302,7 @@ class _Step1State extends State<Step1> {
                             widget.addressSender.longitude=a.longitude;
                             widget.addressSender.latLng=a.latLng;
                           });
-                          print(a.toJson());;
+                          print(a.toJson());
                         },),
                       ),
                     );
@@ -308,10 +311,10 @@ class _Step1State extends State<Step1> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text("Consulter ma liste d'adresses: "),
+                const Text("${StringManager.consultAddress}: "),
                 // Image.asset('img/icon/address.png',height: 24,width: 24,)
                 SvgPicture.asset(
-                  'img/icon/svg/ic_address.svg',
+                  AssetManager.addressIcon,
                   height: 24,
                   width: 24,
                 )
@@ -326,12 +329,22 @@ class _Step1State extends State<Step1> {
             const InputDecoration(labelText: 'Ville '),
             controller: cityDepartTextController,
             enabled: false,
+            validator: (value) {
+              if (isChecked == true) {
+                if (value!.isEmpty) {
+                  return StringManager.errorMessage;
+                } else {
+                  return null;
+                }
+              }
+              return null;
+            },
           ),
           TypeAheadFormField<String>(
             textFieldConfiguration:  TextFieldConfiguration(
               controller: quarterTextController,
               decoration: const InputDecoration(
-                  labelText: 'Quartier'),
+                  labelText: StringManager.quarter),
             ),
             suggestionsCallback: (String pattern) async {
               if(pattern.isEmpty){
@@ -355,6 +368,16 @@ class _Step1State extends State<Step1> {
             onSuggestionSelected: (String suggestion) {
               quarterTextController.text = suggestion;
             },
+            validator: (value) {
+              if (isChecked == true) {
+                if (value!.isEmpty) {
+                  return StringManager.errorMessage;
+                } else {
+                  return null;
+                }
+              }
+              return null;
+            },
             onSaved: (value)=>widget.addressSender.quarter=value,
             autoFlipDirection: true,
             hideOnEmpty: true,
@@ -364,9 +387,10 @@ class _Step1State extends State<Step1> {
             AutovalidateMode.onUserInteraction,
             onSaved: (value)=>widget.addressSender.description=value,
             decoration: const InputDecoration(
-                labelText: 'Description du lieu'),
+                labelText: StringManager.packageDescription),
             controller: descDepartTextController,
           ),
+
           MapTextField(address: widget.addressSender,textController: addressDepartTextController,),
           Visibility(
               visible: isChecked,
@@ -380,12 +404,12 @@ class _Step1State extends State<Step1> {
                       widget.addressSender.surnom=value;
                     },
                     decoration: const InputDecoration(
-                        hintText: "Titre d'adresse *"),
+                        hintText: StringManager.addressTitle),
                     controller: titleDepartTextController,
                     validator: (value) {
                       if (isChecked == true) {
                         if (value!.isEmpty) {
-                          return "Veuillez remplir ce champ";
+                          return StringManager.errorMessage;
                         } else {
                           return null;
                         }
@@ -406,7 +430,7 @@ class _Step1State extends State<Step1> {
             contentPadding: EdgeInsets.zero,
             checkColor: Colors.white,
             activeColor: Colors.black,
-            title: const Text('Enregistrer cette adresse'),
+            title: const Text(StringManager.saveAddress),
             value: isChecked,
             onChanged: (value) {
               setState(() {

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:livraison_express/utils/size_config.dart';
 
 import '../constant/color-constant.dart';
+import '../data/user_helper.dart';
 
  const onFailureMessage =
     "Veuillez vérifier votre connexion internet puis réessayez. Si le problème persiste, veuillez contacter le service technique.";
@@ -87,7 +89,14 @@ InputDecoration inputDecoration({required String labelText, Widget? suffixIcon})
     suffixIcon: suffixIcon
   );
 }
-
+ BoxDecoration containerDecoration(){
+  return BoxDecoration(
+      color: UserHelper.getColor(),
+      border: Border.all(
+          color: primaryColor, width: 1.5),
+      borderRadius: BorderRadius.circular(
+          getProportionateScreenHeight(25)));
+ }
 class MainUtils {
   static hideKeyBoard(BuildContext context) {
     FocusScopeNode currentFocus = FocusScope.of(context);

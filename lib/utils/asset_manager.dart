@@ -9,4 +9,7 @@ class AssetManager{
   static const String facebookIcon = '$socialPath/ic_facebook_logo.svg';
   static const String yahooIcon = 'assets/images/ic_yahoo.svg';
   static const String warningIcon = '$svgPath/ic_warning_yellow.svg';
+  static const String blackLinkIcon = '$svgPath/ic_link_black.svg';
+  static const String creditCardIcon = '$svgPath/ic_credit_card_black.svg';
+  static const String addressIcon = '$svgPath/ic_address.svg';
 }

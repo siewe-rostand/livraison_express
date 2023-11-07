@@ -19,9 +19,13 @@ import 'package:livraison_express/model/orders.dart' as command;
 import 'package:livraison_express/model/user.dart';
 import 'package:livraison_express/service/course_service.dart';
 import 'package:livraison_express/service/paymentApi.dart';
+import 'package:livraison_express/utils/app_extension.dart';
+import 'package:livraison_express/utils/asset_manager.dart';
 import 'package:livraison_express/utils/size_config.dart';
+import 'package:livraison_express/utils/string_manager.dart';
 import 'package:livraison_express/views/livraison/step1.dart';
 import 'package:livraison_express/views/livraison/step2.dart';
+import 'package:livraison_express/views/widgets/custom_textfield.dart';
 import 'package:livraison_express/views/widgets/select_time.dart';
 import 'package:logger/logger.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -357,6 +361,15 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
       "orders": order,
       "paiement": payment,
     };
+    Map data1 = {
+      "infos": info.toJson(),
+      "client": client.toJson(),
+      "receiver": receiver.toJson(),
+      "sender": sender.toJson(),
+      "orders": order.toJson(),
+      "paiement": payment.toJson(),
+    };
+    log("***\n $data1 \- **");
     await CourseApi(context: context)
         .commnander(data: data)
         .then((response) async {
@@ -383,7 +396,8 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                   MaterialPageRoute(builder: (context) => const HomePage()));
             },
           ));
-    }).catchError((onError) {
+    })
+        .catchError((onError) {
       setState(() {
         isLoading1 = false;
       });
@@ -566,15 +580,10 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                 : null,
                             child: Container(
                                 height: getProportionateScreenHeight(50),
-                                decoration: BoxDecoration(
-                                    color: UserHelper.getColor(),
-                                    border: Border.all(
-                                        color: primaryColor, width: 1.5),
-                                    borderRadius: BorderRadius.circular(
-                                        getProportionateScreenHeight(6))),
+                                decoration: containerDecoration(),
                                 child: Center(
                                     child: (isLoading1 == false)
-                                        ? Text("COMMANDER",
+                                        ? Text(StringManager.order,
                                             style: boldTextStyle(16,
                                                 color: Colors.white))
                                         : CupertinoActivityIndicator(
@@ -585,9 +594,10 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                         : SizedBox(
                             width: MediaQuery.of(context).size.width * 0.7,
                             child: ElevatedButton(
+                                style: loginButtonStyle(),
                                 onPressed: detail.onStepContinue,
                                 child: const Text(
-                                  "CONTINUER",
+                                  StringManager.continuer,
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 )),
                           );
@@ -603,7 +613,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                     Step(
                       title: const Text('Depart'),
                       subtitle: const Text(
-                        "Contact de l'expéditeur",
+                        StringManager.senderContact,
                         style: TextStyle(color: Colors.black38),
                       ),
                       content: Step1(
@@ -617,9 +627,9 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                           : StepState.indexed,
                     ),
                     Step(
-                      title: const Text('Destination'),
+                      title: const Text(StringManager.receiver),
                       subtitle: const Text(
-                        "Contact du destinataire",
+                        StringManager.receiverContact,
                         style: TextStyle(color: Colors.black38),
                       ),
                       content: Step2(
@@ -633,18 +643,20 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                           : StepState.indexed,
                     ),
                     Step(
-                      title: const Text('Informations de livraison'),
+                      title: const Text(StringManager.deliveryInfo),
                       content: Form(
                         key: _formKeys[2],
                         child: Column(
                           children: [
+                            5.sBH,
                             TextFormField(
-                              decoration: const InputDecoration(
-                                  labelText: 'Description du colis *'),
+                              decoration: inputDecoration(
+                                labelText: StringManager.packageDescription,
+                              ),
                               controller: descColisTextController,
                               validator: (value) {
                                 if (value!.isEmpty) {
-                                  return "Veuillez remplir ce champ";
+                                  return StringManager.errorMessage;
                                 }
                                 return null;
                               },
@@ -657,10 +669,10 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                       ? () {
                                           showToast(
                                               context: context,
-                                              text:
-                                                  "Service Momentanement indisponible",
+                                              text: StringManager
+                                                  .serviceUnavailable,
                                               iconData: Icons.close_rounded,
-                                              color: Colors.red);
+                                              color: primaryRed);
                                         }
                                       : () {
                                           if (isTodayOpened) {
@@ -685,8 +697,9 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                             });
                                           } else {
                                             Fluttertoast.showToast(
-                                                msg:
-                                                    "Service Momentanement indisponible");
+                                              msg: StringManager
+                                                  .serviceUnavailable,
+                                            );
                                           }
                                         },
                                   child: Row(
@@ -700,12 +713,12 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                                 isTomorrowOpened
                                             ? (DeliveryType? value) {
                                                 showToast(
-                                                    context: context,
-                                                    text:
-                                                        "Service Momentanement indisponible",
-                                                    iconData:
-                                                        Icons.close_rounded,
-                                                    color: Colors.red);
+                                                  context: context,
+                                                  text: StringManager
+                                                      .serviceUnavailable,
+                                                  iconData: Icons.close_rounded,
+                                                  color: primaryRed,
+                                                );
                                               }
                                             : (DeliveryType? value) {
                                                 if (isTodayOpened) {
@@ -731,12 +744,14 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                                   });
                                                 } else {
                                                   Fluttertoast.showToast(
-                                                      msg:
-                                                          "Service Momentanement indisponible");
+                                                    msg: StringManager
+                                                        .serviceUnavailable,
+                                                    backgroundColor: primaryRed,
+                                                  );
                                                 }
                                               },
                                       ),
-                                      const Text('Livraison express'),
+                                      const Text(StringManager.livrex),
                                     ],
                                   ),
                                 ),
@@ -799,7 +814,8 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                         },
                                       ),
                                       const Text(
-                                          'Choisir mon heure de livraison'),
+                                        StringManager.chooseDeliveryTime,
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -817,14 +833,14 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                           : StepState.indexed,
                     ),
                     Step(
-                      title: const Text('Confirmation'),
+                      title: const Text(StringManager.confirmation),
                       content: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
                             margin: const EdgeInsets.only(bottom: 5),
                             child: const Text(
-                              "Résumé",
+                              StringManager.resume,
                               style: TextStyle(color: grey40),
                             ),
                             alignment: Alignment.centerLeft,
@@ -838,7 +854,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 const Text(
-                                  'Distance :  ',
+                                  '${StringManager.distance} :  ',
                                   style: TextStyle(color: grey90),
                                 ),
                                 Text(
@@ -852,7 +868,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               const Text(
-                                'Prix de livraison : ',
+                                '${StringManager.deliveryPrice} : ',
                                 style: TextStyle(color: grey90),
                               ),
                               Text(
@@ -884,7 +900,8 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                           children: [
                                             TextFormField(
                                               decoration: const InputDecoration(
-                                                  labelText: 'Code Promo'),
+                                                  labelText:
+                                                      StringManager.promoCode),
                                             ),
                                             Row(
                                               mainAxisAlignment:
@@ -901,7 +918,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                                           .pop();
                                                     },
                                                     child: const Text(
-                                                      'Annuler',
+                                                      StringManager.cancel,
                                                       style: TextStyle(
                                                           fontWeight:
                                                               FontWeight.bold,
@@ -922,7 +939,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                                           .pop();
                                                     },
                                                     child: const Text(
-                                                      'Valider',
+                                                      StringManager.validate,
                                                       style: TextStyle(
                                                           fontWeight:
                                                               FontWeight.bold,
@@ -942,11 +959,11 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                 Container(
                                     margin: const EdgeInsets.only(right: 3),
                                     child: SvgPicture.asset(
-                                      'img/icon/svg/ic_link_black.svg',
+                                      AssetManager.blackLinkIcon,
                                       color: grey40,
                                     )),
                                 const Text(
-                                  'Ajouter un code promo',
+                                  StringManager.addPromoCode,
                                   style: TextStyle(color: primaryColor),
                                 ),
                               ],
@@ -956,7 +973,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                             alignment: Alignment.centerLeft,
                             margin: const EdgeInsets.only(top: 5, bottom: 5),
                             child: const Text(
-                              "Mode de paiement",
+                              StringManager.paymentMode,
                               style: TextStyle(color: grey40),
                             ),
                             decoration: const BoxDecoration(
@@ -983,9 +1000,9 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                       });
                                     }),
                               ),
-                              const Text('Paiement à la livraison'),
+                              const Text(StringManager.payAtDelivery),
                               SvgPicture.asset(
-                                'img/icon/svg/ic_link_black.svg',
+                                AssetManager.blackLinkIcon,
                                 color: grey40,
                               )
                             ],
@@ -1003,11 +1020,11 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                                     });
                                   }),
                               const Text(
-                                'Payer par carte bancaire',
+                                StringManager.payByCard,
                                 style: TextStyle(color: grey90),
                               ),
                               SvgPicture.asset(
-                                'img/icon/svg/ic_credit_card_black.svg',
+                                AssetManager.creditCardIcon,
                               )
                             ],
                           ),
@@ -1059,8 +1076,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
             });
           } else {
             showToast(
-                context: context,
-                text: "Veuillez choisir l'heure de livraison");
+                context: context, text: StringManager.chooseDeliveryTime1);
           }
           break;
         default:

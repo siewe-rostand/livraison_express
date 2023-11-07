@@ -209,9 +209,9 @@ class _ForgottenPasswordScreenState extends State<ForgottenPasswordScreen> {
                                 }
                               }
                             : null,
-                        child: const Text(
-                          StringManager.validate,
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                        child:  Text(
+                          StringManager.validate.toUpperCase(),
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         )),
                   )
                 ],

@@ -45,12 +45,12 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
-  GlobalKey<RefreshIndicatorState>();
+      GlobalKey<RefreshIndicatorState>();
   //dop down menu initial value
   String initialDropValue = 'DOUALA';
   String currentTime = '';
   String saveCity = '';
-  bool _scrolling = false;
+  bool _scrolling = false, _showFab = true;
   final logger = Logger();
   double heightBottom = getProportionateScreenHeight(110);
 
@@ -68,7 +68,7 @@ class _HomePageState extends State<HomePage> {
   final ScrollController controller = ScrollController();
   List<String> ville = [];
   List<String> quarters = [];
-  DateTime currentBackPressTime =DateTime.now();
+  DateTime currentBackPressTime = DateTime.now();
   List<Quarter> quarter = [];
 
   @override
@@ -76,29 +76,36 @@ class _HomePageState extends State<HomePage> {
     initView();
     super.initState();
   }
-  void toast({required BuildContext context, required String text}){
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text,textAlign: TextAlign.center,),
+
+  void toast({required BuildContext context, required String text}) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(
+        text,
+        textAlign: TextAlign.center,
+      ),
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
     ));
-
   }
-  Future<bool> _onBackButtonDoubleClicked(BuildContext context)async{
+
+  Future<bool> _onBackButtonDoubleClicked(BuildContext context) async {
     final difference = DateTime.now().difference(currentBackPressTime);
     currentBackPressTime = DateTime.now();
-    if(difference >= const Duration(seconds: 2)){
+    if (difference >= const Duration(seconds: 2)) {
       toast(context: context, text: "Cliquez 2 fois pour sortir");
       return false;
-    }else{
+    } else {
       SystemNavigator.pop(animated: true);
       return true;
     }
   }
-  getModulesOnCityChange({String cityString = "douala",required BuildContext context}) async {
-    Future.delayed(Duration.zero,()=>_showDialog(context));
+
+  getModulesOnCityChange(
+      {String cityString = "douala", required BuildContext context}) async {
+    Future.delayed(Duration.zero, () => _showDialog(context));
     cities.clear();
     modules.clear();
-    Provider.of<CartProvider>(context,listen: false).clears();
+    Provider.of<CartProvider>(context, listen: false).clears();
     String url = "$baseUrl/preload?city=$cityString";
     try {
       final response = await get(Uri.parse(url)).catchError((e) {
@@ -111,7 +118,7 @@ class _HomePageState extends State<HomePage> {
           setState(() {
             for (var element in moduleList) {
               Modules module = Modules.fromJson(element);
-              UserHelper.module=module;
+              UserHelper.module = module;
               modules.add(module);
             }
             for (var element in cityList) {
@@ -125,7 +132,7 @@ class _HomePageState extends State<HomePage> {
           });
         }
         Navigator.pop(context);
-      }else{
+      } else {
         Navigator.pop(context);
         showGenDialog(
             context,
@@ -165,7 +172,7 @@ class _HomePageState extends State<HomePage> {
                 Navigator.of(context).pop();
               }));
       print('http error');
-    }on FormatException catch (_) {
+    } on FormatException catch (_) {
       Navigator.pop(context);
       showGenDialog(
           context,
@@ -193,7 +200,6 @@ class _HomePageState extends State<HomePage> {
               }));
       print('eer error');
     }
-
   }
 
   initView() async {
@@ -213,69 +219,16 @@ class _HomePageState extends State<HomePage> {
         setState(() {
           cities.add(City.fromJson(element));
           city = cities.first;
-          UserHelper.city=city;
+          UserHelper.city = city;
           ville.add(city.name!);
         });
       }
     }
   }
-  bool isOpened(Horaires horaires) {
+
+  bool isOpened(List<DayItem>? itemsToday) {
     bool juge = false;
-  if(horaires.toString().isNotEmpty){
-  if(horaires.today!=null){
-    List<DayItem>? itemsToday =
-        horaires.today?.items;
-    for (DayItem i in itemsToday!) {
-      try {
-        DateTime now = DateTime.now();
-        String? openTime = i.openedAt;
-        String? closeTime = i.closedAt;
-        var nw = openTime?.substring(0, 2);
-        var a = openTime?.substring(3, 5);
-        var cnm = closeTime?.substring(0, 2);
-        var cla = closeTime?.substring(3, 5);
-        DateTime openTimeStamp = DateTime(now.year, now.month,
-            now.day, int.parse(nw!), int.parse(a!), 0);
-        DateTime closeTimeStamp = DateTime(now.year, now.month,
-            now.day, int.parse(cnm!), int.parse(cla!), 0);
-        debugPrint('close time home page // $closeTimeStamp');
-        if ((now.isAtSameMomentAs(openTimeStamp) ||
-            now.isAfter(openTimeStamp)) &&
-            now.isBefore(closeTimeStamp)) {
-          isTodayOpened = true;
-          juge=true;
-          break;
-        }
-        log('from home page today',error: isTodayOpened.toString());
-      } catch (e) {
-        debugPrint('shop get time error $e');
-      }
-    }
-  }
-  if (horaires.tomorrow != null) {
-    List<DayItem>? itemsToday =
-        horaires.tomorrow?.items;
-    for (DayItem i in itemsToday!) {
-      try {
-        String? openTime = i.openedAt;
-        String? closeTime = i.closedAt;
-        if (openTime!.isNotEmpty && closeTime!.isNotEmpty) {
-          isTomorrowOpened = true;
-          juge=true;
-          break;
-        }
-        log('from home page',error: isTomorrowOpened.toString());
-      } catch (e) {
-        debugPrint('shop get time error $e');
-      }
-    }
-  }
-}
-    return juge;
-  }
-  bool isOpened1(List<DayItem>? itemsToday) {
-    bool juge = false;
-    if(itemsToday!.isNotEmpty) {
+    if (itemsToday!.isNotEmpty) {
       for (DayItem i in itemsToday) {
         try {
           DateTime now = DateTime.now();
@@ -309,32 +262,16 @@ class _HomePageState extends State<HomePage> {
     }
     return juge;
   }
-  _showDialog(BuildContext context){
+
+  _showDialog(BuildContext context) {
     showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context){
-      return Dialog(
-        child: Image.asset('img/load_modules.gif'),
-      );
-    });
-  }
-  _getQuarters(){
-    MainApi.getQuarters().then((value){
-      var body = json.decode(value.body);
-      List list;
-      var res = body['data'] as List;
-      quarter=res.map((json) => Quarter.fromJson(json)).toList();
-      list =[];
-      for(int i = 0; i<quarter.length; i++){
-        list.add(quarter[i].name!);
-        if(quarter[i].city == city.name || quarter[i].city == "DOUALA"){
-          quarters.add(quarter[i].name!);
-          log("quarters ${quarter[i].name }");
-        }
-      }
-
-    });
+        builder: (context) {
+          return Dialog(
+            child: Image.asset('img/load_modules.gif'),
+          );
+        });
   }
 
   @override
@@ -355,30 +292,46 @@ class _HomePageState extends State<HomePage> {
               )),
               iconTheme: const IconThemeData(color: primaryColor),
               backgroundColor: Colors.white.withOpacity(.3),
-              shadowColor: Color(0xff4084BAFF),
+              shadowColor: const Color(0xff4084baff),
               elevation: 40,
               actions: [
-                IconButton(onPressed:(){
-                  getModulesOnCityChange(context: context);
-                }, icon: const Icon(Icons.refresh))
+                IconButton(
+                    onPressed: () {
+                      getModulesOnCityChange(context: context);
+                    },
+                    icon: const Icon(Icons.refresh))
               ],
             ),
           ),
           drawer: const MyHomeDrawer(),
           body: WillPopScope(
-            onWillPop:()=> _onBackButtonDoubleClicked(context),
+            onWillPop: () => _onBackButtonDoubleClicked(context),
             child: Stack(
               children: [
                 ScrollConfiguration(
                   behavior: const ScrollBehavior()
-                    ..buildOverscrollIndicator(context, Container(), ScrollableDetails(direction: AxisDirection.down, controller: controller)),
-                  child: NotificationListener<ScrollNotification>(
-                    onNotification: _handleScrollNotification,
+                    ..buildOverscrollIndicator(
+                        context,
+                        Container(),
+                        ScrollableDetails(
+                            direction: AxisDirection.down,
+                            controller: controller)),
+                  child: NotificationListener<UserScrollNotification>(
+                    onNotification: (notification) {
+                      final ScrollDirection direction = notification.direction;
+                      setState(() {
+                        if (direction == ScrollDirection.reverse) {
+                          _showFab = false;
+                        } else if (direction == ScrollDirection.forward) {
+                          _showFab = true;
+                        }
+                      });
+                      return true;
+                    },
                     child: SingleChildScrollView(
                       child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                            maxHeight: SizeConfig.screenHeight!
-                        ),
+                        constraints:
+                            BoxConstraints(maxHeight: SizeConfig.screenHeight!),
                         child: Column(
                           children: [
                             SelectCity(
@@ -395,41 +348,70 @@ class _HomePageState extends State<HomePage> {
                                   shrinkWrap: true,
                                   itemCount: modules.length,
                                   gridDelegate:
-                                  SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: 2,
-                                      childAspectRatio:
-                                      SizeConfig.screenWidth! /
-                                          (SizeConfig.screenHeight! /
-                                              2.5)),
+                                      SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: 2,
+                                          childAspectRatio: SizeConfig
+                                                  .screenWidth! /
+                                              (SizeConfig.screenHeight! / 2.5)),
                                   itemBuilder: (context, index) {
                                     isAvailableInCity =
-                                    modules[index].isActiveInCity!;
-                                    List<Shops> shopsList= modules[index].shops!;
+                                        modules[index].isActiveInCity!;
+                                    List<Shops> shopsList =
+                                        modules[index].shops!;
                                     return OpenContainerWrapper(
-                                      transitionType: ContainerTransitionType.fade,
-                                      nextPage: modules[index].slug == 'delivery'
+                                      transitionType:
+                                          ContainerTransitionType.fade,
+                                      nextPage: modules[index].slug ==
+                                              'delivery'
                                           ? const CommandeCoursier()
                                           : modules[index].slug == 'restaurant'
-                                          ? const Restaurant()
-                                          : (shopsList.length == 2 &&
-                                          shopsList[0].toString().isNotEmpty &&
-                                          shopsList[0].horaires != null &&
-                                          shopsList[0].horaires?.today != null &&
-                                          isOpened1(shopsList[0].horaires?.today!.items))? const CategoryPage():const MagasinPage(),
-                                      closedBuilder: (BuildContext _, VoidCallback openContainer) {
+                                              ? const Restaurant()
+                                              : (shopsList.length == 2 &&
+                                                      shopsList[0]
+                                                          .toString()
+                                                          .isNotEmpty &&
+                                                      shopsList[0].horaires !=
+                                                          null &&
+                                                      shopsList[0]
+                                                              .horaires
+                                                              ?.today !=
+                                                          null &&
+                                                      isOpened(shopsList[0]
+                                                          .horaires
+                                                          ?.today!
+                                                          .items))
+                                                  ? const CategoryPage()
+                                                  : const MagasinPage(),
+                                      closedBuilder: (BuildContext _,
+                                          VoidCallback openContainer) {
                                         return InkWellOverlay(
                                             onTap: () {
-                                              if (modules[index].isActiveInCity==true) {
-                                                UserHelper.module = modules[index];
-                                                if(modules[index].slug == 'delivery') {
-                                                  UserHelper.shops = modules[index].shops!.first;
+                                              if (modules[index]
+                                                      .isActiveInCity ==
+                                                  true) {
+                                                UserHelper.module =
+                                                    modules[index];
+                                                if (modules[index].slug ==
+                                                    'delivery') {
+                                                  UserHelper.shops =
+                                                      modules[index]
+                                                          .shops!
+                                                          .first;
                                                 }
                                                 openContainer();
-                                              }else{
-                                                showToast(context: context, text: "Service Pas disponible dans cette ville", iconData: Icons.close, color: Colors.red);
+                                              } else {
+                                                showToast(
+                                                    context: context,
+                                                    text:
+                                                        "Service Pas disponible dans cette ville",
+                                                    iconData: Icons.close,
+                                                    color: Colors.red);
                                               }
                                             },
-                                            child: item(modules[index], modules[index].isActiveInCity!));
+                                            child: item(
+                                                modules[index],
+                                                modules[index]
+                                                    .isActiveInCity!));
                                       },
                                     );
                                   }),
@@ -444,25 +426,24 @@ class _HomePageState extends State<HomePage> {
                   bottom: 0,
                   right: 0,
                   left: 0,
-                  child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      decoration: const BoxDecoration(
-                          image: DecorationImage(
-                              image: AssetImage("assets/images/semi_circle.png"),
-                              fit: BoxFit.cover
-                          )
-                      ),
-                      height: heightBottom,
-                      child: Visibility(
-                        visible: !_scrolling,
+                  child: AnimatedSlide(
+                    duration: const Duration(milliseconds: 300),
+                    offset: _showFab ? Offset.zero : const Offset(0, 2),
+                    child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        decoration: const BoxDecoration(
+                            image: DecorationImage(
+                                image:
+                                    AssetImage("assets/images/semi_circle.png"),
+                                fit: BoxFit.cover)),
+                        height: heightBottom,
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
                             SizedBox(height: getProportionateScreenHeight(10)),
                             const FancyFab(),
                           ],
-                        ),
-                      )
+                        )),
                   ),
                 ),
               ],
@@ -472,46 +453,31 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
   Widget item(Modules module, bool isAvailableInCity) {
     return Container(
       decoration: const BoxDecoration(
-        border: Border(
-          right: BorderSide(color: grey40),
-          bottom: BorderSide(color: grey40),
-          top: BorderSide(color: grey40)
-        )
-      ),
+          border: Border(
+              right: BorderSide(color: grey40),
+              bottom: BorderSide(color: grey40),
+              top: BorderSide(color: grey40))),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment:
-        MainAxisAlignment.spaceEvenly,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           Container(
-            height:
-            getProportionateScreenHeight(
-                80),
+            height: getProportionateScreenHeight(80),
             decoration: BoxDecoration(
                 image: DecorationImage(
-                    image:
-                    CachedNetworkImageProvider(
-                        module
-                            .image!),
-                    colorFilter:
-                    isAvailableInCity ==
-                        false
-                        ? const ColorFilter
-                        .mode(
-                        Colors
-                            .white,
-                        BlendMode
-                            .saturation)
+                    image: CachedNetworkImageProvider(module.image!),
+                    colorFilter: isAvailableInCity == false
+                        ? const ColorFilter.mode(
+                            Colors.white, BlendMode.saturation)
                         : null)),
           ),
           Text(
             module.libelle!,
-            style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 16),
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
           )
         ],
       ),
