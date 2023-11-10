@@ -21,7 +21,7 @@ class CartItemView extends StatefulWidget {
 
 class _CartItemViewState extends State<CartItemView> {
   final logger = Logger();
-  DBHelper1? dbHelper = DBHelper1();
+  DBHelper? dbHelper = DBHelper();
   int? newPrice;
   @override
   Widget build(BuildContext context) {

@@ -1,12 +1,9 @@
 
 import 'dart:convert';
-import 'dart:developer';
-import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart';
 import 'package:livraison_express/model/category.dart';
-import 'package:livraison_express/utils/handle_exception.dart';
 import 'package:livraison_express/utils/main_utils.dart';
 import 'package:logger/logger.dart';
 import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
@@ -62,7 +59,7 @@ class ShopServices{
         throw Exception('error loading module data');
       }
     } catch ( e) {
-      throw handleException(e);
+      throw (e);
     }
   }
   static Future<List<Category>> getSubCategoriesFromShopAndCategory({required int shopId,required int categoryId}) async{

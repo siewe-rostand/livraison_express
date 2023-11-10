@@ -1,6 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:livraison_express/constant/all-constant.dart';
+import 'package:livraison_express/utils/asset_manager.dart';
 import 'package:livraison_express/views/login/login.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -57,30 +60,33 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     SizeConfig().init(context);
-    return Scaffold(
-      body: Stack(
-        children: [
-          Center(
-            child: FadeTransition(
-              child: Image.asset('img/logo.png'),
-              opacity: fadeInFadeOut,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(statusBarColor: primaryColor),
+      child: Scaffold(
+        body: Stack(
+          children: [
+            Center(
+              child: FadeTransition(
+                child: Image.asset(AssetManager.logo),
+                opacity: fadeInFadeOut,
+              ),
             ),
-          ),
-          Container(
-            alignment: Alignment.bottomCenter,
-            margin: const EdgeInsets.only(bottom: 20),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                CircularProgressIndicator(
-                  semanticsValue: 'chargement en cours',
-                ),
-                Text('chargement en cours ..')
-              ],
+            Container(
+              alignment: Alignment.bottomCenter,
+              margin: const EdgeInsets.only(bottom: 20),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  CircularProgressIndicator(
+                    semanticsValue: 'chargement en cours',
+                  ),
+                  Text('chargement en cours ..')
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

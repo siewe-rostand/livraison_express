@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:http/http.dart';
+import 'package:livraison_express/utils/string_manager.dart';
 import 'package:livraison_express/views/widgets/progress_bar.dart';
 import 'package:livraison_express/views/home/select_city.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -122,7 +123,6 @@ class _ModuleCardState extends State<ModuleCard> {
         required ModuleColor moduleColor,
         required bool isRestaurant}) {
     bool isAvailable = true;
-    // print("module ");
     for (Modules modul in widget.modules) {
       List<Shops>? shopsList = modul.shops;
       isAvailableInCity = modul.isActiveInCity == true;
@@ -146,18 +146,11 @@ class _ModuleCardState extends State<ModuleCard> {
           } else {
             try {
               if (shopsList!.isNotEmpty) {
-                print("++++--=${isOpened(shopsList[0].horaires!)}");
                 if (shopsList.length == 1 &&
                     shopsList[0].toString().isNotEmpty &&
                     shopsList[0].horaires != null &&
                     shopsList[0].horaires?.today != null &&
                     isOpened1(shopsList[0].horaires?.today!.items)) {
-                  debugPrint('from home page ${shopsList[0].slug}');
-
-                  final shopData = json.encode(shops);
-                  // pref.setString('magasin', shopData);
-                  // MySession.saveValue('magasin', shopData);
-                  // categoryList = await ShopServices.getCategories(shopId: shopId!);
                   Navigator.of(context).push(MaterialPageRoute(
                       builder: (context) => const CategoryPage(
                       )));
@@ -172,7 +165,7 @@ class _ModuleCardState extends State<ModuleCard> {
               debugPrint('error $e');
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  backgroundColor: Colors.red,
+                  backgroundColor: primaryRed,
                   content: Text(
                       'Ce service est indisponnible pour l\'instant. Veuillez contactez le service client.'),
                 ),
@@ -185,8 +178,8 @@ class _ModuleCardState extends State<ModuleCard> {
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                backgroundColor: Colors.red,
-                content: Text('Ce service est momentanément indisponible.'),
+                backgroundColor: primaryRed,
+                content: Text(StringManager.serviceUnavailable),
               ),
             );
           }
@@ -200,7 +193,7 @@ class _ModuleCardState extends State<ModuleCard> {
   getModulesOnCityChange({String cityString = "douala",required BuildContext context}) async {
     SharedPreferences pref = await SharedPreferences
         .getInstance();
-    DBHelper1 dbHelper=DBHelper1();
+    DBHelper dbHelper=DBHelper();
     _loading = true;
     cities.clear();
     modules.clear();
@@ -370,7 +363,7 @@ class _ModuleCardState extends State<ModuleCard> {
                               childAspectRatio:
                               SizeConfig.screenWidth! /
                                   (SizeConfig.screenHeight! /
-                                      2.5)),
+                                      2.5),),
                           itemBuilder: (context, index) {
                             isAvailableInCity =
                             modules[index].isActiveInCity!;
@@ -378,12 +371,9 @@ class _ModuleCardState extends State<ModuleCard> {
                               margin: EdgeInsets.zero,
                               decoration: const BoxDecoration(
                                   border: Border(
-                                      bottom: BorderSide(
-                                          color: Colors.black12,
-                                          width: 1.5),
                                       left: BorderSide(
                                           color: Colors.black12,
-                                          width: 1.5))),
+                                          width: 1.5)),),
                               height:
                               getProportionateScreenHeight(80),
                               child: InkWell(

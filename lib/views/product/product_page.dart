@@ -12,7 +12,6 @@ import 'package:livraison_express/utils/size_config.dart';
 import 'package:livraison_express/views/product/product-shimmer-card.dart';
 import 'package:livraison_express/views/widgets/floating_action_button.dart';
 import 'package:livraison_express/views/widgets/open_wrapper.dart';
-import 'package:livraison_express/views/widgets/search_Text_field.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -39,7 +38,7 @@ class ProductPage extends StatefulWidget {
 
 class _ProductPageState extends State<ProductPage> with TickerProviderStateMixin {
   late AnimationController animationController;
-  DBHelper1? dbHelper = DBHelper1();
+  DBHelper? dbHelper = DBHelper();
   final logger = Logger();
   FocusNode focusNode = FocusNode();
   TextEditingController controller = TextEditingController();

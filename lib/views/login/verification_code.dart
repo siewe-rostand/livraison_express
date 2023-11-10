@@ -9,6 +9,7 @@ import 'package:livraison_express/utils/app_extension.dart';
 import 'package:livraison_express/utils/asset_manager.dart';
 import 'package:livraison_express/utils/main_utils.dart';
 import 'package:livraison_express/utils/size_config.dart';
+import 'package:livraison_express/utils/string_manager.dart';
 import 'package:livraison_express/views/home/home-page.dart';
 import 'package:livraison_express/views/login/login.dart';
 import 'package:livraison_express/views/login/reset_password.dart';
@@ -75,7 +76,7 @@ class _VerificationCodeState extends State<VerificationCode> {
               isLoading
                   ? const CircularProgressIndicator()
                   : const Text(
-                      'Vous allez recevoir un code de verification par SMS dans 1 minute. Veuillez entrer ce code'),
+                      StringManager.codeSent),
               const SizedBox(
                 height: 10,
               ),
@@ -87,9 +88,9 @@ class _VerificationCodeState extends State<VerificationCode> {
                 decoration: const InputDecoration(labelText: 'Entrez le code'),
                 validator: (val) {
                   if (val!.isEmpty) {
-                    return 'veuillez remplir ce champs';
+                    return StringManager.errorMessage;
                   } else if (val.length < 5) {
-                    return "Le code doit contenir aumoins 5 chiffres";
+                    return StringManager.codeErrorMessage;
                   }
                   return null;
                 },
@@ -164,7 +165,6 @@ class _VerificationCodeState extends State<VerificationCode> {
                 child: TextButton(
                     onPressed: () async {
                       if (resetPassword != widget.resetPassword) {
-                        print('====================={${widget.email}');
                         await ApiAuthService(context: context,progressDialog: getProgressDialog(context: context),)
                             .forgotPasswordCodeEmail(email: widget.email!);
                       } else {

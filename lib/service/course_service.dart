@@ -136,7 +136,7 @@ class CourseApi {
         throw (onErrorMessage);
       }
     } catch (e) {
-      throw handleException(e);
+      throw handleException(e, context);
     }
   }
 

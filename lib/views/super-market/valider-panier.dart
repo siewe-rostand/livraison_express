@@ -40,6 +40,7 @@ import '../../model/order.dart';
 import '../../model/shop.dart';
 import '../../service/course_service.dart';
 import '../../provider/cart-provider.dart';
+import '../../utils/string_manager.dart';
 import '../cart/cart.dart';
 
 enum DeliveryType { express, heure_livraison }
@@ -55,7 +56,7 @@ class ValiderPanier extends StatefulWidget {
 class _ValiderPanierState extends State<ValiderPanier> {
   MainUtils mainUtils = MainUtils();
 
-  DBHelper1 dbHelper = DBHelper1();
+  DBHelper dbHelper = DBHelper();
   final logger = Logger();
   Map<String, dynamic>? paymentIntentData;
   int radioSelected = 1;
@@ -120,6 +121,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
   TextEditingController promoTextController = TextEditingController();
   Adresse selectedAddressDepart = Adresse();
   String? city;
+  String moduleSlug = '';
   int? cityId;
   String? slug;
   int? idChargement;
@@ -142,6 +144,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
     cityId = UserHelper.city.id;
     cityDepartTextController = TextEditingController(text: city);
     initializeDateFormatting();
+    moduleSlug = UserHelper.module.slug!;
     isOpened(UserHelper.shops.horaires!);
   }
 
@@ -265,7 +268,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
     final extractedUserData = json.decode(userString!);
 
     AppUser1 appUser1 = AppUser1.fromJson(extractedUserData);
-    List<CartItem> cartList = await dbHelper.getCartList();
+    List<CartItem> cartList = await dbHelper.getCartList(moduleSlug);
     for (int i = 0; i < cartList.length; i++) {
       CartItem cartItem = cartList[i];
       Products article = Products();
@@ -627,7 +630,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
                         : StepState.disabled,
                   ),
                   Step(
-                    title: const Text("Information 'adresse "),
+                    title: const Text("Information adresse "),
                     content: Step2(
                       step2FormKey: _formKeys[1],
                       addressReceiver: addressReceiver,
@@ -652,7 +655,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                         showToast(
                                             context: context,
                                             text:
-                                                "Service Momentanement indisponible",
+                                            StringManager.serviceUnavailable,
                                             iconData: Icons.close_rounded,
                                             color: Colors.red);
                                       }
@@ -679,7 +682,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                         } else {
                                           Fluttertoast.showToast(
                                               msg:
-                                                  "Service Momentanement indisponible");
+                                              StringManager.serviceUnavailable);
                                         }
                                       },
                                 child: Row(
@@ -695,7 +698,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                               showToast(
                                                   context: context,
                                                   text:
-                                                      "Service Momentanement indisponible",
+                                                  StringManager.serviceUnavailable,
                                                   iconData: Icons.close_rounded,
                                                   color: Colors.red);
                                             }
@@ -723,7 +726,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                               } else {
                                                 Fluttertoast.showToast(
                                                     msg:
-                                                        "Service Momentanement indisponible");
+                                                        StringManager.serviceUnavailable);
                                               }
                                             },
                                     ),
@@ -797,7 +800,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                       },
                                     ),
                                     const Text(
-                                        'Choisir mon heure de livraison'),
+                                        StringManager.chooseDeliveryTime),
                                   ],
                                 ),
                               ),

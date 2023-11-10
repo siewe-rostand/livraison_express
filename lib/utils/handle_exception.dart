@@ -4,39 +4,59 @@ import 'dart:io';
 
 import 'package:livraison_express/utils/main_utils.dart';
 
-String handleException(Object e){
+import '../data/user_helper.dart';
+import '../views/widgets/custom_dialog.dart';
+import 'package:flutter/material.dart';
+
+String handleException(Object e, BuildContext context){
   print(e);
   if(e is SocketException){
-    print('SocketException error');
+    showGenDialog(
+        context,
+        true,
+        CustomDialog(
+            content: onFailureMessage,
+            positiveBtnText: "OK",
+            positiveBtnPressed: () {
+              Navigator.of(context).pop();
+            }));
+    return onFailureMessage;
+  }
+  if(e is FormatException){
+    showGenDialog(
+        context,
+        true,
+        CustomDialog(
+            content: onErrorMessage,
+            positiveBtnText: "OK",
+            positiveBtnPressed: () {
+              Navigator.of(context).pop();
+            }));
     return onFailureMessage;
   }
   else if(e is TimeoutException){
-    print('TimeoutException error');
+    showGenDialog(
+        context,
+        true,
+        CustomDialog(
+            title: 'Ooooops',
+            content: onFailureMessage,
+            positiveBtnText: "OK",
+            positiveBtnPressed: () {
+              Navigator.of(context).pop();
+            }));
     return onFailureMessage;
   }
   else {
-    print('default error');
+    showGenDialog(
+        context,
+        true,
+        CustomDialog(
+            content: onFailureMessage,
+            positiveBtnText: "OK",
+            positiveBtnPressed: () {
+              Navigator.of(context).pop();
+            }));
     return onErrorMessage;
   }
-}
-
-
-class NoInternetException {
-  String message;
-  NoInternetException(this.message);
-}
-
-class NoServiceFoundException {
-  String message;
-  NoServiceFoundException(this.message);
-}
-
-class InvalidFormatException {
-  String message;
-  InvalidFormatException(this.message);
-}
-
-class UnknownException {
-  String message;
-  UnknownException(this.message);
 }

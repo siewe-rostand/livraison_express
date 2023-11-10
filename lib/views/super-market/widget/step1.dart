@@ -10,10 +10,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../data/user_helper.dart';
 import '../../../model/address.dart';
 import '../../../model/user.dart';
+import '../../../utils/string_manager.dart';
+
 class Step1 extends StatefulWidget {
   final GlobalKey<FormState> step1FormKey;
   final Client sender;
-  const Step1({Key? key, required this.step1FormKey, required this.sender}) : super(key: key);
+  const Step1({Key? key, required this.step1FormKey, required this.sender})
+      : super(key: key);
 
   @override
   State<Step1> createState() => _Step1State();
@@ -23,7 +26,7 @@ class _Step1State extends State<Step1> {
   String fullName = '';
   String telephone = '';
   String telephone1 = '';
-  String email = '',name='',fname='';
+  String email = '', name = '', fname = '';
   int radioSelected = 1;
   Address senderAddress = Address();
   Address addressReceiver = Address();
@@ -33,106 +36,97 @@ class _Step1State extends State<Step1> {
   TextEditingController emailTextController = TextEditingController();
   final TextEditingController _typeAheadController = TextEditingController();
 
-
-  autoComplete(){
-    return
-      TypeAheadFormField(
-        getImmediateSuggestions: true,
-        textFieldConfiguration:  TextFieldConfiguration(
-          decoration: const InputDecoration(labelText: 'Nom et prenom *'),
-          controller: _typeAheadController,
-
-        ),
-        suggestionsCallback: (pattern) {
-
-          // call the function to get suggestions based on text entered
-          return getContacts(pattern);
-        },
-        itemBuilder: (context,Contact suggestion) {
-          // show suggection list
-          suggestion.phones?.forEach((element) {
-            telephone=element.value!;
-          });
-          return ListTile(
-            title: Text(suggestion.displayName!),
-            subtitle: Text(
-              telephone,
-            ),
-          );
-        },
-        onSuggestionSelected: (Contact suggestion) {
-          suggestion.phones?.forEach((element) {
-            telephone=element.value!;
-            widget.sender.telephone=element.value;
-          });
-          fname=suggestion.givenName??'';
-          name=suggestion.familyName??'';
-          widget.sender.fullName=suggestion.displayName;
-          _typeAheadController.text=suggestion.displayName!;
-          phoneTextController.text =telephone;
-        },
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return "Veuillez entrer le nom et prénom";
-          }
-          return null;
-        },
-        onSaved: (value)=>widget.sender.fullName=value,
-        hideOnEmpty: true,
-        autoFlipDirection: true,
-      );
+  autoComplete() {
+    return TypeAheadFormField(
+      getImmediateSuggestions: true,
+      textFieldConfiguration: TextFieldConfiguration(
+        decoration:
+            const InputDecoration(labelText: StringManager.nameAndSurname),
+        controller: _typeAheadController,
+      ),
+      suggestionsCallback: (pattern) {
+        // call the function to get suggestions based on text entered
+        return getContacts(pattern);
+      },
+      itemBuilder: (context, Contact suggestion) {
+        // show suggection list
+        suggestion.phones?.forEach((element) {
+          telephone = element.value!;
+        });
+        return ListTile(
+          title: Text(suggestion.displayName!),
+          subtitle: Text(
+            telephone,
+          ),
+        );
+      },
+      onSuggestionSelected: (Contact suggestion) {
+        suggestion.phones?.forEach((element) {
+          telephone = element.value!;
+          widget.sender.telephone = element.value;
+        });
+        fname = suggestion.givenName ?? '';
+        name = suggestion.familyName ?? '';
+        widget.sender.fullName = suggestion.displayName;
+        _typeAheadController.text = suggestion.displayName!;
+        phoneTextController.text = telephone;
+      },
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return "Veuillez entrer le nom et prénom";
+        }
+        return null;
+      },
+      onSaved: (value) => widget.sender.fullName = value,
+      hideOnEmpty: true,
+      autoFlipDirection: true,
+    );
   }
+
   Future<List<Contact>> getContacts(String query) async {
     //We already have permissions for contact when we get to this page, so we
     // are now just retrieving it
     final PermissionStatus permission = await Permission.contacts.status;
-    if(permission == PermissionStatus.granted) {
-      return await ContactsService.getContacts(query: query,
-          withThumbnails: false,photoHighResolution: false
-      );
-    }else{
+    if (permission == PermissionStatus.granted) {
+      return await ContactsService.getContacts(
+          query: query, withThumbnails: false, photoHighResolution: false);
+    } else {
       await Permission.contacts.request().then((value) {
-        if(value==PermissionStatus.granted){
+        if (value == PermissionStatus.granted) {
           getContacts(query);
         }
       });
       throw Exception('error');
     }
   }
-  getUserData(int? value)async{
-    SharedPreferences sharedPreferences =
-        await SharedPreferences.getInstance();
-    String? userString =
-    sharedPreferences.getString("userData");
-    final extractedUserData =
-    json.decode(userString!);
+
+  getUserData(int? value) async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    String? userString = sharedPreferences.getString("userData");
+    final extractedUserData = json.decode(userString!);
     AppUser1 appUser = AppUser1.fromJson(extractedUserData);
-    AppUser1? user=UserHelper.currentUser1??appUser;
-    email =(user.email??appUser.email)!;
-    fullName =(user.fullname??appUser.fullname)!;
-    telephone =(user.telephone??appUser.telephone)!;
-    telephone1 =(user.telephoneAlt??appUser.telephoneAlt)??'';
+    AppUser1? user = UserHelper.currentUser1 ?? appUser;
+    email = (user.email ?? appUser.email)!;
+    fullName = (user.fullname ?? appUser.fullname)!;
+    telephone = (user.telephone ?? appUser.telephone)!;
+    telephone1 = (user.telephoneAlt ?? appUser.telephoneAlt) ?? '';
     setState(() {
       radioSelected = value!;
       nameTextController.text = fullName;
       phone2DepartTextController.text = telephone1;
       phoneTextController.text = telephone;
       emailTextController.text = email;
-      senderAddress.providerName =
-      "livraison-express";
-      widget.sender.providerName=user.providerName;
-      widget.sender.fullName=nameTextController.text;
-      widget.sender.telephone=telephone;
-      widget.sender.telephoneAlt=telephone1;
-      widget.sender.name= radioSelected==0?appUser.lastname:name;
-      widget.sender.surname= radioSelected==0?appUser.firstname:fname;
+      senderAddress.providerName = "livraison-express";
+      widget.sender.providerName = user.providerName;
+      widget.sender.fullName = nameTextController.text;
+      widget.sender.telephone = telephone;
+      widget.sender.telephoneAlt = telephone1;
+      widget.sender.name = radioSelected == 0 ? appUser.lastname : name;
+      widget.sender.surname = radioSelected == 0 ? appUser.firstname : fname;
     });
   }
 
-
-
-
-@override
+  @override
   void dispose() {
     nameTextController.dispose();
     phoneTextController.dispose();
@@ -141,6 +135,7 @@ class _Step1State extends State<Step1> {
     _typeAheadController.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     return Form(
@@ -154,9 +149,12 @@ class _Step1State extends State<Step1> {
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('CHEZ MOI',style: TextStyle(fontWeight: FontWeight.bold),),
+                  const Text(
+                    'CHEZ MOI',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   Radio(
-                    activeColor:UserHelper.getColor(),
+                    activeColor: UserHelper.getColor(),
                     value: 0,
                     groupValue: radioSelected,
                     onChanged: (int? value) {
@@ -167,10 +165,13 @@ class _Step1State extends State<Step1> {
               ),
               Column(
                 children: [
-                  const Text('AUTRE',style: TextStyle(fontWeight: FontWeight.bold),),
+                  const Text(
+                    'AUTRE',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   Radio(
                     activeColor: UserHelper.getColor(),
-                    value:1,
+                    value: 1,
                     groupValue: radioSelected,
                     onChanged: (int? value) {
                       fullName = '';
@@ -184,9 +185,8 @@ class _Step1State extends State<Step1> {
                         phoneTextController.text = telephone;
                         emailTextController.text = email;
                         // sender.id = null;
-                        widget.sender.providerName =
-                        'livraison-express';
-                        widget.sender.providerName='livraison-express';
+                        widget.sender.providerName = 'livraison-express';
+                        widget.sender.providerName = 'livraison-express';
                       });
                     },
                   ),
@@ -194,26 +194,28 @@ class _Step1State extends State<Step1> {
               ),
             ],
           ),
-          radioSelected == 0?TextFormField(
-            controller: nameTextController,
-            onSaved: (value)=>widget.sender.fullName=value,
-            readOnly: radioSelected==0 && nameTextController.text.isNotEmpty,
-            decoration: const InputDecoration(
-                labelText: 'Nom et prenom *'),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return "Veuillez entrer le nom et prénom";
-              }
-              return null;
-            },
-          ):
-          autoComplete(),
+          radioSelected == 0
+              ? TextFormField(
+                  controller: nameTextController,
+                  onSaved: (value) => widget.sender.fullName = value,
+                  readOnly:
+                      radioSelected == 0 && nameTextController.text.isNotEmpty,
+                  decoration:
+                      const InputDecoration(labelText: 'Nom et prenom *'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return "Veuillez entrer le nom et prénom";
+                    }
+                    return null;
+                  },
+                )
+              : autoComplete(),
           TextFormField(
             controller: phoneTextController,
-            readOnly: radioSelected==0 && phoneTextController.text.isNotEmpty,
-            onSaved: (value)=>widget.sender.telephone=value,
-            decoration:
-            const InputDecoration(labelText: 'Telephone 1 *'),
+            readOnly: radioSelected == 0 && phoneTextController.text.isNotEmpty,
+            onSaved: (value) => widget.sender.telephone = value,
+            decoration: const InputDecoration(
+                labelText: '${StringManager.phoneNumber} 1 *'),
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Veuillez entrer le numéro de téléphone';
@@ -223,23 +225,27 @@ class _Step1State extends State<Step1> {
           ),
           TextFormField(
             controller: phone2DepartTextController,
-            onSaved: (value)=>widget.sender.telephoneAlt=value,
-            readOnly: radioSelected==0 && phone2DepartTextController.text.isNotEmpty,
-            decoration:
-            const InputDecoration(labelText: 'Telephone 2 '),
+            onSaved: (value) => widget.sender.telephoneAlt = value,
+            readOnly: radioSelected == 0 &&
+                phone2DepartTextController.text.isNotEmpty,
+            decoration: const InputDecoration(
+                labelText: '${StringManager.phoneNumber} 2 '),
           ),
           TextFormField(
             controller: emailTextController,
-            onSaved: (value)=>widget.sender.email=value,
-            readOnly: radioSelected==0 && emailTextController.text.isNotEmpty,
-            decoration:radioSelected==0?
-            const InputDecoration(labelText: 'Email *'):const InputDecoration(labelText: 'Email '),
-            validator:radioSelected==0? (value) {
-              if (value!.isEmpty) {
-                return "Veuillez remplir ce champ";
-              }
-              return null;
-            }:null,
+            onSaved: (value) => widget.sender.email = value,
+            readOnly: radioSelected == 0 && emailTextController.text.isNotEmpty,
+            decoration: radioSelected == 0
+                ? const InputDecoration(labelText: '${StringManager.email} *')
+                : const InputDecoration(labelText: '${StringManager.email} '),
+            validator: radioSelected == 0
+                ? (value) {
+                    if (value!.isEmpty) {
+                      return StringManager.errorMessage;
+                    }
+                    return null;
+                  }
+                : null,
           ),
         ],
       ),

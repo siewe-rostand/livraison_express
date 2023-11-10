@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:livraison_express/data/user_helper.dart';
 import 'package:livraison_express/utils/size_config.dart';
 
+import '../../utils/string_manager.dart';
+
 class CustomDialog extends StatelessWidget {
-  final String title, content, positiveBtnText;
+  final String? title;
+  final String content, positiveBtnText;
   final String? negativeBtnText;
   final IconData? iconData;
   final GestureTapCallback positiveBtnPressed;
@@ -12,7 +15,7 @@ class CustomDialog extends StatelessWidget {
 
   const CustomDialog({
     Key? key,
-    required this.title,
+     this.title,
     required this.content,
     required this.positiveBtnText,
      this.negativeBtnText='',
@@ -43,7 +46,7 @@ class CustomDialog extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Text(
-                title,
+                title ?? StringManager.alert.toUpperCase(),
                 style: const TextStyle(fontSize: 22,fontWeight: FontWeight.bold),
               ),
               SizedBox(

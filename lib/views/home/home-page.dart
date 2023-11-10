@@ -15,6 +15,7 @@ import 'package:livraison_express/model/quarter.dart';
 import 'package:livraison_express/model/user.dart';
 import 'package:livraison_express/service/auth_service.dart';
 import 'package:livraison_express/service/main_api_call.dart';
+import 'package:livraison_express/utils/asset_manager.dart';
 import 'package:livraison_express/utils/main_utils.dart';
 import 'package:livraison_express/utils/size_config.dart';
 import 'package:livraison_express/views/drawer/home-drawer.dart';
@@ -349,10 +350,10 @@ class _HomePageState extends State<HomePage> {
                                   itemCount: modules.length,
                                   gridDelegate:
                                       SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount: 2,
-                                          childAspectRatio: SizeConfig
-                                                  .screenWidth! /
-                                              (SizeConfig.screenHeight! / 2.5)),
+                                    crossAxisCount: 2,
+                                    childAspectRatio: SizeConfig.screenWidth! /
+                                        (SizeConfig.screenHeight! / 2.5),
+                                  ),
                                   itemBuilder: (context, index) {
                                     isAvailableInCity =
                                         modules[index].isActiveInCity!;
@@ -433,8 +434,7 @@ class _HomePageState extends State<HomePage> {
                         duration: const Duration(milliseconds: 200),
                         decoration: const BoxDecoration(
                             image: DecorationImage(
-                                image:
-                                    AssetImage("assets/images/semi_circle.png"),
+                                image: AssetImage(AssetManager.semiCircle),
                                 fit: BoxFit.cover)),
                         height: heightBottom,
                         child: Column(
@@ -459,7 +459,6 @@ class _HomePageState extends State<HomePage> {
       decoration: const BoxDecoration(
           border: Border(
               right: BorderSide(color: grey40),
-              bottom: BorderSide(color: grey40),
               top: BorderSide(color: grey40))),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -469,7 +468,10 @@ class _HomePageState extends State<HomePage> {
             height: getProportionateScreenHeight(80),
             decoration: BoxDecoration(
                 image: DecorationImage(
-                    image: CachedNetworkImageProvider(module.image!),
+                    image: module.image!.isNotEmpty
+                        ? CachedNetworkImageProvider(module.image!)
+                        : const CachedNetworkImageProvider(
+                            AssetManager.noImage),
                     colorFilter: isAvailableInCity == false
                         ? const ColorFilter.mode(
                             Colors.white, BlendMode.saturation)
@@ -482,30 +484,5 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     );
-  }
-
-  bool _handleScrollNotification(ScrollNotification notification) {
-    if (notification.depth == 0) {
-      if (notification is UserScrollNotification) {
-        if (notification.direction == ScrollDirection.forward) {
-          Future.delayed(const Duration(milliseconds: 500), () {
-            setState(() {
-              heightBottom = getProportionateScreenHeight(110);
-              Future.delayed(const Duration(milliseconds: 200), () {
-                setState(() {
-                  _scrolling = false;
-                });
-              });
-            });
-          });
-        } else if (notification.direction == ScrollDirection.reverse) {
-          setState(() {
-            _scrolling = true;
-            heightBottom = 0;
-          });
-        }
-      }
-    }
-    return false;
   }
 }

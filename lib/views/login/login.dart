@@ -76,18 +76,18 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     // printScreenInformation(context);
     SizeConfig().init(context);
-    return AnnotatedRegion(
-      value: const SystemUiOverlayStyle(statusBarColor: primaryColor),
-      child: GestureDetector(
-        onTap: () {
-          FocusScope.of(context).unfocus();
-        },
+    return GestureDetector(
+      onTap: () {
+        FocusScope.of(context).unfocus();
+      },
+      child: AnnotatedRegion(
+        value: const SystemUiOverlayStyle(statusBarColor: primaryColor),
         child: Scaffold(
           body: Container(
             margin: const EdgeInsets.all(15),
             child: ListView(
               children: [
-                Image.asset('img/logo.png'),
+                Image.asset(AssetManager.logo),
                 Align(
                     alignment: Alignment.centerLeft,
                     child: _isPhone
@@ -123,7 +123,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             disableLengthCheck: true,
                             autovalidateMode:
                                 AutovalidateMode.onUserInteraction,
-                            decoration: inputDecoration(labelText: StringManager.phoneNumber),
+                            decoration: inputDecoration(
+                                labelText: StringManager.phoneNumber),
                             onChanged: (phone) {
                               countryCode = phone.countryCode;
                             },
@@ -134,12 +135,11 @@ class _LoginScreenState extends State<LoginScreen> {
                             labelText: StringManager.email,
                             controller: emailTextController,
                           ),
-                    const SizedBox(
-                      height: 10,
-                    ),
+                    10.sBH,
                     CustomTextField(
                       labelText: StringManager.password,
                       isPassword: isObscureText,
+                      keyboardType: TextInputType.visiblePassword,
                       controller: passwordTextController,
                       suffixIcon: IconButton(
                         icon: isObscureText

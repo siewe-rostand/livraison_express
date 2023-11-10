@@ -10,6 +10,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart';
 import 'package:livraison_express/data/user_helper.dart';
 import 'package:livraison_express/model/user.dart';
+import 'package:livraison_express/utils/handle_exception.dart';
 import 'package:livraison_express/utils/main_utils.dart';
 import 'package:livraison_express/utils/string_manager.dart';
 import 'package:livraison_express/views/home/home-page.dart';
@@ -253,7 +254,7 @@ class ApiAuthService {
           context,
           true,
           CustomDialog(
-            title: 'Ooooops',
+            title: StringManager.alert.toUpperCase(),
             content:
             "l'adresse e-mail est déjà utilisée par un autre compte",
             positiveBtnText: "OK",
@@ -267,7 +268,7 @@ class ApiAuthService {
             context,
             true,
             CustomDialog(
-              title: 'Ooooops',
+              title: StringManager.alert.toUpperCase(),
               content:
               'le numéro de téléphone est déjà utilisé par un autre compte',
               positiveBtnText: "OK",
@@ -281,7 +282,7 @@ class ApiAuthService {
             context,
             true,
             CustomDialog(
-              title: 'Ooooops',
+              title: StringManager.alert.toUpperCase(),
               content:onErrorMessage,
               positiveBtnText: "OK",
               positiveBtnPressed: () {
@@ -297,7 +298,6 @@ class ApiAuthService {
           context,
           true,
           CustomDialog(
-              title: 'Ooooops',
               content: onFailureMessage,
               positiveBtnText: "OK",
               positiveBtnPressed: () {
@@ -310,7 +310,6 @@ class ApiAuthService {
           context,
           true,
           CustomDialog(
-              title: 'Ooooops',
               content: onErrorMessage,
               positiveBtnText: "OK",
               positiveBtnPressed: () {
@@ -323,7 +322,6 @@ class ApiAuthService {
           context,
           true,
           CustomDialog(
-              title: 'Ooooops',
               content: onErrorMessage,
               positiveBtnText: "OK",
               positiveBtnPressed: () {
@@ -337,7 +335,6 @@ class ApiAuthService {
           context,
           true,
           CustomDialog(
-              title: 'Ooooops',
               content: onErrorMessage,
               positiveBtnText: "OK",
               positiveBtnPressed: () {
@@ -379,10 +376,8 @@ class ApiAuthService {
         logger.e(response.body);
         var mes = body['message'];
         var err = body['errors'];
-        if (response.statusCode == 401) {
-          log("$mes  $err");
-          if(mes.toString().contains("phone number")) {
-            showGenDialog(
+        if(mes.toString().contains("phone number")) {
+          showGenDialog(
             context,
             true,
             CustomDialog(
@@ -394,50 +389,44 @@ class ApiAuthService {
               },
             ),
           );
+        }
+        else if(mes == "The given data was invalid.") {
+          if(err['password'].toString().contains('8')) {
+            showGenDialog(
+                context,
+                true,
+                CustomDialog(
+                    title: 'Password Error',
+                    content: "Le texte mot de passe doit contenir au moins 8 caractères",
+                    positiveBtnText: "OK",
+                    positiveBtnPressed: () {
+                      Navigator.of(context).pop();
+                    }));
+          }else{
+            showGenDialog(
+                context,
+                true,
+                CustomDialog(
+                    title: 'Ooooops',
+                    content: onLoginInvalidDate,
+                    positiveBtnText: "OK",
+                    positiveBtnPressed: () {
+                      Navigator.of(context).pop();
+                    }));
           }
-        } else if (response.statusCode == 404 ||
-            response.statusCode == 408 ||
-            response.statusCode == 422 ||
-            response.statusCode == 400 ||
-            response.statusCode == 499) {
-          if(mes == "The given data was invalid.") {
-            if(err['password'].toString().contains('8')) {
-              showGenDialog(
-              context,
-              true,
-              CustomDialog(
-                  title: 'Password Error',
-                  content: "Le texte mot de passe doit contenir au moins 8 caractères",
-                  positiveBtnText: "OK",
-                  positiveBtnPressed: () {
-                    Navigator.of(context).pop();
-                  }));
-            }else{
-              showGenDialog(
-                  context,
-                  true,
-                  CustomDialog(
-                      title: 'Ooooops',
-                      content: onLoginInvalidDate,
-                      positiveBtnText: "OK",
-                      positiveBtnPressed: () {
-                        Navigator.of(context).pop();
-                      }));
-            }
-          }
-        } else {
-          // debugPrint('ERROR MESSAGE ${body['message']}');
+        }
+        else {
           showGenDialog(
               context,
               true,
               CustomDialog(
-                  title: 'Ooooops',
                   content: onErrorMessage,
                   positiveBtnText: "OK",
                   positiveBtnPressed: () {
                     Navigator.of(context).pop();
                   }));
         }
+        throw (mes);
       }
     } on SocketException catch (_) {
       progressDialog!.hide();
@@ -479,16 +468,6 @@ class ApiAuthService {
     logger.e('format error');
     } catch (e) {
       progressDialog!.hide();
-      showGenDialog(
-          context,
-          true,
-          CustomDialog(
-              title: 'Ooooops',
-              content: onErrorMessage,
-              positiveBtnText: "OK",
-              positiveBtnPressed: () {
-                Navigator.of(context).pop();
-              }));
       logger.e(e);
     }
   }

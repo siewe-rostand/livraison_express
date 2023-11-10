@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:livraison_express/service/auth_service.dart';
+import 'package:livraison_express/utils/string_manager.dart';
 import 'package:livraison_express/views/login/verification_code.dart';
 import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -40,11 +41,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   bool isLoading = false;
   bool isClicked = false;
-  String countryCode='';
-  bool isEmpty =true;
-  getPhone()async{
+  String countryCode = '';
+  bool isEmpty = true;
+  getPhone() async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
-    phoneNo =preferences.getString('phone1')??'';
+    phoneNo = preferences.getString('phone1') ?? '';
   }
 
   @override
@@ -52,6 +53,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
     getPhone();
     super.initState();
   }
+
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion(
@@ -75,39 +77,52 @@ class _RegistrationPageState extends State<RegistrationPage> {
                           return _currentStep == 1
                               ? ElevatedButton(
                                   onPressed: () async {
-                                    print('contry code $countryCode');
-                                    if (passwordTextController.text ==
-                                        confirmPasswordTextController
-                                            .text) {
-                                     await ApiAuthService(context: bContext,fromLogin: true,progressDialog: getProgressDialog(context: context)).register(
-                                         username: "+"+countryCode+_phoneTextController.text,
-                                         firstName: nameTextController.text,
-                                         lastName: surnameTextController.text, email: emailTextController.text,
-                                         password: passwordTextController.text, telephoneAlt: _phone2TextController.text,
-                                         pwdConfirm: confirmPasswordTextController.text, telephone: _phoneTextController.text,
-                                         countryCode: countryCode, licence: true.toString());
-                                    } else {
-                                      debugPrint('error');
-                                    }
+                                   if (_formKeys[1].currentState!.validate()){
+                                     await ApiAuthService(
+                                         context: bContext,
+                                         fromLogin: true,
+                                         progressDialog: getProgressDialog(
+                                             context: context))
+                                         .register(
+                                       username: "+" +
+                                           countryCode +
+                                           _phoneTextController.text,
+                                       firstName:
+                                       nameTextController.text,
+                                       lastName:
+                                       surnameTextController.text,
+                                       email: emailTextController.text,
+                                       password:
+                                       passwordTextController.text,
+                                       telephoneAlt:
+                                       _phone2TextController.text,
+                                       pwdConfirm:
+                                       confirmPasswordTextController
+                                           .text,
+                                       telephone:
+                                       _phoneTextController.text,
+                                       countryCode: countryCode,
+                                       licence: true.toString(),);
+                                   }
                                   },
                                   child: const Text(
                                     "ENREGISTRER",
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold),
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
                                   ))
                               : SizedBox(
-                            width: MediaQuery.of(bContext).size.width*0.7,
-                                height: 40,
-                                child: ElevatedButton(
-                                    onPressed: detail.onStepContinue,
-                                    child: const Text(
-                                      "CONTINUER",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        color: Color(0xffF3F3F3)
-                                      ),
-                                    )),
-                              );
+                                  width:
+                                      MediaQuery.of(bContext).size.width * 0.7,
+                                  height: 40,
+                                  child: ElevatedButton(
+                                      onPressed: detail.onStepContinue,
+                                      child: const Text(
+                                        "CONTINUER",
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xffF3F3F3)),
+                                      )),
+                                );
                         },
                         type: StepperType.vertical,
                         physics: const ScrollPhysics(),
@@ -115,147 +130,168 @@ class _RegistrationPageState extends State<RegistrationPage> {
                         currentStep: _currentStep,
                         onStepTapped: (step) => tapped(step),
                         steps: [
-                          Step(
-                              title: const Text('Information Personnelles'),
-                              isActive: _currentStep >= 0,
-                              state: _currentStep > 0
-                                  ? StepState.complete
-                                  : StepState.indexed,
-                              content: Column(
-                                children: [
-                                  TextFormField(
-                                    keyboardType: TextInputType.name,
-                                    decoration:  InputDecoration(
-                                        hintText: 'Nom ',
-                                      suffixIcon:isEmpty==false ?IconButton(onPressed:(){
-                                        print('veuillez remplir ce champs');
-                                          setState(() {
-                                            isClicked =true;
-                                          });
-                                      }, icon: const Icon(Icons.error,color: Colors.red,)):null
-                                    ),
-                                    controller: nameTextController,
-                                    validator: (value){
-                                      if(value!.isEmpty){
-                                        return'veuillez remplir ce champs';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  TextFormField(
-                                    decoration: const InputDecoration(
-                                        hintText: 'Prenom '),
-                                    controller: surnameTextController,
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.allow(
-                                        RegExp(r"[a-zA-Z]+|\s"),
-                                      )
+                            Step(
+                                title: const Text('Information Personnelles'),
+                                isActive: _currentStep >= 0,
+                                state: _currentStep > 0
+                                    ? StepState.complete
+                                    : StepState.indexed,
+                                content: Form(
+                                  key: _formKeys[0],
+                                  child: Column(
+                                    children: [
+                                      TextFormField(
+                                        keyboardType: TextInputType.name,
+                                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                                        decoration: InputDecoration(
+                                            hintText: 'Nom ',
+                                            suffixIcon: isEmpty == false
+                                                ? IconButton(
+                                                    onPressed: () {
+                                                      setState(() {
+                                                        isClicked = true;
+                                                      });
+                                                    },
+                                                    icon: const Icon(
+                                                      Icons.error,
+                                                      color: Colors.red,
+                                                    ))
+                                                : null),
+                                        controller: nameTextController,
+                                        validator: (value) {
+                                          if (value!.isEmpty) {
+                                            return StringManager.errorMessage;
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                      TextFormField(
+                                        decoration: const InputDecoration(
+                                            hintText: 'Prenom '),
+                                        controller: surnameTextController,
+                                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                                        inputFormatters: [
+                                          FilteringTextInputFormatter.allow(
+                                            RegExp(r"[a-zA-Z]+|\s"),
+                                          )
+                                        ],
+                                        validator: (value) {
+                                          if (value!.isEmpty) {
+                                            return StringManager.errorMessage;
+                                          } else if (value.length < 4) {
+                                            return 'minimum 4 lettres svp!';
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                      TextFormField(
+                                        keyboardType: TextInputType.emailAddress,
+                                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                                        decoration: const InputDecoration(
+                                            hintText: StringManager.email),
+                                        controller: emailTextController,
+                                        validator: (val) {
+                                          if (!val!.isValidEmail) {
+                                            return StringManager.errorMessage;
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                      IntlPhoneField(
+                                        keyboardType: TextInputType.phone,
+                                        controller: _phoneTextController,
+                                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                                        showCountryFlag: false,
+                                        dropdownIconPosition:
+                                            IconPosition.trailing,
+                                        decoration: const InputDecoration(
+                                          hintText: '${StringManager.phoneNumber} 1',
+                                        ),
+                                        onChanged: (phone) {
+                                          // print(phone.completeNumber);
+                                          phoneNo = phone.number;
+                                          countryCode = phone.countryCode;
+                                        },
+                                        initialCountryCode: 'CM',
+                                        invalidNumberMessage: invalidPhone,
+                                      ),
+                                      IntlPhoneField(
+                                        showCountryFlag: false,
+                                        autovalidateMode:
+                                            AutovalidateMode.disabled,
+                                        dropdownIconPosition:
+                                            IconPosition.trailing,
+                                        decoration: const InputDecoration(
+                                          hintText: '${StringManager.phoneNumber} 2',
+                                        ),
+                                        onChanged: (phone) {
+                                          // print(phone.completeNumber);
+                                        },
+                                        initialCountryCode: 'CM',
+                                        invalidNumberMessage: invalidPhone,
+                                      ),
                                     ],
-                                    validator: (value){
-                                      if(value!.isEmpty){
-                                        return'veuillez remplir ce champs';
-                                      }else if( value.length<4){
-                                        return 'minimum 4 lettres svp!';
-                                      }
-                                      return null;
-                                    },
                                   ),
-                                  TextFormField(
-                                    keyboardType: TextInputType.emailAddress,
-                                    decoration: const InputDecoration(
-                                        hintText: 'Email '),
-                                    controller: emailTextController,
-                                    validator: (val){
-                                      if(!val!.isValidEmail){
-                                        return 'veuillez remplir ce champs';
-                                      }
-                                      return null;
-                                    },
+                                )),
+                            Step(
+                                title: const Text('Authentification'),
+                                isActive: _currentStep >= 0,
+                                state: _currentStep > 1
+                                    ? StepState.complete
+                                    : StepState.indexed,
+                                content: Form(
+                                  key: _formKeys[1],
+                                  child: Column(
+                                    children: [
+                                      TextFormField(
+                                        decoration: const InputDecoration(
+                                            labelText: StringManager.phoneNumber),
+                                        enabled: false,
+                                        controller: TextEditingController(
+                                            text: _phoneTextController.text),
+                                      ),
+                                      TextFormField(
+                                        keyboardType:
+                                            TextInputType.visiblePassword,
+                                        decoration: const InputDecoration(
+                                            hintText: StringManager.password),
+                                        controller: passwordTextController,
+                                        autovalidateMode:
+                                            AutovalidateMode.onUserInteraction,
+                                        validator: (val) {
+                                          if (val!.isEmpty) {
+                                            return StringManager.errorMessage;
+                                          } else if (val.length < 8) {
+                                            return 'Le mot de passe doit contenir aumoins 8 caractères';
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                      TextFormField(
+                                        keyboardType:
+                                            TextInputType.visiblePassword,
+                                        decoration: const InputDecoration(
+                                            hintText:
+                                                'Confirmer le mot de passe'),
+                                        controller: confirmPasswordTextController,
+                                        autovalidateMode:
+                                            AutovalidateMode.onUserInteraction,
+                                        validator: (val) {
+                                          if (val!.isEmpty) {
+                                            return StringManager.errorMessage;
+                                          } else if (passwordTextController
+                                                  .text !=
+                                              confirmPasswordTextController
+                                                  .text) {
+                                            return "les mots de passe ne sont pas les mêmes";
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                    ],
                                   ),
-                                  IntlPhoneField(
-                                    keyboardType: TextInputType.phone,
-                                    controller: _phoneTextController,
-                                    showCountryFlag: false,
-                                    dropdownIconPosition:
-                                        IconPosition.trailing,
-                                    decoration: const InputDecoration(
-                                      hintText: 'Telephone 1',
-                                    ),
-                                    onChanged: (phone) {
-                                      // print(phone.completeNumber);
-                                      phoneNo=phone.number;
-                                      countryCode =phone.countryCode;
-                                    },
-                                    initialCountryCode: 'CM',
-                                    invalidNumberMessage:
-                                        invalidPhone,
-                                  ),
-                                  IntlPhoneField(
-                                    showCountryFlag: false,
-                                    autovalidateMode: AutovalidateMode.disabled,
-                                    dropdownIconPosition:
-                                        IconPosition.trailing,
-                                    decoration: const InputDecoration(
-                                      hintText: 'Telephone 2',
-                                    ),
-                                    onChanged: (phone) {
-                                      // print(phone.completeNumber);
-                                    },
-                                    initialCountryCode: 'CM',
-                                    invalidNumberMessage:
-                                      invalidPhone,
-                                  ),
-                                ],
-                              )),
-                          Step(
-                              title: const Text('Authentification'),
-                              isActive: _currentStep >= 0,
-                              state: _currentStep > 1
-                                  ? StepState.complete
-                                  : StepState.indexed,
-                              content: Column(
-                                children: [
-                                  TextFormField(
-                                    decoration: const InputDecoration(
-                                        labelText: 'Telephone '),
-                                    enabled: false,
-                                    controller: TextEditingController(text: _phoneTextController.text),
-                                  ),
-                                  TextFormField(
-                                    keyboardType: TextInputType.visiblePassword,
-                                    decoration: const InputDecoration(
-                                        hintText: 'Mot de passe '),
-                                    controller: passwordTextController,
-                                    autovalidateMode: AutovalidateMode.onUserInteraction,
-                                    validator: (val){
-                                      if(val!.isEmpty){
-                                        return "Veuillez remplir ce champ";
-                                      } else if(val.length<8){
-                                        return 'Le mot de passe doit contenir aumoins 8 caractères';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  TextFormField(
-                                    keyboardType: TextInputType.visiblePassword,
-                                    decoration: const InputDecoration(
-                                        hintText:
-                                            'Confirmer le mot de passe'),
-                                    controller:
-                                        confirmPasswordTextController,
-                                    autovalidateMode: AutovalidateMode.onUserInteraction,
-                                    validator: (val){
-                                      if(val!.isEmpty){
-                                        return "Veuillez remplir ce champ";
-                                      } else if(passwordTextController.text != confirmPasswordTextController.text){
-                                        return 'Contenu incorrect';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                ],
-                              ))
-                        ])
+                                ))
+                          ])
                     : const CircularProgressIndicator()
               ],
             ),
@@ -270,17 +306,14 @@ class _RegistrationPageState extends State<RegistrationPage> {
   }
 
   continued() async {
-    _currentStep < 3 ? setState(() => _currentStep += 1) : null;
-
+    if (_formKeys[_currentStep].currentState!.validate()){
+      _currentStep < 3 ? setState(() => _currentStep += 1) : null;
+    }
   }
-
-
 
   cancel() {
     _currentStep > 0 ? setState(() => _currentStep -= 1) : null;
   }
-
-
 }
 
 extension ExString on String {
@@ -289,24 +322,24 @@ extension ExString on String {
     return emailRegExp.hasMatch(this);
   }
 
-  bool get isValidName{
-    final nameRegExp = RegExp(r"^\s*([A-Za-z]{1,}([\.,] |[-']| ))+[A-Za-z]+\.?\s*$");
+  bool get isValidName {
+    final nameRegExp =
+        RegExp(r"^\s*([A-Za-z]{1,}([\.,] |[-']| ))+[A-Za-z]+\.?\s*$");
     return nameRegExp.hasMatch(this);
   }
 
-  bool get isValidPassword{
-    final passwordRegExp =
-    RegExp(r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[!@#\><*~]).{8,}/pre>');
+  bool get isValidPassword {
+    final passwordRegExp = RegExp(
+        r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[!@#\><*~]).{8,}/pre>');
     return passwordRegExp.hasMatch(this);
   }
 
-  bool get isNotNull{
-    return this!=null;
+  bool get isNotNull {
+    return this != null;
   }
 
-  bool get isValidPhone{
+  bool get isValidPhone {
     final phoneRegExp = RegExp(r"^\+?0[0-9]{10}$");
     return phoneRegExp.hasMatch(this);
   }
-
 }

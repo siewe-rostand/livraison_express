@@ -11,7 +11,7 @@ import '../data/local_db/db-helper.dart';
 
 
 class CartProvider with ChangeNotifier {
-  DBHelper1 dbHelper = DBHelper1();
+  DBHelper dbHelper = DBHelper();
   int _counter = 0;
   int _quantity = 1;
   int get counter => _counter;
@@ -22,8 +22,8 @@ class CartProvider with ChangeNotifier {
 
   List<CartItem> cart = [];
 
-  Future<List<CartItem>> getData() async {
-    cart = await dbHelper.getCartList();
+  Future<List<CartItem>> getData(String moduleSlug) async {
+    cart = await dbHelper.getCartList(moduleSlug);
     notifyListeners();
     return cart;
   }

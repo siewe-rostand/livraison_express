@@ -3,6 +3,7 @@ class StringManager {
 
   static const String validate = 'Valider';
   static const String cancel = 'Annuler';
+  static const String alert = 'Annuler';
   static const String invalidField = 'Veuillez valider le(s) champ(s)';
   static const String chooseDeliveryTime1 = "Veuillez choisir l'heure de livraison";
   static const String invalidPhoneNumber = "veuillez entrer un numéro de téléphone valide";
@@ -11,6 +12,7 @@ class StringManager {
   static const String unFoundUser = 'utilisateur introuvable';
   static const String UnknownContactError = "Une erreur est survenue, veuillez réessayer plustard ou contactez nous au 695461461";
   static const String internetConnectionError = "Vérifiez votre connexion internet puis réessayez. Si l'erreur persiste veuillez nous contacter au ";
+  static const String codeSent = 'Vous allez recevoir un code de verification par SMS dans 1 minute. Veuillez entrer ce code';
 
   static const String forgottenPassword = "Mot de passe oublié ?";
   static const String createAccount = "créer un compte";
@@ -44,7 +46,7 @@ class StringManager {
   static const addressTitle = "Titre d'adresse *";
   static const saveAddress = 'Enregistrer cette adresse';
   static const packageDescription = 'Description du colis *';
-  static const serviceUnavailable = "Service Momentanement indisponible";
+  static const serviceUnavailable = "Ce service est Momentanement indisponible";
 
   static const addPromoCode = 'Ajouter un code promo';
   static const paymentMode = "Mode de paiement";
@@ -52,5 +54,6 @@ class StringManager {
   static const payByCard = 'Payer par carte bancaire';
 
   static const errorMessage = "Veuillez remplir ce champ";
+  static const codeErrorMessage = "Le code doit contenir aumoins 5 chiffres";
 
 }
