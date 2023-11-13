@@ -5,14 +5,10 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:livraison_express/constant/all-constant.dart';
 import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/model/orders.dart';
 import 'package:livraison_express/service/address_services.dart';
-import 'package:livraison_express/service/course_service.dart';
 import 'package:livraison_express/views/address_detail/map_text_field.dart';
 
 import '../../model/address.dart';
-import '../../utils/main_utils.dart';
-import '../MapView.dart';
 
 class AddressDialog extends StatefulWidget {
   const AddressDialog({Key? key, required this.address, this.buttonText, this.color, this.readOnly=true, this.title}) : super(key: key);

@@ -1,4 +1,3 @@
-
 class CartItem {
   int? id;
   String? title;
@@ -31,7 +30,7 @@ class CartItem {
       this.quantityMax,
       this.moduleSlug});
 
-  CartItem copyWith(
+  CartItem copyWith({
     int? id,
     String? title,
     int? quantity,
@@ -46,17 +45,26 @@ class CartItem {
     String? complement,
     int? preparationTime,
     String? moduleSlug,
-  ) {
+  }) {
     return CartItem(
-        id: id ?? this.id,
-        title: title ?? this.title,
-        quantity: quantity ?? this.quantity,
-        price: price ?? this.price,
-        image: image ?? this.image,
-        productId: productId ?? productId);
+      id: id ?? this.id,
+      title: title ?? this.title,
+      quantity: quantity ?? this.quantity,
+      price: price ?? this.price,
+      unitPrice: unitPrice ?? this.unitPrice,
+      totalPrice: totalPrice ?? this.totalPrice,
+      image: image ?? this.image,
+      productId: productId ?? this.productId,
+      categoryId: categoryId ?? this.categoryId,
+      userId: userId ?? this.userId,
+      preparationTime: preparationTime ?? this.preparationTime,
+      moduleSlug: moduleSlug ?? this.moduleSlug,
+      complement: complement ?? this.complement,
+      quantityMax: quantityMax ?? this.quantityMax,
+    );
   }
 
-  Map<String, dynamic> toMap() => {
+  Map<String, dynamic> toJson() => {
         'id': id,
         'title': title,
         'price': price,
@@ -73,26 +81,10 @@ class CartItem {
         'temps_preparation': preparationTime,
       };
 
-  CartItem.fromMap(Map<dynamic, dynamic> json)
-      : id = json['id'],
-        title = json["title"],
-        price = json['prix_unitaire'],
-        image = json['image'],
-        quantity = json['quantity'],
-        unitPrice = json['prix_unitaire'],
-        totalPrice = json['prix_total'],
-        quantityMax = json['quantiteMax'],
-        productId = json['id_produit'],
-        categoryId = json['id_categorie'],
-        userId = json['id_user'],
-        complement = json['complement'],
-        preparationTime = json['time_preparation'],
-        moduleSlug = json['module_slug'];
-
   factory CartItem.fromJson(Map<String, dynamic> json) {
     return CartItem(
       id: json['id'],
-      title: json['libelle'],
+      title: json['title'],
       price: json['price'],
       image: json['image'],
       quantity: json['quantity'],
@@ -106,17 +98,5 @@ class CartItem {
       preparationTime: json['time_preparation'],
       moduleSlug: json['module_slug'],
     );
-  }
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-
-    data['id'] = id;
-    data['libelle'] = title;
-    data['quantity'] = quantity;
-    data['price'] = price;
-    data['prix_unitaire'] = unitPrice;
-    data['image'] = image;
-
-    return data;
   }
 }

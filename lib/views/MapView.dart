@@ -39,7 +39,7 @@ class _MapsViewState extends State<MapsView> {
   late Marker marker;
   Position? _currentPosition;
   final startAddressController = TextEditingController();
-  String location='';
+  String location = '';
   String location1 = "Search Location";
   double? latitude;
   double? longitude;
@@ -72,7 +72,6 @@ class _MapsViewState extends State<MapsView> {
       gravity: ToastGravity.BOTTOM,
       toastDuration: const Duration(seconds: 3),
     );
-
   }
 
   // Method for retrieving the current location
@@ -90,7 +89,7 @@ class _MapsViewState extends State<MapsView> {
           Marker(
               draggable: true,
               onDragEnd: (newPosition) {
-                debugPrint('new pos ${newPosition}');
+                debugPrint('new pos $newPosition');
               },
               markerId: MarkerId(startLocation.toString()),
               position: startLocation,
@@ -101,8 +100,7 @@ class _MapsViewState extends State<MapsView> {
             true,
             CustomDialog(
                 title: 'Localization Error',
-                content:
-                "Veuillez activer la localisation svp",
+                content: "Veuillez activer la localisation svp",
                 positiveBtnText: "OK",
                 positiveBtnPressed: () {
                   Navigator.of(context).pop();
@@ -116,7 +114,7 @@ class _MapsViewState extends State<MapsView> {
         Marker(
             draggable: true,
             onDragEnd: (newPosition) {
-              debugPrint('new pos ${newPosition}');
+              debugPrint('new pos $newPosition');
             },
             markerId: MarkerId(startLocation.toString()),
             position: startLocation,
@@ -127,97 +125,95 @@ class _MapsViewState extends State<MapsView> {
         return _showToast();
       }
     }
-    return
-      await Geolocator.getLastKnownPosition().then((position){
-      if (mounted) {
-        setState(() {
-          // Store the position in the variable
-          _currentPosition = position;
-          latitude = _currentPosition?.latitude;
-          longitude = _currentPosition?.longitude;
-          print('current location $_currentPosition');
+    return await Geolocator.getLastKnownPosition().then((position) {
+          if (mounted) {
+            setState(() {
+              // Store the position in the variable
+              _currentPosition = position;
+              latitude = _currentPosition?.latitude;
+              longitude = _currentPosition?.longitude;
+              print('current location $_currentPosition');
 
-          print('CURRENT POS: $_currentPosition');
+              print('CURRENT POS: $_currentPosition');
 
-          // For moving the camera to current location
-          mapController?.animateCamera(
-            CameraUpdate.newCameraPosition(
-              CameraPosition(
-                target: LatLng(position!.latitude, position.longitude),
-                zoom: 18.0,
-              ),
-            ),
-          );
-          markers.add(
-            Marker(
-                markerId: MarkerId(startLocation.toString()),
-                position: LatLng(latitude!, longitude!),
-                icon: bitmapDescriptor,
-                draggable: true,
-                onDragEnd: (newPosition) {
-                  if (mounted) {
-                    setState(() {
-                      longitude = newPosition.longitude;
-                      latitude = newPosition.latitude;
-                      _getAddress();
-                    });
-                  }
-                  debugPrint('new pos ${newPosition}');
-                }),
-          );
+              // For moving the camera to current location
+              mapController?.animateCamera(
+                CameraUpdate.newCameraPosition(
+                  CameraPosition(
+                    target: LatLng(position!.latitude, position.longitude),
+                    zoom: 18.0,
+                  ),
+                ),
+              );
+              markers.add(
+                Marker(
+                    markerId: MarkerId(startLocation.toString()),
+                    position: LatLng(latitude!, longitude!),
+                    icon: bitmapDescriptor,
+                    draggable: true,
+                    onDragEnd: (newPosition) {
+                      if (mounted) {
+                        setState(() {
+                          longitude = newPosition.longitude;
+                          latitude = newPosition.latitude;
+                          _getAddress();
+                        });
+                      }
+                      debugPrint('new pos $newPosition');
+                    }),
+              );
+            });
+          }
+          _getAddress();
+        }) ??
+        await Geolocator.getCurrentPosition(
+                desiredAccuracy: LocationAccuracy.high,
+                forceAndroidLocationManager: true)
+            .then((Position position) {
+          debugPrint('position');
 
+          if (mounted) {
+            setState(() {
+              // Store the position in the variable
+              _currentPosition = position;
+              latitude = _currentPosition?.latitude;
+              longitude = _currentPosition?.longitude;
+              print('current location $_currentPosition');
+
+              print('CURRENT POS: $_currentPosition');
+
+              // For moving the camera to current location
+              mapController?.animateCamera(
+                CameraUpdate.newCameraPosition(
+                  CameraPosition(
+                    target: LatLng(position.latitude, position.longitude),
+                    zoom: 18.0,
+                  ),
+                ),
+              );
+              markers.add(
+                Marker(
+                    markerId: MarkerId(startLocation.toString()),
+                    position: LatLng(latitude!, longitude!),
+                    icon: bitmapDescriptor,
+                    draggable: true,
+                    onDragEnd: (newPosition) {
+                      if (mounted) {
+                        setState(() {
+                          longitude = newPosition.longitude;
+                          latitude = newPosition.latitude;
+                          _getAddress();
+                        });
+                      }
+                      debugPrint('new pos $newPosition');
+                    }),
+              );
+            });
+          }
+          _getAddress();
+        }).catchError((e) {
+          print(e);
         });
-      }
-      _getAddress();
-    })?? await Geolocator.getCurrentPosition(
-            desiredAccuracy: LocationAccuracy.high,
-            forceAndroidLocationManager: true)
-        .then((Position position) {
-      debugPrint('position');
-
-      if (mounted) {
-        setState(() {
-          // Store the position in the variable
-          _currentPosition = position;
-          latitude = _currentPosition?.latitude;
-          longitude = _currentPosition?.longitude;
-          print('current location $_currentPosition');
-
-          print('CURRENT POS: $_currentPosition');
-
-          // For moving the camera to current location
-          mapController?.animateCamera(
-            CameraUpdate.newCameraPosition(
-              CameraPosition(
-                target: LatLng(position.latitude, position.longitude),
-                zoom: 18.0,
-              ),
-            ),
-          );
-          markers.add(
-            Marker(
-                markerId: MarkerId(startLocation.toString()),
-                position: LatLng(latitude!, longitude!),
-                icon: bitmapDescriptor,
-                draggable: true,
-                onDragEnd: (newPosition) {
-                  if (mounted) {
-                    setState(() {
-                      longitude = newPosition.longitude;
-                      latitude = newPosition.latitude;
-                      _getAddress();
-                    });
-                  }
-                  debugPrint('new pos ${newPosition}');
-                }),
-          );
-        });
-      }
-      _getAddress();
-    }).catchError((e) {
-      print(e);
-    });
-
   }
   // Method for retrieving the address
 
@@ -292,7 +288,7 @@ class _MapsViewState extends State<MapsView> {
         apiHeaders: await const GoogleApiHeaders().getHeaders(),
       );
       PlacesDetailsResponse detail =
-          await _places.getDetailsByPlaceId(p.placeId!,region: 'CM');
+          await _places.getDetailsByPlaceId(p.placeId!, region: 'CM');
       latitude = detail.result.geometry!.location.lat;
       longitude = detail.result.geometry!.location.lng;
       BitmapDescriptor bitmapDescriptor = await _bitmapDescriptorFromSvgAsset(
@@ -329,8 +325,7 @@ class _MapsViewState extends State<MapsView> {
     markers.add(
       Marker(
         draggable: true,
-        onDragEnd: (newPosition) {
-        },
+        onDragEnd: (newPosition) {},
         markerId: MarkerId(startLocation.toString()),
         position: startLocation,
         icon: bitmapDescriptor,
@@ -344,7 +339,7 @@ class _MapsViewState extends State<MapsView> {
     fToast = FToast();
     fToast.init(context);
     _getCurrentLocation();
-      initPos();
+    initPos();
   }
 
   @override
@@ -380,32 +375,34 @@ class _MapsViewState extends State<MapsView> {
                 });
               }
             },
-            onCameraMove: (position)async{
-              BitmapDescriptor bitmapDescriptor = await _bitmapDescriptorFromSvgAsset(
-                  context, 'img/icon/svg/ic_location_on_black.svg');
+            onCameraMove: (position) async {
+              BitmapDescriptor bitmapDescriptor =
+                  await _bitmapDescriptorFromSvgAsset(
+                      context, 'img/icon/svg/ic_location_on_black.svg');
               if (mounted) {
                 setState(() {
-                  latitude=position.target.latitude;
-                  longitude=position.target.longitude;
+                  latitude = position.target.latitude;
+                  longitude = position.target.longitude;
                   markers.add(
                     Marker(
-                        markerId: MarkerId(startLocation.toString()),
-                        position: position.target,
-                        draggable: true,
-                        onDragEnd: (newPos){
-                          log('message',error: newPos);
-                          if (kDebugMode) {
-                            print('///$newPos');
-                          }
-                        },
-                        icon: bitmapDescriptor,),
+                      markerId: MarkerId(startLocation.toString()),
+                      position: position.target,
+                      draggable: true,
+                      onDragEnd: (newPos) {
+                        log('message', error: newPos);
+                        if (kDebugMode) {
+                          print('///$newPos');
+                        }
+                      },
+                      icon: bitmapDescriptor,
+                    ),
                   );
                 });
               }
             },
             myLocationEnabled: true,
             myLocationButtonEnabled: false,
-            onCameraIdle: (){
+            onCameraIdle: () {
               _getAddress();
             },
           ),
@@ -424,7 +421,7 @@ class _MapsViewState extends State<MapsView> {
                         width: MediaQuery.of(context).size.width - 40,
                         child: ListTile(
                           title: Text(
-                            location==''?location1:location,
+                            location == '' ? location1 : location,
                             style: const TextStyle(fontSize: 18),
                           ),
                           trailing: const Icon(Icons.search),
@@ -450,7 +447,7 @@ class _MapsViewState extends State<MapsView> {
                         height: 56,
                         child: Icon(Icons.my_location),
                       ),
-                      onTap:_getCurrentLocation,
+                      onTap: _getCurrentLocation,
                     ),
                   ),
                 ),

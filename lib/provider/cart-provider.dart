@@ -2,11 +2,10 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:livraison_express/data/user_helper.dart';
 import 'package:livraison_express/model/cart-model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 
-import '../model/product.dart';
 import '../data/local_db/db-helper.dart';
 
 
@@ -14,17 +13,20 @@ class CartProvider with ChangeNotifier {
   DBHelper dbHelper = DBHelper();
   int _counter = 0;
   int _quantity = 1;
+  int _totalAmount = 0;
   int get counter => _counter;
   int get quantity => _quantity;
 
   double _totalPrice = 0.0;
   double get totalPrice => _totalPrice;
+  int get totalAmount => _totalAmount;
 
   List<CartItem> cart = [];
 
   Future<List<CartItem>> getData(String moduleSlug) async {
     cart = await dbHelper.getCartList(moduleSlug);
-    notifyListeners();
+    // notifyListeners();
+    getTotalAmount();
     return cart;
   }
 
@@ -47,11 +49,11 @@ class CartProvider with ChangeNotifier {
     SharedPreferences prefs = await SharedPreferences.getInstance() ;
     prefs.remove('cart_items');
     prefs.remove('total_price');
-    dbHelper.deleteAll();
+    dbHelper.deleteAll(UserHelper.module.slug!);
     notifyListeners();
   }
   void clears(){
-    dbHelper.deleteAll();
+    dbHelper.deleteAll(UserHelper.module.slug!);
     clearPrefItems();
     notifyListeners();
   }
@@ -78,7 +80,6 @@ class CartProvider with ChangeNotifier {
 
   void addTotalPrice(double productPrice) {
     _totalPrice = _totalPrice + productPrice;
-    log('total price $productPrice');
     _setPrefsItems();
     notifyListeners();
   }
@@ -93,6 +94,18 @@ class CartProvider with ChangeNotifier {
     _getPrefsItems();
     return _totalPrice;
   }
+
+  getTotalAmount() async{
+   _totalAmount = await dbHelper.getTotal(UserHelper.module.slug!);
+  }
+
+ Future<CartItem> updateQuantity(CartItem cartItem) async{
+  var cart =  await dbHelper.updateQuantity1(cartItem);
+    notifyListeners();
+    return cart;
+  }
+
+
 }
 
 

@@ -1,7 +1,6 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -10,7 +9,6 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart';
 import 'package:livraison_express/data/user_helper.dart';
 import 'package:livraison_express/model/user.dart';
-import 'package:livraison_express/utils/handle_exception.dart';
 import 'package:livraison_express/utils/main_utils.dart';
 import 'package:livraison_express/utils/string_manager.dart';
 import 'package:livraison_express/views/home/home-page.dart';

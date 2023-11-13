@@ -152,7 +152,7 @@ class OrderItemCard extends StatelessWidget {
                       SizedBox(width: getProportionateScreenWidth(4),),
                       Text(
                         '${order.paiement!.totalAmount} FCFA',
-                        style: TextStyle(),
+                        style: const TextStyle(),
                       )
                     ],
                   ),

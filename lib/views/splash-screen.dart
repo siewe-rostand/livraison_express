@@ -27,19 +27,21 @@ class _SplashScreenState extends State<SplashScreen>
     final token = preferences.getString(UserHelper.token);
     if (token != null) {
       // await Firebase.initializeApp();
-      ApiAuthService(context: context,fromLogin: false).getUserProfile(token);
+      ApiAuthService(context: context, fromLogin: false).getUserProfile(token);
     } else {
-      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context)=>const LoginScreen()));
+      Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const LoginScreen()));
     }
   }
+
   @override
   void initState() {
     super.initState();
-    Timer(
-        const Duration(seconds: 3),
-            () async{
-              fetchConnectionState(context);});
-    animationController = AnimationController(vsync: this,duration: const Duration(seconds: 2));
+    Timer(const Duration(seconds: 3), () async {
+      fetchConnectionState(context);
+    });
+    animationController =
+        AnimationController(vsync: this, duration: const Duration(seconds: 2));
     fadeInFadeOut = Tween(begin: 0.0, end: 0.5).animate(animationController);
 
     animationController.addStatusListener((status) {
@@ -57,6 +59,7 @@ class _SplashScreenState extends State<SplashScreen>
     animationController.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     SizeConfig().init(context);

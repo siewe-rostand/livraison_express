@@ -96,16 +96,16 @@ class Adresse {
   String? latitude;
   String? longitude;
   String? nom;
-  dynamic? surnom;
+  dynamic surnom;
   String? description;
-  dynamic? photoId;
-  dynamic? photoUrl;
+  dynamic photoId;
+  dynamic photoUrl;
   String? quartier;
-  dynamic? quartierId;
+  dynamic quartierId;
   bool? estFavorite;
   String? createdAt;
   String? updatedAt;
-  dynamic? deletedAt;
+  dynamic deletedAt;
   int? providerId;
   String? providerName;
   String? mapStaticUrl;
@@ -141,7 +141,7 @@ class Adresse {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
+    final Map<String, dynamic> data = <String, dynamic>{};
     data["id"] = id;
     data["client_id"] = clientId;
     data["ville_id"] = villeId;

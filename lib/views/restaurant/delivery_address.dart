@@ -143,7 +143,7 @@ class _DeliveryAddressState extends State<DeliveryAddress> {
                     categoryList =
                         await ShopServices.getCategories(shopId: shopId!);
                     Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) => CategoryPage()));
+                        builder: (context) => const CategoryPage()));
                   },
                   child: Stack(
                     children: [
@@ -242,7 +242,7 @@ class _DeliveryAddressState extends State<DeliveryAddress> {
                                             MaterialStateProperty.all(UserHelper.getColorDark())),
                                     onPressed: () {
                                       !isTomorrowOpened?Fluttertoast.showToast(msg: 'Service indisponible demain'):Navigator.of(context).push(MaterialPageRoute(
-                                          builder: (context) => CategoryPage(
+                                          builder: (context) => const CategoryPage(
                                           )));
                                     },
                                     child: const Text(

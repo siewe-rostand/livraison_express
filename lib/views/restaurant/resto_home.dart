@@ -6,7 +6,7 @@ import 'package:livraison_express/utils/size_config.dart';
 typedef SelectCardCallback = void Function(int option);
 class RestauHome extends StatelessWidget {
   final SelectCardCallback callback;
-  RestauHome(this.callback);
+  const RestauHome(this.callback, {Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
     return Column(

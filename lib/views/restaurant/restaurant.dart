@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
@@ -19,9 +18,7 @@ import '../../service/shopService.dart';
 import '../../utils/main_utils.dart';
 
 class Restaurant extends StatefulWidget {
-  const Restaurant(
-      {Key? key })
-      : super(key: key);
+  const Restaurant({Key? key}) : super(key: key);
 
   @override
   State<Restaurant> createState() => _RestaurantState();
@@ -29,8 +26,8 @@ class Restaurant extends StatefulWidget {
 
 class _RestaurantState extends State<Restaurant> {
   double latitude = 0.0;
-  Logger logger =Logger();
-  Modules modules =Modules();
+  Logger logger = Logger();
+  Modules modules = Modules();
   bool isLoading = false;
   double longitude = 0.0;
   bool isToday = false;
@@ -107,7 +104,9 @@ class _RestaurantState extends State<Restaurant> {
     double longitude,
   ) async {
     City city = UserHelper.city;
-    await ShopServices(context: context,progressDialog: getProgressDialog(context: context))
+    await ShopServices(
+            context: context,
+            progressDialog: getProgressDialog(context: context))
         .getShops(
             moduleId: modules.id!,
             city: city.name!,
@@ -116,18 +115,21 @@ class _RestaurantState extends State<Restaurant> {
             inner_radius: 0,
             outer_radius: 5)
         .then((value) {
-       // UserHelper.shops =value;
-       UserHelper.module.shops = value;
-       if(value.isNotEmpty) {
-         Navigator.of(context).pushReplacement(MaterialPageRoute(
-          builder: (context) => const MagasinPage()));
-       }else{
-         logger.e("====$value");
-         showError(title: "Oops!!", message: "Désolé nous ne livrons pas encore dans cette zone.",context: context);
-       }
+      // UserHelper.shops =value;
+      UserHelper.module.shops = value;
+      if (value.isNotEmpty) {
+        Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const MagasinPage()));
+      } else {
+        logger.e("====$value");
+        showError(
+            title: "Oops!!",
+            message: "Désolé nous ne livrons pas encore dans cette zone.",
+            context: context);
+      }
     }).catchError((onError) {
       logger.e('///$onError');
-      showError(title: "Oops!!", message: onErrorMessage,context: context);
+      showError(title: "Oops!!", message: onErrorMessage, context: context);
     });
   }
 
@@ -145,8 +147,8 @@ class _RestaurantState extends State<Restaurant> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        systemOverlayStyle: SystemUiOverlayStyle(
-            statusBarColor: UserHelper.getColor()),
+        systemOverlayStyle:
+            SystemUiOverlayStyle(statusBarColor: UserHelper.getColor()),
         backgroundColor: UserHelper.getColor(),
         title: const Text('Restaurant'),
       ),
@@ -189,40 +191,48 @@ class _RestaurantState extends State<Restaurant> {
                     print('${pos.latitude}  $longitude');
                     getShops(latitude, longitude);
                   }).catchError((onError) {
-                    showError(title: "Alerte!!", message: "Nous n'avons pas pu récupérer votre position. Veuillez nous accorder l'accès a votre position puis réessayez.",context: context);
+                    showError(
+                        title: "Alerte!!",
+                        message:
+                            "Nous n'avons pas pu récupérer votre position. Veuillez nous accorder l'accès a votre position puis réessayez.",
+                        context: context);
                   });
                   break;
                 case 1:
-
                   showDialog<void>(
                       context: context,
                       builder: (context) {
                         return Center(
                           child: AlertDialog(
                             contentPadding: EdgeInsets.zero,
-                            content: SelectedFavAddress(isDialog: true,onTap: (a){
-                              latitude=double.parse(a.latitude!);
-                              longitude=double.parse(a.longitude!);
-                              getShops(latitude, longitude);
-                              },),
+                            content: SelectedFavAddress(
+                              isDialog: true,
+                              onTap: (a) {
+                                latitude = double.parse(a.latitude!);
+                                longitude = double.parse(a.longitude!);
+                                getShops(latitude, longitude);
+                              },
+                            ),
                           ),
                         );
                       });
                   break;
                 case 2:
-                  await Navigator.of(context).push(
-                      MaterialPageRoute(
-                          builder: (context) =>
-                          const MapsView())).then((result) {
+                  await Navigator.of(context)
+                      .push(MaterialPageRoute(
+                          builder: (context) => const MapsView()))
+                      .then((result) {
                     placeLon = result['Longitude'] ?? 0.0;
                     placeLat = result['Latitude'] ?? 0.0;
                     location = result['location'];
                     getShops(placeLat!, placeLon!);
                     print('_RestaurantState.build$placeLon');
                     print(placeLon);
-                  }).catchError((onError){
-                    showError(title: "Oops!!", message: "Nous N'avons pas pu avoir votre localisation",context: context);
-
+                  }).catchError((onError) {
+                    showError(
+                        title: "Oops!!",
+                        message: "Nous N'avons pas pu avoir votre localisation",
+                        context: context);
                   });
               }
             }),
@@ -231,5 +241,4 @@ class _RestaurantState extends State<Restaurant> {
       ),
     );
   }
-
 }

@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -180,7 +179,7 @@ class UserHelper {
   }
 
   static Color getColorDark() {
-    if (module != null && module.moduleColor != null) {
+    if (module.moduleColor != null) {
       int R = int.parse(module.moduleColor!.substring(1, 3), radix: 16);
       int G = int.parse(module.moduleColor!.substring(3, 5), radix: 16);
       int B = int.parse(module.moduleColor!.substring(5, 7), radix: 16);

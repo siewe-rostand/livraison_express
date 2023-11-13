@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:livraison_express/utils/size_config.dart';
 
-import '../../model/orders.dart';
 import 'command_history.dart';
 class OrderConfirmation extends StatelessWidget {
   final String order;

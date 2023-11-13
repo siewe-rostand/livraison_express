@@ -59,7 +59,7 @@ class ShopServices{
         throw Exception('error loading module data');
       }
     } catch ( e) {
-      throw (e);
+      rethrow;
     }
   }
   static Future<List<Category>> getSubCategoriesFromShopAndCategory({required int shopId,required int categoryId}) async{

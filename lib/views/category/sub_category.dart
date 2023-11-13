@@ -8,7 +8,6 @@ import 'package:livraison_express/views/widgets/custom_sliver_app_bar.dart';
 import '../../model/category.dart';
 import '../../service/shopService.dart';
 import '../../utils/size_config.dart';
-import'../product/product_page.dart';
 import '../cart/cart.dart';
 import '../widgets/floating_action_button.dart';
 import '../widgets/open_wrapper.dart';

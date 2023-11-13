@@ -6,7 +6,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:livraison_express/constant/all-constant.dart';
@@ -25,10 +24,8 @@ import 'package:livraison_express/utils/size_config.dart';
 import 'package:livraison_express/utils/string_manager.dart';
 import 'package:livraison_express/views/livraison/step1.dart';
 import 'package:livraison_express/views/livraison/step2.dart';
-import 'package:livraison_express/views/widgets/custom_textfield.dart';
 import 'package:livraison_express/views/widgets/select_time.dart';
 import 'package:logger/logger.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/user_helper.dart';
@@ -369,7 +366,7 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
       "orders": order.toJson(),
       "paiement": payment.toJson(),
     };
-    log("***\n $data1 \- **");
+    log("***\n $data1 - **");
     await CourseApi(context: context)
         .commnander(data: data)
         .then((response) async {

@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 
 import 'package:contacts_service/contacts_service.dart';
 import 'package:flutter/material.dart';
@@ -16,12 +15,9 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/user_helper.dart';
-import '../../model/address-favorite.dart';
 import '../../model/address.dart';
 import '../../model/quartier.dart';
 import '../../model/user.dart';
-import '../../utils/main_utils.dart';
-import '../MapView.dart';
 
 class Step1 extends StatefulWidget {
   const Step1({Key? key, required this.sender, required this.addressSender, required this.step1FormKey}) : super(key: key);

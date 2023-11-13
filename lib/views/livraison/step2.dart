@@ -13,13 +13,10 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/user_helper.dart';
-import '../../model/address-favorite.dart';
 import '../../model/address.dart';
 import '../../model/client.dart';
 import '../../model/quartier.dart';
 import '../../model/user.dart';
-import '../../utils/main_utils.dart';
-import '../MapView.dart';
 import '../address_detail/selected_fav_address.dart';
 
 class Step2 extends StatefulWidget {
@@ -307,7 +304,7 @@ class _Step2State extends State<Step2> {
                               widget.receiverAddress.longitude=a.longitude;
                               widget.receiverAddress.latLng=a.latLng;
                             });
-                            print(a.toJson());;
+                            print(a.toJson());
                           },
                         ),
                       ),

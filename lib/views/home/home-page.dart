@@ -10,16 +10,14 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart';
 import 'package:livraison_express/constant/all-constant.dart';
 import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/model/horaire.dart';
 import 'package:livraison_express/model/quarter.dart';
 import 'package:livraison_express/model/user.dart';
 import 'package:livraison_express/service/auth_service.dart';
-import 'package:livraison_express/service/main_api_call.dart';
 import 'package:livraison_express/utils/asset_manager.dart';
 import 'package:livraison_express/utils/main_utils.dart';
 import 'package:livraison_express/utils/size_config.dart';
 import 'package:livraison_express/views/drawer/home-drawer.dart';
-import 'package:livraison_express/views/expand-fab.dart';
+import 'package:livraison_express/views/home/expand-fab.dart';
 import 'package:livraison_express/views/category/categoryPage.dart';
 import 'package:livraison_express/views/main/magasin_page.dart';
 import 'package:livraison_express/views/restaurant/restaurant.dart';
@@ -287,7 +285,7 @@ class _HomePageState extends State<HomePage> {
             child: AppBar(
               title: Center(
                   child: Image.asset(
-                'img/logo_start.png',
+                AssetManager.logo,
                 height: getProportionateScreenHeight(70),
                 width: double.infinity,
               )),

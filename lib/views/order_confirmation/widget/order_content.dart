@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:livraison_express/data/user_helper.dart';
 import 'package:livraison_express/model/orders.dart';
-import 'package:livraison_express/views/widgets/horizontal_dash_line.dart';
 
 import '../../../model/attributes.dart';
 import '../../../model/product.dart';
@@ -119,24 +118,20 @@ class OrderContent extends StatelessWidget {
     String string = "";
     int i = 1;
     for (var a in attributes) {
-      if (a != null) {
-        int j = 1;
-        a.options?.forEach((o) {
-          if (o != null) {
-            if (o != null && o.quantity != null && o.quantity! > 0) {
-              string = string + o.name!;
-              if (j != a.options?.length) {
-                string = string + ', ';
-              }
-            }
-          }
-          if (i != attributes.length && attributes.isNotEmpty) {
+      int j = 1;
+      a.options?.forEach((o) {
+        if (o.quantity != null && o.quantity! > 0) {
+          string = string + o.name!;
+          if (j != a.options?.length) {
             string = string + ', ';
           }
-          j++;
-        });
-      }
-      i++;
+        }
+              if (i != attributes.length && attributes.isNotEmpty) {
+          string = string + ', ';
+        }
+        j++;
+      });
+          i++;
     }
 
     return string;

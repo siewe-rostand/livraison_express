@@ -10,7 +10,7 @@ import 'order_content.dart';
 class OrderDetailScreen extends StatefulWidget {
   final Command order;
 
-  const OrderDetailScreen(this.order,{Key? key}):super(key: key);
+  const OrderDetailScreen(this.order, {Key? key}) : super(key: key);
 
   @override
   State<OrderDetailScreen> createState() => _OrderDetailScreenState();
@@ -25,11 +25,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     _order = widget.order;
     super.initState();
   }
+
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -50,7 +52,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           ),
           Expanded(
             child: NestedScrollView(
-                headerSliverBuilder: (context, isScrolled){
+                headerSliverBuilder: (context, isScrolled) {
                   return [
                     SliverCardResume(
                       command: _order,
@@ -70,7 +72,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       padding: const EdgeInsets.all(8.0),
                       child: Column(
                         children: [
-                          SizedBox(height: getProportionateScreenHeight(20),),
+                          SizedBox(
+                            height: getProportionateScreenHeight(20),
+                          ),
                           OrderContent(_order),
                           ContactInfo('expediteur', _order.sender!),
                           ContactInfo('destinataire', _order.receiver!),
@@ -78,8 +82,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       ),
                     ),
                   ),
-                )
-            ),
+                )),
           )
         ],
       ),

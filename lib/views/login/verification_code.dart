@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
@@ -10,13 +9,9 @@ import 'package:livraison_express/utils/asset_manager.dart';
 import 'package:livraison_express/utils/main_utils.dart';
 import 'package:livraison_express/utils/size_config.dart';
 import 'package:livraison_express/utils/string_manager.dart';
-import 'package:livraison_express/views/home/home-page.dart';
 import 'package:livraison_express/views/login/login.dart';
-import 'package:livraison_express/views/login/reset_password.dart';
-import 'package:livraison_express/views/widgets/custom_alert_dialog.dart';
 import 'package:livraison_express/views/widgets/custom_dialog.dart';
 
-import '../../constant/color-constant.dart';
 
 class VerificationCode extends StatefulWidget {
   const VerificationCode(

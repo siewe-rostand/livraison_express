@@ -16,7 +16,7 @@ class AboutPage extends StatelessWidget {
               const Text('Email'),
               TextButton(
                 autofocus: true,
-                onPressed: (){},
+                onPressed: () {},
                 child: const Text('contact@mail.livraison-express.net'),
               )
             ],
@@ -27,7 +27,7 @@ class AboutPage extends StatelessWidget {
               const Text('Numero de Telephone'),
               TextButton(
                 autofocus: true,
-                onPressed: (){},
+                onPressed: () {},
                 child: const Text('695461461 / 674527527'),
               )
             ],

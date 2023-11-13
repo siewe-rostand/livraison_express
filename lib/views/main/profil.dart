@@ -1,16 +1,15 @@
 import 'dart:convert';
-import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:livraison_express/constant/all-constant.dart';
 import 'package:livraison_express/data/user_helper.dart';
 import 'package:livraison_express/model/user.dart';
 import 'package:livraison_express/service/auth_service.dart';
+import 'package:livraison_express/utils/main_utils.dart';
+import 'package:livraison_express/utils/string_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../login/login.dart';
 
 class Profile extends StatefulWidget {
   const Profile({Key? key}) : super(key: key);
@@ -165,7 +164,7 @@ class _ProfileState extends State<Profile> {
                                       style: const TextStyle(color: Colors.black38),
                                       enabled: false,
                                       decoration: const InputDecoration(
-                                          labelText: 'Email'
+                                          labelText: StringManager.email
                                       ),
                                       controller: emailController,
                                     ),
@@ -173,13 +172,13 @@ class _ProfileState extends State<Profile> {
                                       style: const TextStyle(color: Colors.black38),
                                       enabled: false,
                                       decoration: const InputDecoration(
-                                          labelText: 'Telephone'
+                                          labelText: StringManager.phoneNumber
                                       ),
                                       controller: tel1Controller,
                                     ),
                                     TextFormField(
                                       decoration: const InputDecoration(
-                                          labelText: 'Telephone 2'
+                                          labelText: '${StringManager.phoneNumber} 2'
                                       ),
                                       controller: tel2Controller,
                                     ),
@@ -246,11 +245,7 @@ class _ProfileState extends State<Profile> {
                                         style:
                                         TextStyle(fontWeight: FontWeight.bold,),
                                       ),
-                                    style: ButtonStyle(
-                                      shape: MaterialStateProperty.all(RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(5)
-                                      ))
-                                    ),
+                                    style: loginButtonStyle(),
                                   ),
                                 )
                               ],

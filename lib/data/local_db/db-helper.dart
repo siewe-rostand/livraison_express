@@ -53,7 +53,7 @@ class DBHelper {
 
   Future<CartItem> insert(CartItem cart) async {
     var dbClient = await db;
-    await dbClient.insert(tableName, cart.toMap());
+    await dbClient.insert(tableName, cart.toJson());
     return cart;
   }
 
@@ -61,23 +61,44 @@ class DBHelper {
     var dbClient = await db;
     final List<Map<String, Object?>> queryResult = await dbClient
         .query(tableName, where: 'module_slug = ?', whereArgs: [module]);
-    return queryResult.map((e) => CartItem.fromMap(e)).toList();
+    return queryResult.map((e) => CartItem.fromJson(e)).toList();
   }
 
-  Future<int> delete(int id) async {
+  Future<int> delete(int id, String moduleSlug) async {
     var dbClient = await db;
-    return await dbClient
-        .delete(tableName, where: 'id_produit = ?', whereArgs: [id]);
+    return await dbClient.delete(tableName,
+        where: 'id_produit = ? and module_slug = ?',
+        whereArgs: [id, moduleSlug]);
   }
 
   Future<int> updateQuantity(CartItem cart) async {
     var dbClient = await db;
-    return await dbClient.update(tableName, cart.toMap(),
-        where: 'id_produit = ?', whereArgs: [cart.productId]);
+    return await dbClient.update(tableName, cart.toJson(),
+        where: 'id_produit = ? and module_slug = ?',
+        whereArgs: [cart.productId, cart.moduleSlug]);
+  }
+  Future<CartItem> updateQuantity1(CartItem cart) async {
+    var dbClient = await db;
+     await dbClient.update(tableName, cart.toJson(),
+        where: 'id_produit = ? and module_slug = ?',
+        whereArgs: [cart.productId, cart.moduleSlug]);
+     return cart;
   }
 
-  Future deleteAll() async {
+  Future deleteAll(String moduleSlug) async {
     var dbClient = await db;
-    dbClient.delete(tableName);
+    dbClient.delete(
+      tableName,
+      where: 'module_slug = ?',
+      whereArgs: [moduleSlug],
+    );
+  }
+
+ Future<int> getTotal(String moduleSlug) async{
+   var dbClient = await db;
+   var queryResult = await dbClient.rawQuery("SELECT SUM(prix_total)  as total from panier where module_slug = ?",[moduleSlug]);
+   String abc = queryResult[0]['total'].toString();
+   int total = int.parse(abc);
+   return total;
   }
 }

@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:http/http.dart';
 import 'package:livraison_express/data/user_helper.dart';
 import 'package:livraison_express/service/address_services.dart';
 import 'package:livraison_express/views/address_detail/address_dialog_items.dart';

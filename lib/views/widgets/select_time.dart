@@ -10,7 +10,6 @@ import '../../data/user_helper.dart';
 import '../../model/day.dart';
 import '../../model/day_item.dart';
 import '../../model/horaire.dart';
-import '../../model/module_color.dart';
 
 class SelectTime extends StatefulWidget {
   // final ModuleColor moduleColor;
@@ -29,11 +28,11 @@ class _SelectTimeState extends State<SelectTime> {
   List<String> timeSlots = [];
   List<String> todayTime = [];
   late DateFormat dateFormat;
-  late String selectTodayTime,nextStart;
+  late String selectTodayTime, nextStart;
   bool isToday = false;
-   bool selected = false;
+  bool selected = false;
   String chooseTime = '';
-   bool isTodayOpened=false,isTomorrowOpened=false;
+  bool isTodayOpened = false, isTomorrowOpened = false;
   late Days today;
 
   @override
@@ -44,28 +43,28 @@ class _SelectTimeState extends State<SelectTime> {
     isOpened(UserHelper.shops.horaires!);
   }
 
-  getTodayTimes(){
+  getTodayTimes() {
     dateFormat = DateFormat.Hm();
     selectTodayTime = dateFormat.format(t);
-     today =UserHelper.shops.horaires!.today!;
-    if(today.toString().isNotEmpty){
+    today = UserHelper.shops.horaires!.today!;
+    if (today.toString().isNotEmpty) {
       List<DayItem>? item = today.items;
-      if(item!.isNotEmpty){
+      if (item!.isNotEmpty) {
         for (var i in item) {
-          String? openTime=i.openedAt;
+          String? openTime = i.openedAt;
           String? closeTime = i.closedAt;
           var nw = openTime?.substring(0, 2);
           var a = openTime?.substring(3, 5);
           var cnm = closeTime?.substring(0, 2);
           var cla = closeTime?.substring(3, 5);
-          DateTime openTimeStamp = DateTime(now.year, now.month,
-              now.day, int.parse(nw!), int.parse(a!), 0);
-          DateTime closeTimeStamp = DateTime(now.year, now.month,
-              now.day, int.parse(cnm!), int.parse(cla!), 0);
-          if (openTime!.isNotEmpty && closeTime!.isNotEmpty){
+          DateTime openTimeStamp = DateTime(
+              now.year, now.month, now.day, int.parse(nw!), int.parse(a!), 0);
+          DateTime closeTimeStamp = DateTime(now.year, now.month, now.day,
+              int.parse(cnm!), int.parse(cla!), 0);
+          if (openTime!.isNotEmpty && closeTime!.isNotEmpty) {
             dateFormat = DateFormat.Hm();
-            if(now.isBefore(openTimeStamp)){
-              todayTime=[];
+            if (now.isBefore(openTimeStamp)) {
+              todayTime = [];
               while (openTimeStamp.isBefore(closeTimeStamp)) {
                 DateTime timeIncrement = openTimeStamp.add(step);
                 openTimeStamp = timeIncrement;
@@ -73,22 +72,23 @@ class _SelectTimeState extends State<SelectTime> {
               }
             }
             if ((now.isAtSameMomentAs(openTimeStamp) ||
-                now.isAfter(openTimeStamp)) && now.isBefore(closeTimeStamp)){
-              isTodayOpened=true;
-              todayTime=[];
+                    now.isAfter(openTimeStamp)) &&
+                now.isBefore(closeTimeStamp)) {
+              isTodayOpened = true;
+              todayTime = [];
               while (now1.isBefore(closeTimeStamp)) {
                 now1;
                 DateTime incr = now1.add(step);
                 todayTime.add(DateFormat.Hm().format(incr));
                 now1 = incr;
               }
-              selectTodayTime=todayTime.first;
+              selectTodayTime = todayTime.first;
             }
           }
         }
       }
     }
-    isToday=today.toString().isNotEmpty;
+    isToday = today.toString().isNotEmpty;
   }
 
   showToday(BuildContext context) {
@@ -97,12 +97,12 @@ class _SelectTimeState extends State<SelectTime> {
         context: context,
         builder: (context) {
           dateFormat = DateFormat.Hm();
-          if(!todayTime.contains(selectTodayTime)){
+          if (!todayTime.contains(selectTodayTime)) {
             selectTodayTime = todayTime[2];
-          }else{
+          } else {
             selectTodayTime = dateFormat.format(t);
           }
-          var selectTime;
+          String selectTime = '';
           return StatefulBuilder(builder: (context, setStateSB) {
             return Dialog(
               shape: RoundedRectangleBorder(
@@ -117,7 +117,7 @@ class _SelectTimeState extends State<SelectTime> {
                         padding: const EdgeInsets.only(top: 10, left: 6),
                         height: 35,
                         width: double.infinity,
-                        decoration:  BoxDecoration(
+                        decoration: BoxDecoration(
                           borderRadius: const BorderRadius.only(
                               topLeft: Radius.circular(10),
                               topRight: Radius.circular(5)),
@@ -140,8 +140,8 @@ class _SelectTimeState extends State<SelectTime> {
                                 ElevatedButton(
                                   style: ButtonStyle(
                                       backgroundColor:
-                                      MaterialStateProperty.all(
-                                          UserHelper.getColorDark())),
+                                          MaterialStateProperty.all(
+                                              UserHelper.getColorDark())),
                                   onPressed: () {
                                     isToday = true;
                                     showToday(context);
@@ -149,7 +149,7 @@ class _SelectTimeState extends State<SelectTime> {
                                   child: const Text(
                                     "AUJOUD'HUI",
                                     style:
-                                    TextStyle(fontWeight: FontWeight.bold),
+                                        TextStyle(fontWeight: FontWeight.bold),
                                   ),
                                 ),
                                 Row(
@@ -168,8 +168,8 @@ class _SelectTimeState extends State<SelectTime> {
                                 ElevatedButton(
                                     style: ButtonStyle(
                                         backgroundColor:
-                                        MaterialStateProperty.all(
-                                            UserHelper.getColorDark())),
+                                            MaterialStateProperty.all(
+                                                UserHelper.getColorDark())),
                                     onPressed: () {
                                       isToday == false;
                                       showTomorrow(context);
@@ -187,9 +187,9 @@ class _SelectTimeState extends State<SelectTime> {
                               value: selectTodayTime,
                               icon: const Icon(Icons.arrow_drop_down_outlined),
                               elevation: 16,
-                              style:  TextStyle(color: UserHelper.getColorDark()),
+                              style:
+                                  TextStyle(color: UserHelper.getColorDark()),
                               onChanged: (String? newValue) {
-
                                 setStateSB(() {
                                   selectTodayTime = newValue!;
                                 });
@@ -202,20 +202,21 @@ class _SelectTimeState extends State<SelectTime> {
                                     int.parse(nw),
                                     int.parse(a),
                                     0);
-                                selectTime = startTime2.customFormat("yyyy-MM-dd HH:mm:ss", "fr_FR");
-                                    // DateFormat('dd-MM-yyyy  k:mm')
-                                    // .format(startTime2);
+                                selectTime = startTime2.customFormat(
+                                    "yyyy-MM-dd HH:mm:ss", "fr_FR");
+                                // DateFormat('dd-MM-yyyy  k:mm')
+                                // .format(startTime2);
                               },
                               items: todayTime.map<DropdownMenuItem<String>>(
-                                      (String value) {
-                                    return DropdownMenuItem<String>(
-                                      value: value,
-                                      child: Text(
-                                        value,
-                                        style: const TextStyle(color: Colors.black),
-                                      ),
-                                    );
-                                  }).toList(),
+                                  (String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(
+                                    value,
+                                    style: const TextStyle(color: Colors.black),
+                                  ),
+                                );
+                              }).toList(),
                             ),
                           )
                         ],
@@ -234,14 +235,20 @@ class _SelectTimeState extends State<SelectTime> {
                           var a = selectTodayTime.substring(3, 5);
                           DateTime startTime2 = DateTime(now.year, now.month,
                               now.day, int.parse(nw), int.parse(a), 0);
-                          var selectTime1 = startTime2.customFormat("yyyy-MM-dd HH:mm:ss", "fr_FR");
+                          var selectTime1 = startTime2.customFormat(
+                              "yyyy-MM-dd HH:mm:ss", "fr_FR");
                           // DateFormat('dd-MM-yyyy  k:mm').format(startTime2);
-                          chooseTime = selectTime ?? selectTime1;
+                          chooseTime =
+                              selectTime != '' ? selectTime : selectTime1;
                           widget.onSelectedDate(chooseTime);
-                          UserHelper.chooseTime=selectTime ?? selectTime1;
+                          UserHelper.chooseTime =
+                              selectTime != '' ? selectTime : selectTime1;
                           Navigator.of(context).pop();
                         },
-                        child:  Text('VALIDER',style: TextStyle(color: UserHelper.getColorDark()),),
+                        child: Text(
+                          'VALIDER',
+                          style: TextStyle(color: UserHelper.getColorDark()),
+                        ),
                       ),
                     ),
                   ),
@@ -251,12 +258,11 @@ class _SelectTimeState extends State<SelectTime> {
                         onTap: () {
                           Navigator.of(context).pop();
                         },
-                        child:  Align(
+                        child: Align(
                           alignment: Alignment.topRight,
                           child: CircleAvatar(
                             radius: 14.0,
-                            backgroundColor:
-                            UserHelper.getColorDark(),
+                            backgroundColor: UserHelper.getColorDark(),
                             child: const Icon(Icons.close, color: Colors.white),
                           ),
                         ),
@@ -267,25 +273,26 @@ class _SelectTimeState extends State<SelectTime> {
           });
         });
   }
+
   showTomorrow(BuildContext context) {
     Navigator.of(context).pop();
-    Days tomorrow =UserHelper.shops.horaires!.tomorrow!;
-    if(tomorrow.toString().isNotEmpty){
-      List<DayItem>? item=tomorrow.items;
-      timeSlots=[];
-      if(item!.isNotEmpty){
+    Days tomorrow = UserHelper.shops.horaires!.tomorrow!;
+    if (tomorrow.toString().isNotEmpty) {
+      List<DayItem>? item = tomorrow.items;
+      timeSlots = [];
+      if (item!.isNotEmpty) {
         for (var i in item) {
-          String? openTime=i.openedAt;
+          String? openTime = i.openedAt;
           String? closeTime = i.closedAt;
           var nw = openTime?.substring(0, 2);
           var a = openTime?.substring(3, 5);
           var cnm = closeTime?.substring(0, 2);
           var cla = closeTime?.substring(3, 5);
-          DateTime openTimeStamp = DateTime(now.year, now.month,
-              now.day, int.parse(nw!), int.parse(a!), 0);
-          DateTime closeTimeStamp = DateTime(now.year, now.month,
-              now.day, int.parse(cnm!), int.parse(cla!), 0);
-          if (openTime!.isNotEmpty && closeTime!.isNotEmpty){
+          DateTime openTimeStamp = DateTime(
+              now.year, now.month, now.day, int.parse(nw!), int.parse(a!), 0);
+          DateTime closeTimeStamp = DateTime(now.year, now.month, now.day,
+              int.parse(cnm!), int.parse(cla!), 0);
+          if (openTime!.isNotEmpty && closeTime!.isNotEmpty) {
             dateFormat = DateFormat.Hm();
             while (openTimeStamp.isBefore(closeTimeStamp)) {
               DateTime timeIncrement = openTimeStamp.add(step);
@@ -302,11 +309,11 @@ class _SelectTimeState extends State<SelectTime> {
         builder: (context) {
           dateFormat = DateFormat.Hm();
           DateTime startTime1 =
-          DateTime(now.year, now.month, now.day, 8, 30, 0);
+              DateTime(now.year, now.month, now.day, 8, 30, 0);
           var selectTime;
-          nextStart=timeSlots.first;
+          nextStart = timeSlots.first;
           return StatefulBuilder(builder: (context, setStateSB) {
-            List<String> se=[];
+            List<String> se = [];
             se.add(nextStart);
 
             return Dialog(
@@ -322,8 +329,8 @@ class _SelectTimeState extends State<SelectTime> {
                         padding: const EdgeInsets.only(top: 10, left: 6),
                         height: 35,
                         width: double.infinity,
-                        decoration:  BoxDecoration(
-                          borderRadius:const BorderRadius.only(
+                        decoration: BoxDecoration(
+                          borderRadius: const BorderRadius.only(
                               topLeft: Radius.circular(10),
                               topRight: Radius.circular(5)),
                           color: UserHelper.getColorDark(),
@@ -345,8 +352,8 @@ class _SelectTimeState extends State<SelectTime> {
                                 ElevatedButton(
                                   style: ButtonStyle(
                                       backgroundColor:
-                                      MaterialStateProperty.all(
-                                          UserHelper.getColorDark())),
+                                          MaterialStateProperty.all(
+                                              UserHelper.getColorDark())),
                                   onPressed: () {
                                     print("Tomorrow's today");
                                     isToday = true;
@@ -355,7 +362,7 @@ class _SelectTimeState extends State<SelectTime> {
                                   child: const Text(
                                     "AUJOUD'HUI",
                                     style:
-                                    TextStyle(fontWeight: FontWeight.bold),
+                                        TextStyle(fontWeight: FontWeight.bold),
                                   ),
                                 ),
                                 Row(
@@ -374,8 +381,8 @@ class _SelectTimeState extends State<SelectTime> {
                                 ElevatedButton(
                                     style: ButtonStyle(
                                         backgroundColor:
-                                        MaterialStateProperty.all(
-                                            UserHelper.getColorDark())),
+                                            MaterialStateProperty.all(
+                                                UserHelper.getColorDark())),
                                     onPressed: () {
                                       // print("tomorrow's tomorrow");
                                       showTomorrow(context);
@@ -393,11 +400,11 @@ class _SelectTimeState extends State<SelectTime> {
                               value: nextStart,
                               icon: const Icon(Icons.arrow_drop_down_outlined),
                               elevation: 16,
-                              style:  TextStyle(color: UserHelper.getColor()),
+                              style: TextStyle(color: UserHelper.getColor()),
                               onChanged: (String? newValue) {
                                 setStateSB(() {
                                   nextStart = newValue!;
-                                  selected=true;
+                                  selected = true;
                                 });
                                 var nw = nextStart.substring(0, 2);
                                 var a = nextStart.substring(3, 5);
@@ -408,23 +415,24 @@ class _SelectTimeState extends State<SelectTime> {
                                     int.parse(nw),
                                     int.parse(a),
                                     0);
-                                selectTime = startTime2.customFormat("yyyy-MM-dd HH:mm:ss", "fr_FR");
-                                    // DateFormat('dd-MM-yyyy  k:mm')
-                                    // .format(startTime2);
+                                selectTime = startTime2.customFormat(
+                                    "yyyy-MM-dd HH:mm:ss", "fr_FR");
+                                // DateFormat('dd-MM-yyyy  k:mm')
+                                // .format(startTime2);
                                 // selectTime = DateFormat('dd-MM-yyyy  k:mm')
                                 //     .format(startTime2);
                                 // print("selectTime$selectTime");
                               },
                               items: timeSlots.map<DropdownMenuItem<String>>(
-                                      (String value) {
-                                    return DropdownMenuItem<String>(
-                                      value: value,
-                                      child: Text(
-                                        value,
-                                        style: const TextStyle(color: Colors.black),
-                                      ),
-                                    );
-                                  }).toList(),
+                                  (String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(
+                                    value,
+                                    style: const TextStyle(color: Colors.black),
+                                  ),
+                                );
+                              }).toList(),
                             ),
                           )
                         ],
@@ -442,14 +450,18 @@ class _SelectTimeState extends State<SelectTime> {
                           var nw = nextStart.substring(0, 2);
                           var a = nextStart.substring(3, 5);
                           DateTime startTime2 = DateTime(now.year, now.month,
-                              now.day+1, int.parse(nw), int.parse(a), 0);
-                          var selectTime1 = startTime2.customFormat("yyyy-MM-dd HH:mm:ss", "fr_FR");
+                              now.day + 1, int.parse(nw), int.parse(a), 0);
+                          var selectTime1 = startTime2.customFormat(
+                              "yyyy-MM-dd HH:mm:ss", "fr_FR");
                           // DateFormat('dd-MM-yyyy k:mm').format(startTime2);
                           Navigator.of(context).pop();
                           chooseTime = selectTime ?? selectTime1;
                           widget.onSelectedDate(chooseTime);
                         },
-                        child: Text('VALIDER',style: TextStyle(color: UserHelper.getColorDark()),),
+                        child: Text(
+                          'VALIDER',
+                          style: TextStyle(color: UserHelper.getColorDark()),
+                        ),
                       ),
                     ),
                   ),
@@ -459,12 +471,12 @@ class _SelectTimeState extends State<SelectTime> {
                         onTap: () {
                           Navigator.of(context).pop();
                         },
-                        child:  Align(
+                        child: Align(
                           alignment: Alignment.topRight,
                           child: CircleAvatar(
                             radius: 14.0,
                             backgroundColor: UserHelper.getColorDark(),
-                            child:const Icon(Icons.close, color: Colors.white),
+                            child: const Icon(Icons.close, color: Colors.white),
                           ),
                         ),
                       ))
@@ -474,7 +486,6 @@ class _SelectTimeState extends State<SelectTime> {
           });
         });
   }
-
 
   bool isOpened(Horaires horaires) {
     bool juge = false;
@@ -496,7 +507,7 @@ class _SelectTimeState extends State<SelectTime> {
                 int.parse(cnm!), int.parse(cla!), 0);
             // debugPrint('close time // $closeTimeStamp');
             if ((now.isAtSameMomentAs(openTimeStamp) ||
-                now.isAfter(openTimeStamp)) &&
+                    now.isAfter(openTimeStamp)) &&
                 now.isBefore(closeTimeStamp)) {
               isTodayOpened = true;
               juge = true;
@@ -532,9 +543,7 @@ class _SelectTimeState extends State<SelectTime> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(
-          borderRadius:
-          BorderRadius.circular(16.0)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
       elevation: 0.0,
       child: Stack(
         children: [
@@ -542,25 +551,18 @@ class _SelectTimeState extends State<SelectTime> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                padding:
-                const EdgeInsets.only(
-                    top: 10, left: 6),
+                padding: const EdgeInsets.only(top: 10, left: 6),
                 height: 35,
                 width: double.infinity,
-                decoration:
-                BoxDecoration(
-                  borderRadius:
-                  const BorderRadius.only(
-                      topLeft: Radius
-                          .circular(10),
-                      topRight: Radius
-                          .circular(5)),
+                decoration: BoxDecoration(
+                  borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(10),
+                      topRight: Radius.circular(5)),
                   color: UserHelper.getColorDark(),
                 ),
                 child: const Text(
                   'Quand souhaitez vous etre livre ?',
-                  style: TextStyle(
-                      color: Colors.white),
+                  style: TextStyle(color: Colors.white),
                 ),
               ),
               /**
@@ -569,35 +571,29 @@ class _SelectTimeState extends State<SelectTime> {
               ElevatedButton(
                 style: ButtonStyle(
                     backgroundColor:
-                    MaterialStateProperty
-                        .all(UserHelper.getColorDark())),
-                onPressed:() {
-                  if(!isTodayOpened && isTomorrowOpened) {
-                    Fluttertoast.showToast(msg: "Service Momentanement indisponible");
-
-                  }else{
+                        MaterialStateProperty.all(UserHelper.getColorDark())),
+                onPressed: () {
+                  if (!isTodayOpened && isTomorrowOpened) {
+                    Fluttertoast.showToast(
+                        msg: "Service Momentanement indisponible");
+                  } else {
                     // print("isTodayOpened/...$isTodayOpened...$isTomorrowOpened ");
                     showToday(context);
                   }
                 },
                 child: const Text(
                   "AUJOUD'HUI",
-                  style: TextStyle(
-                      fontWeight:
-                      FontWeight.bold),
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
               Row(
                 children: const [
-                  Expanded(
-                      child: Divider()),
+                  Expanded(child: Divider()),
                   Padding(
-                    padding:
-                    EdgeInsets.all(8.0),
+                    padding: EdgeInsets.all(8.0),
                     child: Text('Ou'),
                   ),
-                  Expanded(
-                      child: Divider()),
+                  Expanded(child: Divider()),
                 ],
               ),
               /**
@@ -606,17 +602,13 @@ class _SelectTimeState extends State<SelectTime> {
               ElevatedButton(
                   style: ButtonStyle(
                       backgroundColor:
-                      MaterialStateProperty
-                          .all(UserHelper.getColorDark())),
+                          MaterialStateProperty.all(UserHelper.getColorDark())),
                   onPressed: () {
                     showTomorrow(context);
                   },
                   child: const Text(
                     "DEMAIN",
-                    style: TextStyle(
-                        fontWeight:
-                        FontWeight
-                            .bold),
+                    style: TextStyle(fontWeight: FontWeight.bold),
                   )),
             ],
           ),
@@ -626,15 +618,12 @@ class _SelectTimeState extends State<SelectTime> {
               onTap: () {
                 Navigator.of(context).pop();
               },
-              child:  Align(
-                alignment:
-                Alignment.topRight,
+              child: Align(
+                alignment: Alignment.topRight,
                 child: CircleAvatar(
                   radius: 14.0,
-                  backgroundColor:
-                  UserHelper.getColorDark(),
-                  child: const Icon(Icons.close,
-                      color: Colors.white),
+                  backgroundColor: UserHelper.getColorDark(),
+                  child: const Icon(Icons.close, color: Colors.white),
                 ),
               ),
             ),
@@ -651,5 +640,3 @@ extension on DateTime {
         millisecondsSinceEpoch - millisecondsSinceEpoch % delta.inMilliseconds);
   }
 }
-
-

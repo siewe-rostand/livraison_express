@@ -1,11 +1,7 @@
-import 'dart:convert';
-import 'dart:developer';
-
-import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl_phone_field/country_picker_dialog.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:livraison_express/constant/all-constant.dart';
@@ -18,9 +14,9 @@ import 'package:livraison_express/utils/size_config.dart';
 import 'package:livraison_express/utils/string_manager.dart';
 import 'package:livraison_express/views/login/forgotten_password.dart';
 import 'package:livraison_express/views/login/register.dart';
-import 'package:livraison_express/views/login/verification_code.dart';
 import 'package:livraison_express/views/widgets/custom_textfield.dart';
 import 'package:livraison_express/views/widgets/social-card.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../model/city.dart';
 import '../../service/fire-auth.dart';
@@ -36,7 +32,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   bool isObscureText = true;
   bool _isPhone = false;
-  bool _isProcessing = false;
+  final bool _isProcessing = false;
   final _phoneTextController = TextEditingController();
   final passwordTextController = TextEditingController();
   final emailTextController = TextEditingController();
@@ -58,18 +54,45 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  static const String redirectUri =
+      'https://livraison-express-staging.firebaseapp.com/__/auth/handler';
+  static const String id =
+      'dj0yJmk9ZEkxNjliNzhTcXhxJmQ9WVdrOVMwaEVXWEZQYVRnbWNHbzlNQT09JnM9Y29uc3VtZXJzZWNyZXQmc3Y9MCZ4PTE2';
+  String yahooRequestUrl =
+      "https://api.login.yahoo.com/oauth2/request_auth?client_id=dj0yJmk9ZEkxNjliNzhTcXhxJmQ9WVdrOVMwaEVXWEZQYVRnbWNHbzlNQT09JnM9Y29uc3VtZXJzZWNyZXQmc3Y9MCZ4PTE2--&response_type=code&redirect_uri=https://yahoo.com&scope=openid%20mail-r&nonce=YihsFwGKgt3KJUh6tPs2";
+  launchMessenger() async {
+    try {
+      String url = yahooRequestUrl;
+
+      if (await canLaunchUrl(Uri.parse(url))) {
+        await launchUrl(Uri.parse(url));
+      } else {
+        throw 'Could not launch $url';
+      }
+    } catch (e) {
+      showToast(
+          context: context,
+          text:
+              "L'application Messenger n'est pas installé dans cette appareil.",
+          color: Colors.blueGrey);
+    }
+  }
+
   void printScreenInformation(BuildContext context) {
-    print('Device Size:${Size(1.sw, 1.sh)}');
-    print('Device pixel density:${ScreenUtil().pixelRatio}');
-    print('Bottom safe zone distance dp:${ScreenUtil().bottomBarHeight}dp');
-    print('Status bar height dp:${ScreenUtil().statusBarHeight}dp');
-    print('The ratio of actual width to UI design:${ScreenUtil().scaleWidth}');
-    print(
-        'The ratio of actual height to UI design:${ScreenUtil().scaleHeight}');
-    print('System font scaling:${ScreenUtil().textScaleFactor}');
-    print('0.5 times the screen width:${0.5.sw}dp');
-    print('0.5 times the screen height:${0.5.sh}dp');
-    print('Screen orientation:${ScreenUtil().orientation}');
+    if (kDebugMode) {
+      print('Device Size:${Size(1.sw, 1.sh)}');
+      print('Device pixel density:${ScreenUtil().pixelRatio}');
+      print('Bottom safe zone distance dp:${ScreenUtil().bottomBarHeight}dp');
+      print('Status bar height dp:${ScreenUtil().statusBarHeight}dp');
+      print(
+          'The ratio of actual width to UI design:${ScreenUtil().scaleWidth}');
+      print(
+          'The ratio of actual height to UI design:${ScreenUtil().scaleHeight}');
+      print('System font scaling:${ScreenUtil().textScaleFactor}');
+      print('0.5 times the screen width:${0.5.sw}dp');
+      print('0.5 times the screen height:${0.5.sh}dp');
+      print('Screen orientation:${ScreenUtil().orientation}');
+    }
   }
 
   @override
@@ -242,8 +265,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       SocialCard(
                         icon: AssetManager.yahooIcon,
                         press: () async {
-                          await FireAuth.performLogin('yahoo.com',
-                              ['openid mail-r'], {'language': 'fr'});
+                          // await FireAuth.performLogin('yahoo.com',
+                          //     ['openid mail-r'], {'language': 'fr'});
+                          launchMessenger();
                         },
                       )
                     ],

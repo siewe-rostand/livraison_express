@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:livraison_express/utils/size_config.dart';
@@ -7,9 +9,11 @@ import 'package:livraison_express/views/cart/cart-item-view.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 
+import '../../data/local_db/db-helper.dart';
 import '../../data/user_helper.dart';
 import '../../model/cart-model.dart';
 import '../widgets/custom_dialog.dart';
+import '../widgets/plus-minus-button.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({
@@ -27,7 +31,10 @@ class _CartPageState extends State<CartPage>
   bool isClick = false;
   bool isButtonActive = true;
   double amount = 0.0;
+  int tAmount = 0;
   bool listen = false;
+  DBHelper? dbHelper = DBHelper();
+  int? newPrice;
   Map<String, dynamic>? paymentIntentData;
   @override
   Widget build(BuildContext context) {
@@ -82,17 +89,23 @@ class _CartPageState extends State<CartPage>
                       height: 20,
                     ),
                     Text('Votre panier est vide 😌',
-                        style: Theme.of(context).textTheme.headline5),
+                        style: Theme.of(context).textTheme.headlineSmall),
                     const SizedBox(
                       height: 20,
                     ),
                     Text('veuillez ajouter les produits au panier',
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.subtitle2)
+                        style: Theme.of(context).textTheme.titleSmall)
                   ],
                 ),
               );
-            } else {
+            }
+            else {
+              tAmount = 0;
+              for (var item in snapshot.data!){
+                int total = item.quantity! * item.unitPrice!;
+                tAmount += total;
+              }
               return Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Column(
@@ -177,8 +190,9 @@ class _CartPageState extends State<CartPage>
                 Consumer<CartProvider>(
                   builder: (context, cartProvide, child) {
                     amount = cartProvide.getTotalPrice();
+                    logger.wtf(cartProvide.totalAmount);
                     return Text(
-                      cartProvider.getTotalPrice().toStringAsFixed(0) + ' FCFA',
+                      cartProvider.totalAmount.toStringAsFixed(0) + ' FCFA',
                       style: const TextStyle(
                           fontWeight: FontWeight.bold, fontSize: 18),
                     );
@@ -193,22 +207,24 @@ class _CartPageState extends State<CartPage>
                   color: UserHelper.getColorDark(),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10)),
-                  onPressed: isButtonActive == true ? () async {
-                    List cartList = await cartProvider.getData(UserHelper.module.slug ?? '');
-                    // await ApiAuthService.getUser();
-                    String text =
-                        'Veuillez remplir votre panier avant de le valider';
-                    bool cartLength = cartList.isEmpty;
-                    !cartLength
-                        ? Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(
-                                builder: (BuildContext context) =>
-                                    ValiderPanier(
-                                      totalAmount: amount,
-                                    )))
-                        : Fluttertoast.showToast(msg: text);
-                  }
-                  : null,
+                  onPressed: isButtonActive == true
+                      ? () async {
+                          List cartList = await cartProvider
+                              .getData(UserHelper.module.slug ?? '');
+                          // await ApiAuthService.getUser();
+                          String text =
+                              'Veuillez remplir votre panier avant de le valider';
+                          bool cartLength = cartList.isEmpty;
+                          !cartLength
+                              ? Navigator.of(context).pushReplacement(
+                                  MaterialPageRoute(
+                                      builder: (BuildContext context) =>
+                                          ValiderPanier(
+                                            totalAmount: tAmount.toDouble(),
+                                          )))
+                              : Fluttertoast.showToast(msg: text);
+                        }
+                      : null,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: const [

@@ -1,4 +1,3 @@
-import 'package:livraison_express/constant/all-constant.dart';
 
 class AppUser1 {
   int? id;

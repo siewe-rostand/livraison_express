@@ -23,7 +23,7 @@ class CustomFloatingButton extends StatelessWidget {
           badgeContent: Consumer<CartProvider>(
             builder: (context, cart, child) {
               return Text(
-                cart.getCounter(UserHelper.module.slug!).toString(),
+                cart.getCounter().toString(),
                 style: const TextStyle(
                     fontWeight: FontWeight.bold, fontSize: 12,color: Colors.white),
               );

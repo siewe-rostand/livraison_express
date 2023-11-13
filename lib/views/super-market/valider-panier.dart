@@ -15,12 +15,10 @@ import 'package:livraison_express/model/cart-model.dart';
 import 'package:livraison_express/model/client.dart';
 import 'package:livraison_express/model/day_item.dart';
 import 'package:livraison_express/model/infos.dart';
-import 'package:livraison_express/model/orders.dart' as command;
 import 'package:livraison_express/model/payment.dart';
 import 'package:livraison_express/model/product.dart';
 import 'package:livraison_express/model/user.dart';
 import 'package:livraison_express/service/paymentApi.dart';
-import 'package:livraison_express/utils/app_extension.dart';
 import 'package:livraison_express/utils/main_utils.dart';
 import 'package:livraison_express/utils/size_config.dart';
 import 'package:livraison_express/views/super-market/widget/step1.dart';
@@ -258,7 +256,6 @@ class _ValiderPanierState extends State<ValiderPanier> {
               }));
     });
   }
-
 
   saveOrder(String modePaiement, String pi, String status,
       String paimentMessage) async {
@@ -654,8 +651,8 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                     ? () {
                                         showToast(
                                             context: context,
-                                            text:
-                                            StringManager.serviceUnavailable,
+                                            text: StringManager
+                                                .serviceUnavailable,
                                             iconData: Icons.close_rounded,
                                             color: Colors.red);
                                       }
@@ -681,8 +678,8 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                           });
                                         } else {
                                           Fluttertoast.showToast(
-                                              msg:
-                                              StringManager.serviceUnavailable);
+                                              msg: StringManager
+                                                  .serviceUnavailable);
                                         }
                                       },
                                 child: Row(
@@ -697,8 +694,8 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                           ? (DeliveryType? value) {
                                               showToast(
                                                   context: context,
-                                                  text:
-                                                  StringManager.serviceUnavailable,
+                                                  text: StringManager
+                                                      .serviceUnavailable,
                                                   iconData: Icons.close_rounded,
                                                   color: Colors.red);
                                             }
@@ -725,8 +722,8 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                                 });
                                               } else {
                                                 Fluttertoast.showToast(
-                                                    msg:
-                                                        StringManager.serviceUnavailable);
+                                                    msg: StringManager
+                                                        .serviceUnavailable);
                                               }
                                             },
                                     ),
@@ -752,8 +749,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                                 chooseTime = selectedDate;
                                                 String deliverTime =
                                                     chooseTime.substring(11);
-                                                deliveryTime =
-                                                    deliverTime;
+                                                deliveryTime = deliverTime;
                                                 deliveryDate =
                                                     chooseTime.substring(0, 10);
                                               });
@@ -789,7 +785,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                                           chooseTime
                                                               .substring(11);
                                                       deliveryTime =
-                                                          deliverTime ;
+                                                          deliverTime;
                                                       deliveryDate = chooseTime
                                                           .substring(0, 10);
                                                     });
