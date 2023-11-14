@@ -101,4 +101,14 @@ class DBHelper {
    int total = int.parse(abc);
    return total;
   }
+
+  Future<int> getCartAmount(String slug) async{
+    int amount = 0;
+    await getCartList(slug).then((value){
+      for (var element in value) {
+        amount = amount + (element.quantity! * element.unitPrice!);
+      }
+    });
+    return amount;
+  }
 }

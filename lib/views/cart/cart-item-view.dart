@@ -82,12 +82,7 @@ class _CartItemViewState extends State<CartItemView> {
                         //   logger.e('error message', error);
                         // });
                         CartItem cart = widget.cartItem.copyWith(quantity: qty,totalPrice: newPrice);
-                        cartProvider.updateQuantity(cart).then((value){
-                          logger.w(value.toJson());
-                          cartProvider.getTotalAmount();
-                        }).catchError((onError){
-                          logger.e(onError);
-                        });
+                        cartProvider.updateQuantity(cart);
                       },
                       deleteQuantity: () {
                         int qty = widget.cartItem.quantity!;
@@ -144,7 +139,6 @@ class _CartItemViewState extends State<CartItemView> {
               logger.i(widget.cartItem.toJson());
               dbHelper!
                   .delete(widget.cartItem.productId!, UserHelper.module.slug!);
-              cartProvider.removeTotalPrice(widget.cartItem.totalPrice!.toDouble());
               cartProvider.removeCounter();
             },
             icon: const Icon(Icons.delete_rounded),

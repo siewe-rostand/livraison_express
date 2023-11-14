@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:badges/badges.dart' as badge;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -57,6 +58,14 @@ class _ProductPageState extends State<ProductPage>
   late Category category;
   late Shops shops;
   late Modules modules;
+  int cartCount= 0;
+  getCounter()async{
+    await dbHelper!.getCartList(UserHelper.module.slug!).then((value) {
+      setState(() {
+        cartCount = value.length;
+      });
+    });
+  }
   loader() {
     return Positioned(
       bottom: 20,
@@ -171,9 +180,7 @@ class _ProductPageState extends State<ProductPage>
           userId: user.id),
     )
         .then((value) {
-      Provider.of<CartProvider>(context, listen: false)
-          .addTotalPrice(products[index].prixUnitaire!.toDouble());
-      Provider.of<CartProvider>(context, listen: false).addCounter();
+          getCounter();
       Navigator.of(context).pop();
       showToast(
           context: context,
@@ -338,6 +345,7 @@ class _ProductPageState extends State<ProductPage>
 
   @override
   Widget build(BuildContext context) {
+    getCounter();
     return Scaffold(
         appBar: PreferredSize(
           preferredSize: const Size.fromHeight(65),
@@ -626,7 +634,34 @@ class _ProductPageState extends State<ProductPage>
         floatingActionButton: showFab
             ? OpenContainerWrapper(
                 closedBuilder: (BuildContext _, VoidCallback openContainer) {
-                  return CustomFloatingButton(onTap: openContainer);
+                  return Container(
+                    margin: const EdgeInsets.only(right: 5),
+                    child: CircleAvatar(
+                      backgroundColor: Colors.white,
+                      radius: 32,
+                      child: badge.Badge(
+                        padding: const EdgeInsets.all(10),
+                        badgeColor: UserHelper.getColorDark(),
+                        animationType: badge.BadgeAnimationType.scale,
+                        badgeContent: Consumer<CartProvider>(
+                          builder: (context, cart, child) {
+                            return Text(
+                              cartCount.toString(),
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 12,color: Colors.white),
+                            );
+                          },
+                        ),
+                        child: IconButton(
+                          onPressed:openContainer,
+                          icon: Icon(
+                            Icons.shopping_cart,
+                            color: UserHelper.getColor(),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
                 },
                 onClosed: (v) async =>
                     Future.delayed(const Duration(milliseconds: 500)),

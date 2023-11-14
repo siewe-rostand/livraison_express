@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:livraison_express/utils/asset_manager.dart';
+import 'package:livraison_express/utils/main_utils.dart';
 import 'package:livraison_express/utils/string_manager.dart';
 import 'package:livraison_express/views/address_detail/map_text_field.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -287,6 +288,7 @@ class _Step2State extends State<Step2> {
               )),
           InkWell(
             onTap: () {
+              MainUtils.hideKeyBoard(context);
               showDialog<void>(
                   context: context,
                   builder: (context) {

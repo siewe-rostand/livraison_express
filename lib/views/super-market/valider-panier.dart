@@ -125,6 +125,16 @@ class _ValiderPanierState extends State<ValiderPanier> {
   int? idChargement;
   List<Products> productList = [];
   bool isTodayOpened = false, isTomorrowOpened = false;
+  int cartAmount = 0;
+
+  void getCartAmount() async {
+    await dbHelper.getCartAmount(UserHelper.module.slug!).then((value) {
+      setState(() {
+        cartAmount = value;
+      });
+    });
+    logger.d(cartAmount);
+  }
 
   @override
   void initState() {
@@ -132,6 +142,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
     isChecked1 = false;
     isToday = false;
     initView();
+    getCartAmount();
 
     // TODO: implement initState
     super.initState();
@@ -208,7 +219,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
             destination: destination,
             module: module,
             magasin: slug,
-            amount: amount.toInt())
+            amount: cartAmount)
         .then((response) {
       // logger.i(response);
       var body = json.decode(response.body);
@@ -275,9 +286,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
       article.totalPrice = cartItem.totalPrice;
       article.totalPrice = widget.totalAmount.toInt();
       article.quantity = cartItem.quantity;
-      article.subTotalAmount = Provider.of<CartProvider>(context, listen: false)
-          .getTotalPrice()
-          .toInt();
+      article.subTotalAmount = cartAmount;
       article.magasinId = shops.id;
       productList.add(article);
     }
@@ -306,9 +315,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
     order.montantLivraison = initialDeliveryPrice;
     order.magasinId = shops.id;
     order.listeArticles = productList;
-    var total =
-        Provider.of<CartProvider>(context, listen: false).getTotalPrice() +
-            deliveryPrice;
+    var total = cartAmount + deliveryPrice;
     Payment payment = Payment();
     payment.totalAmount = total.toInt();
     payment.message = paimentMessage;
@@ -528,20 +535,22 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                   });
                                   if (payMode == "cash") {
                                     saveOrder("cash", '', '', '');
-                                  } else if (payMode == "card") {
-                                    var amt =
-                                        cartProvider.totalPrice + deliveryPrice;
-                                    var amount = amt.toString();
-                                    PaymentApi(context: context)
-                                        .createPaymentIntent(amount, 'XAF')
-                                        .then((value) async {
-                                      paymentIntentData = value;
-                                      initPaymentSheet(value);
-                                    }).catchError((onError) {
-                                      logger.e(onError);
-                                    });
-                                    displayPaymentSheet(paymentIntentData!);
-                                  } else {
+                                  }
+                                  // else if (payMode == "card") {
+                                  //   var amt =
+                                  //       cartProvider.totalPrice + deliveryPrice;
+                                  //   var amount = amt.toString();
+                                  //   PaymentApi(context: context)
+                                  //       .createPaymentIntent(amount, 'XAF')
+                                  //       .then((value) async {
+                                  //     paymentIntentData = value;
+                                  //     initPaymentSheet(value);
+                                  //   }).catchError((onError) {
+                                  //     logger.e(onError);
+                                  //   });
+                                  //   displayPaymentSheet(paymentIntentData!);
+                                  // }
+                                  else {
                                     setState(() {
                                       isLoading1 = false;
                                     });
@@ -833,8 +842,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               const Text('Montant du panier: '),
-                              Text(cartProvider.getTotalPrice().toString() +
-                                  'FCFA')
+                              Text(cartAmount.toString() + 'FCFA')
                             ],
                           ),
                         ),
@@ -853,8 +861,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
                           children: [
                             const Text('Total: '),
                             Consumer<CartProvider>(builder: (_, cart, child) {
-                              var total =
-                                  cartProvider.getTotalPrice() + deliveryPrice;
+                              var total = cartAmount + deliveryPrice;
                               return Text(
                                 total.toString() + " FCFA",
                                 style: const TextStyle(color: grey90),
@@ -919,8 +926,7 @@ class _ValiderPanierState extends State<ValiderPanier> {
                                                                   .white)),
                                                   onPressed: () {
                                                     Navigator.of(context).pop();
-                                                    var amount = cartProvider
-                                                        .getTotalPrice();
+                                                    var amount = cartAmount;
                                                     CourseApi(context: context)
                                                         .validatePromoCode(
                                                             code:
@@ -1005,31 +1011,31 @@ class _ValiderPanierState extends State<ValiderPanier> {
                             )
                           ],
                         ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Radio(
-                                activeColor: UserHelper.getColorDark(),
-                                focusColor: UserHelper.getColorDark(),
-                                value: 1,
-                                groupValue: payOption,
-                                onChanged: (int? value) {
-                                  if (mounted) {
-                                    setState(() {
-                                      payOption = value;
-                                      payMode = 'card';
-                                    });
-                                  }
-                                }),
-                            const Text(
-                              'Payer par carte bancaire',
-                              style: TextStyle(color: grey90),
-                            ),
-                            SvgPicture.asset(
-                              'img/icon/svg/ic_credit_card_black.svg',
-                            )
-                          ],
-                        ),
+                        // Row(
+                        //   mainAxisAlignment: MainAxisAlignment.start,
+                        //   children: [
+                        //     Radio(
+                        //         activeColor: UserHelper.getColorDark(),
+                        //         focusColor: UserHelper.getColorDark(),
+                        //         value: 1,
+                        //         groupValue: payOption,
+                        //         onChanged: (int? value) {
+                        //           if (mounted) {
+                        //             setState(() {
+                        //               payOption = value;
+                        //               payMode = 'card';
+                        //             });
+                        //           }
+                        //         }),
+                        //     const Text(
+                        //       'Payer par carte bancaire',
+                        //       style: TextStyle(color: grey90),
+                        //     ),
+                        //     SvgPicture.asset(
+                        //       'img/icon/svg/ic_credit_card_black.svg',
+                        //     )
+                        //   ],
+                        // ),
                       ],
                     ),
                     isActive: _currentStep >= 0,

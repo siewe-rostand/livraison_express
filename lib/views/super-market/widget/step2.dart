@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import '../../../data/user_helper.dart';
 import '../../../model/address.dart';
 import '../../../model/quartier.dart';
+import '../../../utils/main_utils.dart';
 
 class Step2 extends StatefulWidget {
   final GlobalKey<FormState> step2FormKey;
@@ -75,6 +76,7 @@ class _Step2State extends State<Step2> {
               const Text("Consulter ma liste d'adresses: "),
               IconButton(
                   onPressed: () async {
+                    MainUtils.hideKeyBoard(context);
                     showDialog<void>(
                         context: context,
                         builder: (context) {
@@ -149,7 +151,7 @@ class _Step2State extends State<Step2> {
                 return StringManager.errorMessage;
               }
               if (!(douala.contains(value))) {
-                return "Veuillez Choisir une ville svp";
+                return "Veuillez Choisir un quartier de votre ville svp";
               }
               return null;
             },

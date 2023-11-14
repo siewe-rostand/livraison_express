@@ -199,6 +199,7 @@ class _RestaurantState extends State<Restaurant> {
                   });
                   break;
                 case 1:
+                  MainUtils.hideKeyBoard(context);
                   showDialog<void>(
                       context: context,
                       builder: (context) {

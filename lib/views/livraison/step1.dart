@@ -18,6 +18,7 @@ import '../../data/user_helper.dart';
 import '../../model/address.dart';
 import '../../model/quartier.dart';
 import '../../model/user.dart';
+import '../../utils/main_utils.dart';
 
 class Step1 extends StatefulWidget {
   const Step1({Key? key, required this.sender, required this.addressSender, required this.step1FormKey}) : super(key: key);
@@ -283,6 +284,7 @@ class _Step1State extends State<Step1> {
               )),
           InkWell(
             onTap: () {
+              MainUtils.hideKeyBoard(context);
               showDialog<void>(
                   context: context,
                   builder: (context) {

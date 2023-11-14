@@ -1004,27 +1004,27 @@ class _CommandeCoursierState extends State<CommandeCoursier> {
                               )
                             ],
                           ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              Radio(
-                                  value: 1,
-                                  groupValue: payOption,
-                                  onChanged: (int? value) {
-                                    setState(() {
-                                      payOption = value;
-                                      payMode = 'card';
-                                    });
-                                  }),
-                              const Text(
-                                StringManager.payByCard,
-                                style: TextStyle(color: grey90),
-                              ),
-                              SvgPicture.asset(
-                                AssetManager.creditCardIcon,
-                              )
-                            ],
-                          ),
+                          // Row(
+                          //   mainAxisAlignment: MainAxisAlignment.start,
+                          //   children: [
+                          //     Radio(
+                          //         value: 1,
+                          //         groupValue: payOption,
+                          //         onChanged: (int? value) {
+                          //           setState(() {
+                          //             payOption = value;
+                          //             payMode = 'card';
+                          //           });
+                          //         }),
+                          //     const Text(
+                          //       StringManager.payByCard,
+                          //       style: TextStyle(color: grey90),
+                          //     ),
+                          //     SvgPicture.asset(
+                          //       AssetManager.creditCardIcon,
+                          //     )
+                          //   ],
+                          // ),
                         ],
                       ),
                       isActive: _currentStep >= 0,

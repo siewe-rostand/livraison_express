@@ -7,7 +7,7 @@ import '../../provider/cart-provider.dart';
 
 class CustomFloatingButton extends StatelessWidget {
   const CustomFloatingButton({Key? key, required this.onTap}) : super(key: key);
-  final VoidCallback  onTap;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -25,12 +25,14 @@ class CustomFloatingButton extends StatelessWidget {
               return Text(
                 cart.getCounter().toString(),
                 style: const TextStyle(
-                    fontWeight: FontWeight.bold, fontSize: 12,color: Colors.white),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    color: Colors.white),
               );
             },
           ),
           child: IconButton(
-            onPressed:onTap,
+            onPressed: onTap,
             icon: Icon(
               Icons.shopping_cart,
               color: UserHelper.getColor(),

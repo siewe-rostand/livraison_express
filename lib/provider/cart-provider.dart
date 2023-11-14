@@ -25,8 +25,6 @@ class CartProvider with ChangeNotifier {
 
   Future<List<CartItem>> getData(String moduleSlug) async {
     cart = await dbHelper.getCartList(moduleSlug);
-    // notifyListeners();
-    getTotalAmount();
     return cart;
   }
 
@@ -45,16 +43,8 @@ class CartProvider with ChangeNotifier {
     _totalPrice = prefs.getDouble('total_price') ?? 0;
   }
 
-  void clearPrefItems()async{
-    SharedPreferences prefs = await SharedPreferences.getInstance() ;
-    prefs.remove('cart_items');
-    prefs.remove('total_price');
-    dbHelper.deleteAll(UserHelper.module.slug!);
-    notifyListeners();
-  }
   void clears(){
     dbHelper.deleteAll(UserHelper.module.slug!);
-    clearPrefItems();
     notifyListeners();
   }
 
@@ -71,32 +61,8 @@ class CartProvider with ChangeNotifier {
   }
 
   int getCounter() {
-    _getPrefsItems();
-    return _counter;
-  }
-
-
-
-
-  void addTotalPrice(double productPrice) {
-    _totalPrice = _totalPrice + productPrice;
-    _setPrefsItems();
-    notifyListeners();
-  }
-
-  void removeTotalPrice(double productPrice) {
-    _totalPrice = _totalPrice - productPrice;
-    _setPrefsItems();
-    notifyListeners();
-  }
-
-  double getTotalPrice() {
-    _getPrefsItems();
-    return _totalPrice;
-  }
-
-  getTotalAmount() async{
-   _totalAmount = await dbHelper.getTotal(UserHelper.module.slug!);
+    int count = cart.length;
+    return count;
   }
 
  Future<CartItem> updateQuantity(CartItem cartItem) async{

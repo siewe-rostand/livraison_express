@@ -118,7 +118,7 @@ class CourseApi {
         return response;
       } else {
         var body = json.decode(response.body);
-        logger.e("+++${body['message'].toString().contains("Point")}");
+        logger.e("+++${body}");
         var mes = body['message'];
         if(body['message'].toString().contains("Point")){
           throw("Point de livraison non acceptable ");
@@ -135,7 +135,8 @@ class CourseApi {
         throw (onErrorMessage);
       }
     } catch (e) {
-      throw handleException(e, context);
+      // throw handleException(e, context);
+      throw (e);
     }
   }
 

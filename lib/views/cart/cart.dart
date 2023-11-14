@@ -5,7 +5,6 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:livraison_express/utils/size_config.dart';
 import 'package:livraison_express/provider/cart-provider.dart';
 import 'package:livraison_express/views/super-market/valider-panier.dart';
-import 'package:livraison_express/views/cart/cart-item-view.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 
@@ -32,10 +31,23 @@ class _CartPageState extends State<CartPage>
   bool isButtonActive = true;
   double amount = 0.0;
   int tAmount = 0;
+  int cartAmount = 0;
   bool listen = false;
-  DBHelper? dbHelper = DBHelper();
+  DBHelper dbHelper = DBHelper();
   int? newPrice;
   Map<String, dynamic>? paymentIntentData;
+  void getCartAmount()async {
+   await dbHelper.getCartAmount(UserHelper.module.slug!).then((value) {
+     setState(() {
+       cartAmount = value;
+     });
+   });
+  }
+  @override
+  void initState() {
+    getCartAmount();
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
     final cartProvider = Provider.of<CartProvider>(context);
@@ -59,7 +71,8 @@ class _CartPageState extends State<CartPage>
                       content: message,
                       positiveBtnText: "OK",
                       positiveBtnPressed: () {
-                        cartProvider.clearPrefItems();
+                        cartProvider.clears();
+                        getCartAmount();
                         Navigator.of(context).pop();
                       },
                       negativeBtnText: non,
@@ -101,11 +114,6 @@ class _CartPageState extends State<CartPage>
               );
             }
             else {
-              tAmount = 0;
-              for (var item in snapshot.data!){
-                int total = item.quantity! * item.unitPrice!;
-                tAmount += total;
-              }
               return Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Column(
@@ -161,8 +169,129 @@ class _CartPageState extends State<CartPage>
                                 ],
                               );
                             }
-                            return CartItemView(
-                              cartItem: snapshot.data![index],
+                            CartItem cartItem = snapshot.data![index];
+                            return Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Container(
+                                        width: getProportionateScreenWidth(90),
+                                        height: getProportionateScreenHeight(90),
+                                        color: Colors.white38,
+                                        child: SizedBox(
+                                            height: getProportionateScreenHeight(85),
+                                            child: Image.network(
+                                              cartItem.image,
+                                              errorBuilder: (BuildContext context, Object exception,
+                                                  StackTrace? stackTrace) {
+                                                return Image.asset(
+                                                  'img/no-images.jpeg',
+                                                  height: getProportionateScreenHeight(70),
+                                                );
+                                              },
+                                            )),
+                                      ),
+                                      flex: 2,
+                                    ),
+                                    const SizedBox(
+                                      width: 10,
+                                    ),
+                                    // Padding(padding: EdgeInsets.all(4)),
+                                    Expanded(
+                                      flex: 8,
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(cartItem.title!),
+                                          PlusMinusButtons(
+                                              addQuantity: () {
+                                                int qty = cartItem.quantity!;
+                                                int px = cartItem.price!;
+                                                qty++;
+                                                newPrice = px * qty;
+                                                // dbHelper!
+                                                //     .updateQuantity(CartItem(
+                                                //   id: widget.cartItem.id,
+                                                //   quantity: qty,
+                                                //   price: newPrice,
+                                                //   title: widget.cartItem.title,
+                                                //   image: widget.cartItem.image,
+                                                //   unitPrice: widget.cartItem.price,
+                                                //   productId: widget.cartItem.productId,
+                                                //   moduleSlug: UserHelper.module.slug,
+                                                // ))
+                                                //     .then((value) {
+                                                //   cartProvider.addTotalPrice(
+                                                //       double.parse(widget.cartItem.price.toString()));
+                                                // }).onError((error, stackTrace) {
+                                                //   logger.e('error message', error);
+                                                // });
+                                                CartItem cart = cartItem.copyWith(quantity: qty,totalPrice: newPrice);
+                                                cartProvider.updateQuantity(cart);
+                                                getCartAmount();
+                                              },
+                                              deleteQuantity: () {
+                                                int qty = cartItem.quantity!;
+                                                int px = cartItem.price!;
+                                                qty--;
+                                                newPrice = px * qty;
+                                                int total = qty * px;
+                                                if (qty > 0) {
+                                                  // dbHelper!
+                                                  //     .updateQuantity(
+                                                  //   CartItem(
+                                                  //     id: widget.cartItem.id,
+                                                  //     quantity: qty,
+                                                  //     price: newPrice,
+                                                  //     title: widget.cartItem.title,
+                                                  //     image: widget.cartItem.image,
+                                                  //     totalPrice: total,
+                                                  //     unitPrice: widget.cartItem.price,
+                                                  //     productId: widget.cartItem.productId,
+                                                  //     moduleSlug: UserHelper.module.slug,
+                                                  //   ),
+                                                  // )
+                                                  //     .then((value) {
+                                                  //       logger.i(value);
+                                                  //   cartProvider.removeTotalPrice(
+                                                  //       double.parse(widget.cartItem.price.toString()));
+                                                  // }).onError((error, stackTrace) {
+                                                  //   logger.e(error);
+                                                  // });
+                                                  CartItem cart = cartItem.copyWith(quantity: qty,totalPrice: newPrice);
+                                                  cartProvider.updateQuantity(cart);
+                                                  getCartAmount();
+                                                }
+                                              },
+                                              text: cartItem.quantity.toString()),
+                                          Align(
+                                              alignment: Alignment.bottomRight,
+                                              child: Text(
+                                                cartItem.unitPrice.toString() + ' FCFA',
+                                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                              )),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Align(
+                                  alignment: Alignment.bottomRight,
+                                  child: IconButton(
+                                    onPressed: () async {
+                                      logger.i(cartItem.toJson());
+                                      dbHelper
+                                          .delete(cartItem.productId!, UserHelper.module.slug!);
+                                      getCartAmount();
+                                    },
+                                    icon: const Icon(Icons.delete_rounded),
+                                  ),
+                                ),
+                                const Divider(
+                                  thickness: 1.5,
+                                ),
+                              ],
                             );
                           }),
                     ),
@@ -188,11 +317,9 @@ class _CartPageState extends State<CartPage>
                       color: Colors.grey.withOpacity(0.86), fontSize: 20),
                 ),
                 Consumer<CartProvider>(
-                  builder: (context, cartProvide, child) {
-                    amount = cartProvide.getTotalPrice();
-                    logger.wtf(cartProvide.totalAmount);
+                  builder: (context, provider, child) {
                     return Text(
-                      cartProvider.totalAmount.toStringAsFixed(0) + ' FCFA',
+                      cartAmount.toStringAsFixed(0) + ' FCFA',
                       style: const TextStyle(
                           fontWeight: FontWeight.bold, fontSize: 18),
                     );
@@ -220,7 +347,7 @@ class _CartPageState extends State<CartPage>
                                   MaterialPageRoute(
                                       builder: (BuildContext context) =>
                                           ValiderPanier(
-                                            totalAmount: tAmount.toDouble(),
+                                            totalAmount: cartAmount.toDouble(),
                                           )))
                               : Fluttertoast.showToast(msg: text);
                         }
