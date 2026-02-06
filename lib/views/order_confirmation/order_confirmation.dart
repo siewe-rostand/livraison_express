@@ -1,12 +1,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:livraison_express/utils/size_config.dart';
 
+import '../../utils/size_config.dart';
 import 'command_history.dart';
 class OrderConfirmation extends StatelessWidget {
   final String order;
-  const OrderConfirmation({Key? key, required this.order}) : super(key: key);
+  const OrderConfirmation({super.key, required this.order});
 
   @override
   Widget build(BuildContext context) {

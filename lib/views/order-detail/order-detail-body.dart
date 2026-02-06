@@ -1,16 +1,16 @@
 
 import 'package:flutter/material.dart';
-import 'package:livraison_express/model/orders.dart';
-import 'package:livraison_express/views/order-detail/resume-silver-card.dart';
+import 'package:livraison_express_client/views/order-detail/resume-silver-card.dart';
 
 import '../../constant/color-constant.dart';
+import '../../model/orders.dart';
 import '../../utils/size_config.dart';
 import '../order_confirmation/widget/contact_info.dart';
 import '../order_confirmation/widget/order_content.dart';
 
 class OrderDetailBody extends StatefulWidget {
   final Command command;
-  const OrderDetailBody({Key? key,required this.command}) : super(key: key);
+  const OrderDetailBody({super.key,required this.command});
 
   @override
   State<OrderDetailBody> createState() => _OrderDetailBodyState();

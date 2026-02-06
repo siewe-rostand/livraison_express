@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:livraison_express/model/module_color.dart';
-import 'package:livraison_express/views/livraison/commande-coursier.dart';
 
+import '../../model/module_color.dart';
 import '../../model/shop.dart';
+import 'commande-coursier.dart';
 
 class Livraison extends StatefulWidget {
   final String city;
   final ModuleColor moduleColor;
   final Shops shops;
-  const Livraison({Key? key, required this.city, required this.moduleColor, required this.shops}) : super(key: key);
+  const Livraison({super.key, required this.city, required this.moduleColor, required this.shops});
 
   @override
   State<Livraison> createState() => _LivraisonState();

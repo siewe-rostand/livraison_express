@@ -1,10 +1,10 @@
-import 'package:livraison_express/model/client.dart';
-import 'package:livraison_express/model/extra.dart';
-import 'package:livraison_express/model/order.dart';
-import 'package:livraison_express/model/payment.dart';
-import 'package:livraison_express/model/shop.dart';
+import 'package:livraison_express_client/model/payment.dart';
+import 'package:livraison_express_client/model/shop.dart';
 
+import 'client.dart';
+import 'extra.dart';
 import 'infos.dart';
+import 'order.dart';
 
 class Command {
   Infos? infos;

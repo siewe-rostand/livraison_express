@@ -4,21 +4,21 @@ import 'package:flutter_svg/svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
-import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/model/city.dart';
-import 'package:livraison_express/utils/size_config.dart';
-import 'package:livraison_express/views/MapView.dart';
-import 'package:livraison_express/views/address_detail/selected_fav_address.dart';
-import 'package:livraison_express/views/main/magasin_page.dart';
-import 'package:livraison_express/views/restaurant/resto_home.dart';
+import 'package:livraison_express_client/views/restaurant/resto_home.dart';
 import 'package:logger/logger.dart';
 
+import '../../data/user_helper.dart';
+import '../../model/city.dart';
 import '../../model/module.dart';
 import '../../service/shopService.dart';
 import '../../utils/main_utils.dart';
+import '../../utils/size_config.dart';
+import '../MapView.dart';
+import '../address_detail/selected_fav_address.dart';
+import '../main/magasin_page.dart';
 
 class Restaurant extends StatefulWidget {
-  const Restaurant({Key? key}) : super(key: key);
+  const Restaurant({super.key});
 
   @override
   State<Restaurant> createState() => _RestaurantState();

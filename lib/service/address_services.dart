@@ -1,9 +1,9 @@
 import 'dart:convert';
 
 import 'package:http/http.dart';
-import 'package:livraison_express/model/address.dart';
 import 'package:logger/logger.dart';
 
+import '../model/address.dart';
 import 'auth_service.dart';
 
 class AddressService{

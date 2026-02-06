@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/utils/size_config.dart';
-import 'package:livraison_express/views/widgets/plus-minus-button.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 
+import '../../data/user_helper.dart';
 import '../../model/cart-model.dart';
 import '../../provider/cart-provider.dart';
 import '../../data/local_db/db-helper.dart';
+import '../../utils/size_config.dart';
+import '../widgets/plus-minus-button.dart';
 
 class CartItemView extends StatefulWidget {
   final CartItem cartItem;
-  const CartItemView({Key? key, required this.cartItem}) : super(key: key);
+  const CartItemView({super.key, required this.cartItem});
 
   @override
   State<CartItemView> createState() => _CartItemViewState();
@@ -29,6 +29,7 @@ class _CartItemViewState extends State<CartItemView> {
         Row(
           children: [
             Expanded(
+              flex: 2,
               child: Container(
                 width: getProportionateScreenWidth(90),
                 height: getProportionateScreenHeight(90),
@@ -46,7 +47,6 @@ class _CartItemViewState extends State<CartItemView> {
                       },
                     )),
               ),
-              flex: 2,
             ),
             const SizedBox(
               width: 10,

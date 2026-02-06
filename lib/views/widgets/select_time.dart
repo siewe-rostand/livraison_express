@@ -4,16 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
-import 'package:livraison_express/utils/app_extension.dart';
 
 import '../../data/user_helper.dart';
 import '../../model/day.dart';
 import '../../model/day_item.dart';
 import '../../model/horaire.dart';
+import '../../utils/app_extension.dart';
 
 class SelectTime extends StatefulWidget {
   // final ModuleColor moduleColor;
-  const SelectTime({Key? key, required this.onSelectedDate}) : super(key: key);
+  const SelectTime({super.key, required this.onSelectedDate});
   final Function onSelectedDate;
 
   @override
@@ -129,6 +129,7 @@ class _SelectTimeState extends State<SelectTime> {
                         ),
                       ),
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           Expanded(
                             child: Column(
@@ -220,7 +221,6 @@ class _SelectTimeState extends State<SelectTime> {
                             ),
                           )
                         ],
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       ),
                     ],
                   ),

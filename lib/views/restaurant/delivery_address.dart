@@ -4,25 +4,24 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:livraison_express/constant/all-constant.dart';
-import 'package:livraison_express/service/shopService.dart';
-import 'package:livraison_express/views/category/categoryPage.dart';
 
+import '../../constant/color-constant.dart';
 import '../../data/user_helper.dart';
 import '../../model/category.dart';
 import '../../model/day_item.dart';
 import '../../model/shop.dart';
+import '../../service/shopService.dart';
 import '../../utils/size_config.dart';
+import '../category/categoryPage.dart';
 
 class DeliveryAddress extends StatefulWidget {
   const DeliveryAddress(
-      {Key? key,
+      {super.key,
       required this.moduleId,
       required this.city,
       required this.latitude,
       required this.longitude,
-      required this.shops})
-      : super(key: key);
+      required this.shops});
   final int moduleId;
   final String city;
   final double latitude;

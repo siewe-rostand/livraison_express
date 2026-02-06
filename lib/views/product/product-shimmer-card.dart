@@ -1,6 +1,6 @@
 
 import 'package:flutter/material.dart';
-import 'package:livraison_express/views/product/skeleton.dart';
+import 'package:livraison_express_client/views/product/skeleton.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../utils/size_config.dart';

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:livraison_express/model/orders.dart';
 
 import '../../../constant/color-constant.dart';
+import '../../../model/orders.dart';
 import '../../../utils/size_config.dart';
 import '../silver_card_resume.dart';
 import 'contact_info.dart';
@@ -10,7 +10,7 @@ import 'order_content.dart';
 class OrderDetailScreen extends StatefulWidget {
   final Command order;
 
-  const OrderDetailScreen(this.order, {Key? key}) : super(key: key);
+  const OrderDetailScreen(this.order, {super.key});
 
   @override
   State<OrderDetailScreen> createState() => _OrderDetailScreenState();

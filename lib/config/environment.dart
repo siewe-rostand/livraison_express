@@ -45,8 +45,8 @@ class _Config {
   };
 
   static Map<String, dynamic> qaConstants = {
-    SERVER_ONE: "https://staging1.example.com/",
-    SERVER_TWO: "https://staging2.example.com/",
+    SERVER_ONE: "https://staging1.mcs.com/",
+    SERVER_TWO: "https://staging2.mcs.com/",
     WHERE_AM_I: "staging",
   };
 

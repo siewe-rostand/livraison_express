@@ -2,15 +2,15 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/service/address_services.dart';
-import 'package:livraison_express/views/address_detail/address_dialog_items.dart';
 
+import '../../data/user_helper.dart';
 import '../../model/address.dart';
+import '../../service/address_services.dart';
 import '../../utils/main_utils.dart';
 import '../../utils/size_config.dart';
 import '../../utils/value_helper.dart';
 import 'address_dialog.dart';
+import 'address_dialog_items.dart';
 
 enum Menu { detail, edit, delete }
 class SelectedFavAddress extends StatefulWidget {

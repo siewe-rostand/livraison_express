@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:livraison_express/model/client.dart';
 
 import '../../../data/user_helper.dart';
+import '../../../model/client.dart';
 import '../../../utils/size_config.dart';
 import 'horizontal_line.dart';
 
@@ -9,7 +9,7 @@ class ContactInfo extends StatelessWidget {
   final String title;
   final Client contact;
 
-  const ContactInfo(this.title, this.contact,{Key? key}):super(key: key);
+  const ContactInfo(this.title, this.contact,{super.key});
 
   @override
   Widget build(BuildContext context) {

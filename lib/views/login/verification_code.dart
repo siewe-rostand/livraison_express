@@ -2,26 +2,24 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/service/auth_service.dart';
-import 'package:livraison_express/utils/app_extension.dart';
-import 'package:livraison_express/utils/asset_manager.dart';
-import 'package:livraison_express/utils/main_utils.dart';
-import 'package:livraison_express/utils/size_config.dart';
-import 'package:livraison_express/utils/string_manager.dart';
-import 'package:livraison_express/views/login/login.dart';
-import 'package:livraison_express/views/widgets/custom_dialog.dart';
 
+import '../../data/user_helper.dart';
+import '../../service/auth_service.dart';
+import '../../utils/app_extension.dart';
+import '../../utils/asset_manager.dart';
+import '../../utils/main_utils.dart';
+import '../../utils/size_config.dart';
+import '../../utils/string_manager.dart';
+import '../widgets/custom_dialog.dart';
+import 'login.dart';
 
 class VerificationCode extends StatefulWidget {
-  const VerificationCode(
-      {Key? key,
+  const VerificationCode({super.key,
       this.phone,
       this.email,
       this.token,
       this.resetPassword,
-      this.code})
-      : super(key: key);
+      this.code});
   final String? phone;
   final String? email;
   final String? token;

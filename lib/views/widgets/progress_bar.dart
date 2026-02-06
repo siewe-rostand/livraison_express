@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:livraison_express/constant/all-constant.dart';
-import 'package:livraison_express/model/module_color.dart';
 
+import '../../constant/color-constant.dart';
+import '../../model/module_color.dart';
 import '../../utils/size_config.dart';
 
 class ProgressBar extends StatelessWidget {
   final ModuleColor? moduleColor;
-  const ProgressBar({Key? key,  this.moduleColor}) : super(key: key);
+
+  const ProgressBar({super.key, this.moduleColor});
 
   @override
   Widget build(BuildContext context) {

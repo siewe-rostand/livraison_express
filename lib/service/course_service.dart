@@ -3,10 +3,9 @@ import 'dart:io';
 
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart';
-import 'package:livraison_express/model/orders.dart';
-import 'package:livraison_express/utils/handle_exception.dart';
 import 'package:logger/logger.dart';
 
+import '../model/orders.dart';
 import '../utils/main_utils.dart';
 import 'auth_service.dart';
 

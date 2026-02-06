@@ -1,4 +1,4 @@
-name: livraison_express
+name: livraison_express_client
 description: A new Flutter project.
 
 # The following line prevents the package from being accidentally published to
@@ -18,7 +18,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.2.1+1
 
 environment:
-  sdk: ">=2.16.1 <3.0.0"
+  sdk: '>=3.2.4 <4.0.0'
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -34,45 +34,55 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
-  provider: ^6.0.0
-  shared_preferences: ^2.0.8
-  geolocator: ^8.2.0
-  intl: ^0.17.0
-  google_maps_flutter: ^2.1.2
-  geocoding: ^2.0.0
-  intl_phone_field: ^3.0.0
-  flutter_google_places: ^0.3.0
-  flutter_screenutil: ^5.0.0
-  uuid:
-  badges: ^2.0.2
-  sqflite: ^2.0.2
-  path_provider: ^2.0.9
-  share_plus: ^4.0.3
-  flutter_share_me: ^0.11.0
-  url_launcher: ^6.0.20
-  firebase_auth: ^3.3.13
-  firebase_core: ^1.14.0
-  firebase_core_platform_interface: 4.5.1
-  firebase_messaging: ^13.0.4
-  google_sign_in: ^5.3.3
-  flutter_facebook_auth: ^4.3.0
-  firebase_auth_oauth: ^1.2.0
-  http: ^0.13.4
-  font_awesome_flutter: ^10.1.0
-  flutter_svg: ^1.0.3
-  fluttertoast: ^8.0.9
-  permission_handler: ^9.2.0
-  contacts_service: ^0.6.3
-  cached_network_image: ^3.2.0
-  logger: ^1.1.0
-  flutter_stripe: ^3.2.0
-  flutter_typeahead: ^3.1.2
-  progress_dialog_null_safe: ^1.0.7
-  animations: ^2.0.1
-  shimmer: ^2.0.0
+  provider: ^6.1.4
+  shared_preferences: ^2.5.3
+  #geo location
+  geolocator: ^13.0.3
+  geocoding: ^3.0.0
+  permission_handler: ^11.4.0
+  google_maps_flutter: ^2.12.0
+  flutter_google_places_sdk: ^0.4.0
 
-  #internet connection_notifier:
-  data_connection_checker_nulls: ^0.0.2
+  intl: ^0.20.2
+  intl_phone_field: ^3.2.0
+  flutter_screenutil: ^5.9.3
+  uuid:
+  badges: ^3.1.2
+  sqflite: ^2.4.2
+  path: ^1.8.3
+  path_provider: ^2.1.5
+  share_plus: ^10.1.4
+  url_launcher: ^6.3.1
+
+
+  #authentications
+  firebase_auth: ^5.5.1
+  flutter_facebook_auth: ^7.1.1
+  google_sign_in: ^6.3.0
+#  firebase_auth_oauth: ^1.4.1
+
+  firebase_core: ^3.12.1
+  firebase_messaging: ^15.2.4
+
+
+  http: ^1.3.0
+
+  #images and icons
+  font_awesome_flutter: ^10.8.0
+  flutter_svg: ^2.0.17
+  cached_network_image: ^3.4.1
+
+  #toast, animations and logs
+  fluttertoast: ^8.2.12
+  logger: ^2.5.0
+  animations: ^2.0.11
+  shimmer: ^3.0.0
+  progress_dialog_null_safe: ^3.0.0
+
+  fast_contacts: ^4.0.0
+  flutter_stripe: ^11.4.0
+  flutter_typeahead: ^5.2.0
+
 
 
 dev_dependencies:
@@ -84,7 +94,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^1.0.0
+  flutter_lints: ^5.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -116,7 +126,7 @@ flutter:
   # in this "flutter" section. Each entry in this list should have a
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
-  # example:
+  # mcs:
   fonts:
      - family: Muli
        fonts:

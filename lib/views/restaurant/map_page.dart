@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_google_places/flutter_google_places.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:google_maps_webservice/places.dart';
 import 'package:uuid/uuid.dart';
-import 'package:google_api_headers/google_api_headers.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({Key? key}) : super(key: key);
@@ -29,11 +26,7 @@ class _MapPageState extends State<MapPage> {
   GoogleMapController? _controller;
 
 
-  void onError(PlacesAutocompleteResponse response) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(response.errorMessage!)),
-    );
-  }
+  // void onError(PlacesAutocompleteResponse response)
   void _onMapCreated(GoogleMapController _cntlr)
   {
     _controller = _cntlr;
@@ -74,61 +67,61 @@ class _MapPageState extends State<MapPage> {
       print(onError);
     });
   }
-  Future<void> _handlePressButton() async {
-    // show input autocomplete with selected mode
-    // then get the Prediction selected
-    Prediction? p = await PlacesAutocomplete.show(
-      context: context,
-      apiKey: googleApikey,
-      onError: onError,
-      mode: Mode.overlay,
-      language: "fr",
-      region: 'CM',
-      sessionToken: sessionToken,
-      types: [],
-      offset: 0,
-      strictbounds: false,
-      decoration: InputDecoration(
-        hintText: 'Search',
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
-          borderSide: const BorderSide(
-            color: Colors.white,
-          ),
-        ),
-      ),
-      components: [Component(Component.country, "cm")],
-    );
-
-    displayPrediction(p, context);
-  }
-  Future<void> displayPrediction(Prediction? p, BuildContext context) async {
-    if (p != null) {
-      // get detail (lat/lng)
-      GoogleMapsPlaces _places = GoogleMapsPlaces(
-        apiKey: googleApikey,
-        apiHeaders: await const GoogleApiHeaders().getHeaders(),
-      );
-      PlacesDetailsResponse detail =
-      await _places.getDetailsByPlaceId(p.placeId!);
-      final lat = detail.result.geometry!.location.lat;
-      final lng = detail.result.geometry!.location.lng;
-      setState(() {
-        location = p.description!;
-        //move map camera to selected place with animation
-        mapController?.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(target: LatLng(lat,lng), zoom: 17)));
-        markers.add(
-          Marker(
-              markerId: MarkerId(startLocation.toString()),
-              position: LatLng(lat,lng),
-              icon: BitmapDescriptor.defaultMarker),
-        );
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("${p.description} - $lat/$lng")),
-      );
-    }
-  }
+  // Future<void> _handlePressButton() async {
+  //   // show input autocomplete with selected mode
+  //   // then get the Prediction selected
+  //   Prediction? p = await PlacesAutocomplete.show(
+  //     context: context,
+  //     apiKey: googleApikey,
+  //     onError: onError,
+  //     mode: Mode.overlay,
+  //     language: "fr",
+  //     region: 'CM',
+  //     sessionToken: sessionToken,
+  //     types: [],
+  //     offset: 0,
+  //     strictbounds: false,
+  //     decoration: InputDecoration(
+  //       hintText: 'Search',
+  //       focusedBorder: OutlineInputBorder(
+  //         borderRadius: BorderRadius.circular(20),
+  //         borderSide: const BorderSide(
+  //           color: Colors.white,
+  //         ),
+  //       ),
+  //     ),
+  //     components: [Component(Component.country, "cm")],
+  //   );
+  //
+  //   displayPrediction(p, context);
+  // }
+  // Future<void> displayPrediction(Prediction? p, BuildContext context) async {
+  //   if (p != null) {
+  //     // get detail (lat/lng)
+  //     GoogleMapsPlaces _places = GoogleMapsPlaces(
+  //       apiKey: googleApikey,
+  //       apiHeaders: await const GoogleApiHeaders().getHeaders(),
+  //     );
+  //     PlacesDetailsResponse detail =
+  //     await _places.getDetailsByPlaceId(p.placeId!);
+  //     final lat = detail.result.geometry!.location.lat;
+  //     final lng = detail.result.geometry!.location.lng;
+  //     setState(() {
+  //       location = p.description!;
+  //       //move map camera to selected place with animation
+  //       mapController?.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(target: LatLng(lat,lng), zoom: 17)));
+  //       markers.add(
+  //         Marker(
+  //             markerId: MarkerId(startLocation.toString()),
+  //             position: LatLng(lat,lng),
+  //             icon: BitmapDescriptor.defaultMarker),
+  //       );
+  //     });
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text("${p.description} - $lat/$lng")),
+  //     );
+  //   }
+  // }
   @override
   void initState() {
     super.initState();
@@ -169,7 +162,7 @@ class _MapPageState extends State<MapPage> {
             //search input bar
               top: 10,
               child: GestureDetector(
-                onTap: _handlePressButton,
+                onTap: null,
                 child: Padding(
                   padding: const EdgeInsets.all(15.0),
                   child: Card(

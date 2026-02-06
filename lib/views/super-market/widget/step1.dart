@@ -1,14 +1,11 @@
 import 'dart:convert';
 
-import 'package:contacts_service/contacts_service.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_typeahead/flutter_typeahead.dart';
-import 'package:livraison_express/model/client.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../data/user_helper.dart';
 import '../../../model/address.dart';
+import '../../../model/client.dart';
 import '../../../model/user.dart';
 import '../../../utils/string_manager.dart';
 
@@ -36,69 +33,69 @@ class _Step1State extends State<Step1> {
   TextEditingController emailTextController = TextEditingController();
   final TextEditingController _typeAheadController = TextEditingController();
 
-  autoComplete() {
-    return TypeAheadFormField(
-      getImmediateSuggestions: true,
-      textFieldConfiguration: TextFieldConfiguration(
-        decoration:
-            const InputDecoration(labelText: StringManager.nameAndSurname),
-        controller: _typeAheadController,
-      ),
-      suggestionsCallback: (pattern) {
-        // call the function to get suggestions based on text entered
-        return getContacts(pattern);
-      },
-      itemBuilder: (context, Contact suggestion) {
-        // show suggection list
-        suggestion.phones?.forEach((element) {
-          telephone = element.value!;
-        });
-        return ListTile(
-          title: Text(suggestion.displayName!),
-          subtitle: Text(
-            telephone,
-          ),
-        );
-      },
-      onSuggestionSelected: (Contact suggestion) {
-        suggestion.phones?.forEach((element) {
-          telephone = element.value!;
-          widget.sender.telephone = element.value;
-        });
-        fname = suggestion.givenName ?? '';
-        name = suggestion.familyName ?? '';
-        widget.sender.fullName = suggestion.displayName;
-        _typeAheadController.text = suggestion.displayName!;
-        phoneTextController.text = telephone;
-      },
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return "Veuillez entrer le nom et prénom";
-        }
-        return null;
-      },
-      onSaved: (value) => widget.sender.fullName = value,
-      hideOnEmpty: true,
-      autoFlipDirection: true,
-    );
-  }
-
-  Future<List<Contact>> getContacts(String query) async {
-    //We already have permissions for contact when we get to this page, so we
-    // are now just retrieving it
-    final PermissionStatus permission = await Permission.contacts.status;
-    if (permission == PermissionStatus.granted) {
-      return await ContactsService.getContacts(
-          query: query, withThumbnails: false, photoHighResolution: false);
-    } else {
-      await Permission.contacts.request().then((value) {
-        if (value == PermissionStatus.granted) {
-          getContacts(query);
-        }
-      });
-      throw Exception('error');
-    }
-  }
+  // autoComplete() {
+  //   return TypeAheadFormField(
+  //     getImmediateSuggestions: true,
+  //     textFieldConfiguration: TextFieldConfiguration(
+  //       decoration:
+  //           const InputDecoration(labelText: StringManager.nameAndSurname),
+  //       controller: _typeAheadController,
+  //     ),
+  //     suggestionsCallback: (pattern) {
+  //       // call the function to get suggestions based on text entered
+  //       return getContacts(pattern);
+  //     },
+  //     itemBuilder: (context, Contact suggestion) {
+  //       // show suggection list
+  //       suggestion.phones?.forEach((element) {
+  //         telephone = element.value!;
+  //       });
+  //       return ListTile(
+  //         title: Text(suggestion.displayName!),
+  //         subtitle: Text(
+  //           telephone,
+  //         ),
+  //       );
+  //     },
+  //     onSuggestionSelected: (Contact suggestion) {
+  //       suggestion.phones?.forEach((element) {
+  //         telephone = element.value!;
+  //         widget.sender.telephone = element.value;
+  //       });
+  //       fname = suggestion.givenName ?? '';
+  //       name = suggestion.familyName ?? '';
+  //       widget.sender.fullName = suggestion.displayName;
+  //       _typeAheadController.text = suggestion.displayName!;
+  //       phoneTextController.text = telephone;
+  //     },
+  //     validator: (value) {
+  //       if (value == null || value.isEmpty) {
+  //         return "Veuillez entrer le nom et prénom";
+  //       }
+  //       return null;
+  //     },
+  //     onSaved: (value) => widget.sender.fullName = value,
+  //     hideOnEmpty: true,
+  //     autoFlipDirection: true,
+  //   );
+  // }
+  //
+  // Future<List<Contact>> getContacts(String query) async {
+  //   //We already have permissions for contact when we get to this page, so we
+  //   // are now just retrieving it
+  //   final PermissionStatus permission = await Permission.contacts.status;
+  //   if (permission == PermissionStatus.granted) {
+  //     return await ContactsService.getContacts(
+  //         query: query, withThumbnails: false, photoHighResolution: false);
+  //   } else {
+  //     await Permission.contacts.request().then((value) {
+  //       if (value == PermissionStatus.granted) {
+  //         getContacts(query);
+  //       }
+  //     });
+  //     throw Exception('error');
+  //   }
+  // }
 
   getUserData(int? value) async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
@@ -194,22 +191,18 @@ class _Step1State extends State<Step1> {
               ),
             ],
           ),
-          radioSelected == 0
-              ? TextFormField(
-                  controller: nameTextController,
-                  onSaved: (value) => widget.sender.fullName = value,
-                  readOnly:
-                      radioSelected == 0 && nameTextController.text.isNotEmpty,
-                  decoration:
-                      const InputDecoration(labelText: 'Nom et prenom *'),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return "Veuillez entrer le nom et prénom";
-                    }
-                    return null;
-                  },
-                )
-              : autoComplete(),
+          TextFormField(
+            controller: nameTextController,
+            onSaved: (value) => widget.sender.fullName = value,
+            readOnly: radioSelected == 0 && nameTextController.text.isNotEmpty,
+            decoration: const InputDecoration(labelText: 'Nom et prenom *'),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return "Veuillez entrer le nom et prénom";
+              }
+              return null;
+            },
+          ),
           TextFormField(
             controller: phoneTextController,
             readOnly: radioSelected == 0 && phoneTextController.text.isNotEmpty,

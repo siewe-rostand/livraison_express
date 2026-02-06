@@ -1,13 +1,10 @@
 
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
-import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/model/cart-model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/local_db/db-helper.dart';
-
+import '../data/user_helper.dart';
+import '../model/cart-model.dart';
 
 class CartProvider with ChangeNotifier {
   DBHelper dbHelper = DBHelper();

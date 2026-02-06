@@ -3,15 +3,15 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:livraison_express/constant/all-constant.dart';
-import 'package:livraison_express/model/category.dart';
-import 'package:livraison_express/model/user.dart';
 import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../constant/color-constant.dart';
+import '../model/category.dart';
 import '../model/city.dart';
 import '../model/module.dart';
 import '../model/shop.dart';
+import '../model/user.dart';
 import '../views/widgets/custom_alert_dialog.dart';
 
 showGenDialog(context, dismissible, dialog) => showGeneralDialog(

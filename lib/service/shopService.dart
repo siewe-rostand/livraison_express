@@ -3,13 +3,13 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart';
-import 'package:livraison_express/model/category.dart';
-import 'package:livraison_express/utils/main_utils.dart';
 import 'package:logger/logger.dart';
 import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 
 import '../data/user_helper.dart';
+import '../model/category.dart';
 import '../model/shop.dart';
+import '../utils/main_utils.dart';
 import 'auth_service.dart';
 
 class ShopServices{

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:livraison_express/constant/all-constant.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../constant/color-constant.dart';
 import '../../data/user_helper.dart';
 import '../../model/city.dart';
 import '../../utils/size_config.dart';
@@ -9,7 +9,7 @@ import '../../utils/size_config.dart';
 class SelectCity extends StatefulWidget {
   final List<City> cities;
   final OnCitySelected citySelected;
-   const SelectCity({Key? key,required this.cities, required this.citySelected}): super(key: key);
+   const SelectCity({super.key,required this.cities, required this.citySelected});
 
   @override
   _SelectCityState createState() => _SelectCityState();

@@ -4,19 +4,19 @@ import 'package:animations/animations.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/views/category/categoryPage.dart';
 import 'package:logger/logger.dart';
 
 import '../../constant/color-constant.dart';
+import '../../data/user_helper.dart';
 import '../../model/category.dart';
 import '../../model/day_item.dart';
 import '../../model/shop.dart';
 import '../../utils/size_config.dart';
+import '../category/categoryPage.dart';
 import '../widgets/open_wrapper.dart';
 
 class MagasinPage extends StatefulWidget {
-  const MagasinPage({Key? key}) : super(key: key);
+  const MagasinPage({super.key});
 
   @override
   State<MagasinPage> createState() => _MagasinPageState();

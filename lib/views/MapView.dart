@@ -1,26 +1,18 @@
-import 'dart:async';
 import 'dart:developer';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_google_places/flutter_google_places.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:google_api_headers/google_api_headers.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:google_maps_webservice/places.dart';
-import 'package:livraison_express/utils/main_utils.dart';
-import 'package:livraison_express/views/widgets/custom_dialog.dart';
+import 'package:livraison_express_client/views/widgets/custom_dialog.dart';
 import 'package:uuid/uuid.dart';
-import 'dart:ui' as ui;
-import 'package:flutter/services.dart';
 
 import '../data/user_helper.dart';
 
 class MapsView extends StatefulWidget {
-  const MapsView({Key? key}) : super(key: key);
+  const MapsView({super.key});
 
   @override
   State<MapsView> createState() => _MapsViewState();
@@ -78,8 +70,9 @@ class _MapsViewState extends State<MapsView> {
   _getCurrentLocation() async {
     bool serviceEnabled;
     LocationPermission permission = await Geolocator.checkPermission();
-    BitmapDescriptor bitmapDescriptor = await _bitmapDescriptorFromSvgAsset(
-        context, 'img/icon/svg/ic_location_on_black.svg');
+    // BitmapDescriptor bitmapDescriptor = await _bitmapDescriptorFromSvgAsset(
+    //     context, 'img/icon/svg/ic_location_on_black.svg');
+    BitmapDescriptor bitmapDescriptor = BitmapDescriptor.defaultMarker;
     // Test if location services are enabled.
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
@@ -245,83 +238,84 @@ class _MapsViewState extends State<MapsView> {
     }
   }
 
-  void onError(PlacesAutocompleteResponse response) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text(onErrorMessage)),
-    );
-  }
-
-  Future<void> _handlePressButton() async {
-    // show input autocomplete with selected mode
-    // then get the Prediction selected
-    Prediction? p = await PlacesAutocomplete.show(
-      context: context,
-      apiKey: googleApikey,
-      onError: onError,
-      mode: Mode.overlay,
-      language: "fr",
-      region: 'cm',
-      sessionToken: sessionToken,
-      types: [],
-      offset: 0,
-      strictbounds: false,
-      decoration: InputDecoration(
-        hintText: 'Search',
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
-          borderSide: const BorderSide(
-            color: Colors.white,
-          ),
-        ),
-      ),
-      components: [Component(Component.country, "cm")],
-    );
-
-    displayPrediction(p, context);
-  }
-
-  Future<void> displayPrediction(Prediction? p, BuildContext context) async {
-    if (p != null) {
-      // get detail (lat/lng)
-      GoogleMapsPlaces _places = GoogleMapsPlaces(
-        apiKey: googleApikey,
-        apiHeaders: await const GoogleApiHeaders().getHeaders(),
-      );
-      PlacesDetailsResponse detail =
-          await _places.getDetailsByPlaceId(p.placeId!, region: 'CM');
-      latitude = detail.result.geometry!.location.lat;
-      longitude = detail.result.geometry!.location.lng;
-      BitmapDescriptor bitmapDescriptor = await _bitmapDescriptorFromSvgAsset(
-          context, 'img/icon/svg/ic_location_on_black.svg');
-      if (mounted) {
-        setState(() {
-          // location = p.description!;
-          //move map camera to selected place with animation
-          mapController?.animateCamera(CameraUpdate.newCameraPosition(
-              CameraPosition(target: LatLng(latitude!, longitude!), zoom: 17)));
-          markers.add(Marker(
-            draggable: true,
-            onDragEnd: (newPosition) {
-              longitude = newPosition.longitude;
-              latitude = newPosition.latitude;
-              _getAddress();
-            },
-            markerId: MarkerId(startLocation.toString()),
-            position: LatLng(latitude!, longitude!),
-            icon: bitmapDescriptor,
-          ));
-        });
-      }
-      _getAddress();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("${p.description} - $latitude/$longitude")),
-      );
-    }
-  }
+  // void onError(PlacesAutocompleteResponse response) {
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     const SnackBar(content: Text(onErrorMessage)),
+  //   );
+  // }
+  //
+  // Future<void> _handlePressButton() async {
+  //   // show input autocomplete with selected mode
+  //   // then get the Prediction selected
+  //   Prediction? p = await PlacesAutocomplete.show(
+  //     context: context,
+  //     apiKey: googleApikey,
+  //     onError: onError,
+  //     mode: Mode.overlay,
+  //     language: "fr",
+  //     region: 'cm',
+  //     sessionToken: sessionToken,
+  //     types: [],
+  //     offset: 0,
+  //     strictbounds: false,
+  //     decoration: InputDecoration(
+  //       hintText: 'Search',
+  //       focusedBorder: OutlineInputBorder(
+  //         borderRadius: BorderRadius.circular(20),
+  //         borderSide: const BorderSide(
+  //           color: Colors.white,
+  //         ),
+  //       ),
+  //     ),
+  //     components: [Component(Component.country, "cm")],
+  //   );
+  //
+  //   displayPrediction(p, context);
+  // }
+  //
+  // Future<void> displayPrediction(Prediction? p, BuildContext context) async {
+  //   if (p != null) {
+  //     // get detail (lat/lng)
+  //     GoogleMapsPlaces _places = GoogleMapsPlaces(
+  //       apiKey: googleApikey,
+  //       apiHeaders: await const GoogleApiHeaders().getHeaders(),
+  //     );
+  //     PlacesDetailsResponse detail =
+  //         await _places.getDetailsByPlaceId(p.placeId!, region: 'CM');
+  //     latitude = detail.result.geometry!.location.lat;
+  //     longitude = detail.result.geometry!.location.lng;
+  //     BitmapDescriptor bitmapDescriptor = await _bitmapDescriptorFromSvgAsset(
+  //         context, 'img/icon/svg/ic_location_on_black.svg');
+  //     if (mounted) {
+  //       setState(() {
+  //         // location = p.description!;
+  //         //move map camera to selected place with animation
+  //         mapController?.animateCamera(CameraUpdate.newCameraPosition(
+  //             CameraPosition(target: LatLng(latitude!, longitude!), zoom: 17)));
+  //         markers.add(Marker(
+  //           draggable: true,
+  //           onDragEnd: (newPosition) {
+  //             longitude = newPosition.longitude;
+  //             latitude = newPosition.latitude;
+  //             _getAddress();
+  //           },
+  //           markerId: MarkerId(startLocation.toString()),
+  //           position: LatLng(latitude!, longitude!),
+  //           icon: bitmapDescriptor,
+  //         ));
+  //       });
+  //     }
+  //     _getAddress();
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text("${p.description} - $latitude/$longitude")),
+  //     );
+  //   }
+  // }
 
   initPos() async {
-    BitmapDescriptor bitmapDescriptor = await _bitmapDescriptorFromSvgAsset(
-        context, 'img/icon/svg/ic_location_on_black.svg');
+    // BitmapDescriptor bitmapDescriptor = await _bitmapDescriptorFromSvgAsset(
+    //     context, 'img/icon/svg/ic_location_on_black.svg');
+    BitmapDescriptor bitmapDescriptor = BitmapDescriptor.defaultMarker;
     markers.add(
       Marker(
         draggable: true,
@@ -376,9 +370,11 @@ class _MapsViewState extends State<MapsView> {
               }
             },
             onCameraMove: (position) async {
+              // BitmapDescriptor bitmapDescriptor =
+              //     await _bitmapDescriptorFromSvgAsset(
+              //         context, 'img/icon/svg/ic_location_on_black.svg');
               BitmapDescriptor bitmapDescriptor =
-                  await _bitmapDescriptorFromSvgAsset(
-                      context, 'img/icon/svg/ic_location_on_black.svg');
+                  BitmapDescriptor.defaultMarker;
               if (mounted) {
                 setState(() {
                   latitude = position.target.latitude;
@@ -412,7 +408,7 @@ class _MapsViewState extends State<MapsView> {
               //search input bar
               top: 10,
               child: GestureDetector(
-                onTap: _handlePressButton,
+                onTap: null,
                 child: Padding(
                   padding: const EdgeInsets.all(15.0),
                   child: Card(
@@ -441,13 +437,13 @@ class _MapsViewState extends State<MapsView> {
                   child: Material(
                     color: Colors.orange.shade100, // button color
                     child: InkWell(
-                      splashColor: Colors.orange, // inkwell color
+                      splashColor: Colors.orange,
+                      onTap: _getCurrentLocation, // inkwell color
                       child: const SizedBox(
                         width: 56,
                         height: 56,
                         child: Icon(Icons.my_location),
                       ),
-                      onTap: _getCurrentLocation,
                     ),
                   ),
                 ),
@@ -459,30 +455,25 @@ class _MapsViewState extends State<MapsView> {
     );
   }
 
-  Future<BitmapDescriptor> _bitmapDescriptorFromSvgAsset(
-      BuildContext context, String assetName) async {
-    // Read SVG file as String
-    String svgString =
-        await DefaultAssetBundle.of(context).loadString(assetName);
-    // Create DrawableRoot from SVG String
-    DrawableRoot svgDrawableRoot = await svg.fromSvgString(svgString, '');
-
-    // toPicture() and toImage() don't seem to be pixel ratio aware, so we calculate the actual sizes here
-    MediaQueryData queryData = MediaQuery.of(context);
-    double devicePixelRatio = queryData.devicePixelRatio;
-    double width =
-        36 * devicePixelRatio; // where 32 is your SVG's original width
-    double height = 36 * devicePixelRatio; // same thing
-
-    // Convert to ui.Picture
-    ui.Picture picture = svgDrawableRoot.toPicture(size: Size(width, height));
-    int nWidth = width.toInt();
-    int nHeight = height.toInt();
-    // Convert to ui.Image. toImage() takes width and height as parameters
-    // you need to find the best size to suit your needs and take into account the
-    // screen DPI
-    ui.Image image = await picture.toImage(nWidth, nHeight);
-    ByteData? bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-    return BitmapDescriptor.fromBytes(bytes!.buffer.asUint8List());
-  }
+// Future<BitmapDescriptor> _bitmapDescriptorFromSvgAsset(
+//     BuildContext context, String assetName) async {
+//   // Read SVG file as String
+//   String svgString =
+//       await DefaultAssetBundle.of(context).loadString(assetName);
+//   DrawableRoot svgDrawableRoot = await svg.fromSvgString(svgString, '');
+//   MediaQueryData queryData = MediaQuery.of(context);
+//   double devicePixelRatio = queryData.devicePixelRatio;
+//   double width =
+//       36 * devicePixelRatio; // where 32 is your SVG's original width
+//   double height = 36 * devicePixelRatio; // same thing
+//   ui.Picture picture = svgDrawableRoot.toPicture(size: Size(width, height));
+//   int nWidth = width.toInt();
+//   int nHeight = height.toInt();
+//   // Convert to ui.Image. toImage() takes width and height as parameters
+//   // you need to find the best size to suit your needs and take into account the
+//   // screen DPI
+//   ui.Image image = await picture.toImage(nWidth, nHeight);
+//   ByteData? bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+//   return BitmapDescriptor.fromBytes(bytes!.buffer.asUint8List());
+// }
 }

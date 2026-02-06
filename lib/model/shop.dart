@@ -1,7 +1,5 @@
-
-import 'package:livraison_express/model/client.dart';
-
 import 'address.dart';
+import 'client.dart';
 import 'horaire.dart';
 
 class Shops {

@@ -7,12 +7,12 @@ import 'package:flutter_svg/svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl_phone_field/country_picker_dialog.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
-import 'package:livraison_express/utils/app_extension.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../constant/color-constant.dart';
 import '../../data/user_helper.dart';
 import '../../service/auth_service.dart';
+import '../../utils/app_extension.dart';
 import '../../utils/asset_manager.dart';
 import '../../utils/main_utils.dart';
 import '../../utils/size_config.dart';
@@ -20,7 +20,7 @@ import '../../utils/string_manager.dart';
 import '../widgets/custom_textfield.dart';
 
 class ForgottenPasswordScreen extends StatefulWidget {
-  const ForgottenPasswordScreen({Key? key}) : super(key: key);
+  const ForgottenPasswordScreen({super.key});
 
   @override
   State<ForgottenPasswordScreen> createState() =>

@@ -10,7 +10,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:733611067265:android:95c4be02dacb6b52d2ca80",
         "android_client_info": {
-          "package_name": "com.example.livraison_express"
+          "package_name": "com.mcs.livraison_express_client"
         }
       },
       "oauth_client": [
@@ -39,7 +39,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:733611067265:android:676b605ef518a668d2ca80",
         "android_client_info": {
-          "package_name": "com.example.livraison_express"
+          "package_name": "com.mcs.livraison_express_client"
         }
       },
       "oauth_client": [

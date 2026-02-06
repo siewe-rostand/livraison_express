@@ -7,16 +7,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart';
-import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/model/user.dart';
-import 'package:livraison_express/utils/main_utils.dart';
-import 'package:livraison_express/utils/string_manager.dart';
-import 'package:livraison_express/views/home/home-page.dart';
-import 'package:livraison_express/views/login/login.dart';
 import 'package:logger/logger.dart';
 import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../data/user_helper.dart';
+import '../model/user.dart';
+import '../utils/main_utils.dart';
+import '../utils/string_manager.dart';
+import '../views/home/home-page.dart';
+import '../views/login/login.dart';
 import '../views/login/reset_password.dart';
 import '../views/login/verification_code.dart';
 import '../views/widgets/custom_alert_dialog.dart';
@@ -481,7 +481,7 @@ class ApiAuthService {
         User? user = result.user;
         if (user != null) {
           final idToken = await user.getIdToken();
-          getAccessToken(firebaseTokenId: idToken);
+          getAccessToken(firebaseTokenId: idToken ?? '');
         } else {
           progressDialog!.hide();
           showGenDialog(

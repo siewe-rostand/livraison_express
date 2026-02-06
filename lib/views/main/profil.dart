@@ -2,17 +2,17 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:livraison_express/constant/all-constant.dart';
-import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/model/user.dart';
-import 'package:livraison_express/service/auth_service.dart';
-import 'package:livraison_express/utils/main_utils.dart';
-import 'package:livraison_express/utils/string_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../constant/color-constant.dart';
+import '../../data/user_helper.dart';
+import '../../model/user.dart';
+import '../../service/auth_service.dart';
+import '../../utils/main_utils.dart';
+import '../../utils/string_manager.dart';
 
 class Profile extends StatefulWidget {
-  const Profile({Key? key}) : super(key: key);
+  const Profile({super.key});
 
   @override
   State<Profile> createState() => _ProfileState();
@@ -240,12 +240,13 @@ class _ProfileState extends State<Profile> {
                                           );
                                         });
                                       },
-                                      child: const Text(
-                                        'ENREGISTRER',
-                                        style:
-                                        TextStyle(fontWeight: FontWeight.bold,),
-                                      ),
                                     style: loginButtonStyle(),
+                                    child: const Text(
+                                      'ENREGISTRER',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                   ),
                                 )
                               ],

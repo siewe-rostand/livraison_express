@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:livraison_express/constant/all-constant.dart';
-import 'package:livraison_express/model/orders.dart';
+
+import '../../constant/color-constant.dart';
+import '../../model/orders.dart';
 
 class OrderStatusDialog extends StatelessWidget {
-  const OrderStatusDialog({Key? key, required this.command}) : super(key: key);
+  const OrderStatusDialog({super.key, required this.command});
   final Command command;
 
   @override

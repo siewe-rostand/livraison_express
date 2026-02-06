@@ -21,17 +21,17 @@ class PaymentApi{
       paymentIntentData =
       await createPaymentIntent(amount, 'XAF'); //json.decode(response.body);
       // print('Response body==>${response.body.toString()}');
-      await Stripe.instance.initPaymentSheet(
-          paymentSheetParameters: SetupPaymentSheetParameters(
-            paymentIntentClientSecret: paymentIntentData!['client_secret'],
-            applePay: true,
-            googlePay: true,
-            testEnv: true,
-            style: ThemeMode.dark,
-            merchantCountryCode: 'US',
-            merchantDisplayName: 'ROSTAND',
-            customerId: paymentIntentData!['customer'],
-            customerEphemeralKeySecret: paymentIntentData!['ephemeralKey'],));
+      // await Stripe.instance.initPaymentSheet(
+      //     paymentSheetParameters: SetupPaymentSheetParameters(
+      //       paymentIntentClientSecret: paymentIntentData!['client_secret'],
+      //       applePay: true,
+      //       googlePay: true,
+      //       testEnv: true,
+      //       style: ThemeMode.dark,
+      //       merchantCountryCode: 'US',
+      //       merchantDisplayName: 'ROSTAND',
+      //       customerId: paymentIntentData!['customer'],
+      //       customerEphemeralKeySecret: paymentIntentData!['ephemeralKey'],));
       ///now finally display payment sheeet
       displayPaymentSheet();
       // log("$paymentIntentData");

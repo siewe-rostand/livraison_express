@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/service/auth_service.dart';
-import 'package:livraison_express/utils/app_extension.dart';
-import 'package:livraison_express/utils/asset_manager.dart';
-import 'package:livraison_express/utils/main_utils.dart';
-import 'package:livraison_express/utils/size_config.dart';
 
+import '../../data/user_helper.dart';
+import '../../service/auth_service.dart';
+import '../../utils/app_extension.dart';
+import '../../utils/asset_manager.dart';
+import '../../utils/main_utils.dart';
+import '../../utils/size_config.dart';
 import '../widgets/custom_textfield.dart';
 
 class ResetPassword extends StatefulWidget {
@@ -14,11 +14,10 @@ class ResetPassword extends StatefulWidget {
   final String code;
   final String telephone;
   const ResetPassword(
-      {Key? key,
+      {super.key,
       required this.email,
       required this.code,
-      required this.telephone})
-      : super(key: key);
+      required this.telephone});
 
   @override
   State<ResetPassword> createState() => _ResetPasswordState();

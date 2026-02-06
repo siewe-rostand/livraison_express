@@ -3,15 +3,15 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
-import 'package:livraison_express/service/auth_service.dart';
-import 'package:livraison_express/utils/string_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../constant/app-constant.dart';
 import '../../data/user_helper.dart';
+import '../../service/auth_service.dart';
+import '../../utils/string_manager.dart';
 
 class RegistrationPage extends StatefulWidget {
-  const RegistrationPage({Key? key}) : super(key: key);
+  const RegistrationPage({super.key});
 
   @override
   State<RegistrationPage> createState() => _RegistrationPageState();
@@ -81,9 +81,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                                          progressDialog: getProgressDialog(
                                              context: context))
                                          .register(
-                                       username: "+" +
-                                           countryCode +
-                                           _phoneTextController.text,
+                                       username: "+$countryCode${_phoneTextController.text}",
                                        firstName:
                                        nameTextController.text,
                                        lastName:

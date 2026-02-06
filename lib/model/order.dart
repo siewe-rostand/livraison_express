@@ -1,6 +1,4 @@
-
-import 'package:livraison_express/model/product.dart';
-
+import 'package:livraison_express_client/model/product.dart';
 
 class Orders {
   int? idLivraison;

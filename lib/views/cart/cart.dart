@@ -2,22 +2,22 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:livraison_express/utils/size_config.dart';
-import 'package:livraison_express/provider/cart-provider.dart';
-import 'package:livraison_express/views/super-market/valider-panier.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/local_db/db-helper.dart';
 import '../../data/user_helper.dart';
 import '../../model/cart-model.dart';
+import '../../provider/cart-provider.dart';
+import '../../utils/size_config.dart';
+import '../super-market/valider-panier.dart';
 import '../widgets/custom_dialog.dart';
 import '../widgets/plus-minus-button.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<CartPage> createState() => _CartPageState();
@@ -175,6 +175,7 @@ class _CartPageState extends State<CartPage>
                                 Row(
                                   children: [
                                     Expanded(
+                                      flex: 2,
                                       child: Container(
                                         width: getProportionateScreenWidth(90),
                                         height: getProportionateScreenHeight(90),
@@ -192,7 +193,6 @@ class _CartPageState extends State<CartPage>
                                               },
                                             )),
                                       ),
-                                      flex: 2,
                                     ),
                                     const SizedBox(
                                       width: 10,

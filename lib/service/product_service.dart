@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:http/http.dart';
-import 'package:livraison_express/model/product.dart';
 
+import '../model/product.dart';
 import 'auth_service.dart';
 
 class ProductService {

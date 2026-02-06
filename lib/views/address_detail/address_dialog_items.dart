@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:livraison_express/views/address_detail/selected_fav_address.dart';
+import 'package:livraison_express_client/views/address_detail/selected_fav_address.dart';
 
 import '../../data/user_helper.dart';
 import '../../model/address.dart';

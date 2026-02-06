@@ -8,35 +8,35 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart';
-import 'package:livraison_express/constant/all-constant.dart';
-import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/model/quarter.dart';
-import 'package:livraison_express/model/user.dart';
-import 'package:livraison_express/service/auth_service.dart';
-import 'package:livraison_express/utils/asset_manager.dart';
-import 'package:livraison_express/utils/main_utils.dart';
-import 'package:livraison_express/utils/size_config.dart';
-import 'package:livraison_express/views/drawer/home-drawer.dart';
-import 'package:livraison_express/views/home/expand-fab.dart';
-import 'package:livraison_express/views/category/categoryPage.dart';
-import 'package:livraison_express/views/main/magasin_page.dart';
-import 'package:livraison_express/views/restaurant/restaurant.dart';
-import 'package:livraison_express/views/home/select_city.dart';
+import 'package:livraison_express_client/views/home/select_city.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../constant/color-constant.dart';
+import '../../data/user_helper.dart';
 import '../../model/city.dart';
 import '../../model/day_item.dart';
 import '../../model/module.dart';
+import '../../model/quarter.dart';
 import '../../model/shop.dart';
-import '../livraison/commande-coursier.dart';
+import '../../model/user.dart';
 import '../../provider/cart-provider.dart';
+import '../../service/auth_service.dart';
+import '../../utils/asset_manager.dart';
+import '../../utils/main_utils.dart';
+import '../../utils/size_config.dart';
+import '../category/categoryPage.dart';
+import '../drawer/home-drawer.dart';
+import '../livraison/commande-coursier.dart';
+import '../main/magasin_page.dart';
+import '../restaurant/restaurant.dart';
 import '../widgets/custom_dialog.dart';
 import '../widgets/open_wrapper.dart';
+import 'expand-fab.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();

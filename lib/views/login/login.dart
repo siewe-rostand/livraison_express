@@ -4,25 +4,25 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl_phone_field/country_picker_dialog.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
-import 'package:livraison_express/constant/all-constant.dart';
-import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/service/auth_service.dart';
-import 'package:livraison_express/utils/app_extension.dart';
-import 'package:livraison_express/utils/asset_manager.dart';
-import 'package:livraison_express/utils/main_utils.dart';
-import 'package:livraison_express/utils/size_config.dart';
-import 'package:livraison_express/utils/string_manager.dart';
-import 'package:livraison_express/views/login/forgotten_password.dart';
-import 'package:livraison_express/views/login/register.dart';
-import 'package:livraison_express/views/widgets/custom_textfield.dart';
-import 'package:livraison_express/views/widgets/social-card.dart';
+import 'package:livraison_express_client/views/login/register.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../constant/color-constant.dart';
+import '../../data/user_helper.dart';
 import '../../model/city.dart';
+import '../../service/auth_service.dart';
 import '../../service/fire-auth.dart';
+import '../../utils/app_extension.dart';
+import '../../utils/asset_manager.dart';
+import '../../utils/main_utils.dart';
+import '../../utils/size_config.dart';
+import '../../utils/string_manager.dart';
+import '../widgets/custom_textfield.dart';
+import '../widgets/social-card.dart';
+import 'forgotten_password.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  const LoginScreen({super.key});
   static String routeName = "/login_screen";
 
   @override

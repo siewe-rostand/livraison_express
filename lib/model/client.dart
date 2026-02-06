@@ -1,5 +1,4 @@
-import 'package:livraison_express/model/address.dart';
-
+import 'address.dart';
 
 class Client{
    int? id;

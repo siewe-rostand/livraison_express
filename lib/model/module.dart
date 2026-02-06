@@ -1,5 +1,4 @@
-
-import 'package:livraison_express/model/shop.dart';
+import 'package:livraison_express_client/model/shop.dart';
 
 import 'extra.dart';
 

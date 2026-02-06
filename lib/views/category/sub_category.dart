@@ -2,26 +2,26 @@ import 'package:badges/badges.dart' as badge;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/views/product/product_page.dart';
-import 'package:livraison_express/views/widgets/custom_sliver_app_bar.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/local_db/db-helper.dart';
+import '../../data/user_helper.dart';
 import '../../model/category.dart';
 import '../../provider/cart-provider.dart';
 import '../../service/shopService.dart';
 import '../../utils/size_config.dart';
 import '../cart/cart.dart';
+import '../product/product_page.dart';
+import '../widgets/custom_sliver_app_bar.dart';
 import '../widgets/open_wrapper.dart';
 
 class SubCategory extends StatefulWidget {
   const SubCategory({
-    Key? key,
+    super.key,
     required this.shopId,
     required this.categoryId,
     required this.title,
-  }) : super(key: key);
+  });
   final int shopId;
   final String title;
   final int categoryId;
@@ -150,9 +150,10 @@ class _SubCategoryState extends State<SubCategory> {
                   backgroundColor: Colors.white,
                   radius: 32,
                   child: badge.Badge(
-                    padding: const EdgeInsets.all(10),
-                    badgeColor: UserHelper.getColorDark(),
-                    animationType: badge.BadgeAnimationType.scale,
+                    badgeStyle: badge.BadgeStyle(
+                      padding: const EdgeInsets.all(10),
+                      badgeColor: UserHelper.getColorDark(),
+                    ),
                     badgeContent: Consumer<CartProvider>(
                       builder: (context, cart, child) {
                         return Text(

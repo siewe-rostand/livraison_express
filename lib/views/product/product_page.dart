@@ -4,29 +4,28 @@ import 'package:badges/badges.dart' as badge;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:livraison_express/constant/all-constant.dart';
-import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/model/category.dart';
-import 'package:livraison_express/model/user.dart';
-import 'package:livraison_express/service/product_service.dart';
-import 'package:livraison_express/utils/size_config.dart';
-import 'package:livraison_express/views/product/product-shimmer-card.dart';
-import 'package:livraison_express/views/widgets/floating_action_button.dart';
-import 'package:livraison_express/views/widgets/open_wrapper.dart';
+import 'package:livraison_express_client/views/product/product-shimmer-card.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../constant/app-constant.dart';
 import '../../data/local_db/db-helper.dart';
+import '../../data/user_helper.dart';
 import '../../model/cart-model.dart';
+import '../../model/category.dart';
 import '../../model/module.dart';
 import '../../model/product.dart';
 import '../../model/shop.dart';
-import '../../provider/nav_view_model.dart';
-import '../../utils/main_utils.dart';
+import '../../model/user.dart';
 import '../../provider/cart-provider.dart';
+import '../../provider/nav_view_model.dart';
+import '../../service/product_service.dart';
+import '../../utils/main_utils.dart';
+import '../../utils/size_config.dart';
 import '../cart/cart.dart';
 import '../widgets/custom_alert_dialog.dart';
+import '../widgets/open_wrapper.dart';
 
 class ProductPage extends StatefulWidget {
   const ProductPage({
@@ -640,9 +639,10 @@ class _ProductPageState extends State<ProductPage>
                       backgroundColor: Colors.white,
                       radius: 32,
                       child: badge.Badge(
-                        padding: const EdgeInsets.all(10),
-                        badgeColor: UserHelper.getColorDark(),
-                        animationType: badge.BadgeAnimationType.scale,
+                        badgeStyle: badge.BadgeStyle(
+                          padding: const EdgeInsets.all(10),
+                          badgeColor: UserHelper.getColorDark(),
+                        ),
                         badgeContent: Consumer<CartProvider>(
                           builder: (context, cart, child) {
                             return Text(

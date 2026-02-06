@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/utils/size_config.dart';
 import 'dart:io';
 
 import 'package:url_launcher/url_launcher.dart';
+
+import '../../data/user_helper.dart';
+import '../../utils/size_config.dart';
 
 void main() {
   runApp(
@@ -15,7 +16,7 @@ void main() {
   );
 }
 class FancyFab extends StatefulWidget {
-  const FancyFab({Key? key}) : super(key: key);
+  const FancyFab({super.key});
 
   @override
   _FancyFabState createState() => _FancyFabState();

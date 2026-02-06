@@ -1,8 +1,8 @@
 
 import 'package:flutter/material.dart';
-import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/utils/size_config.dart';
 
+import '../../data/user_helper.dart';
+import '../../utils/size_config.dart';
 import '../../utils/string_manager.dart';
 
 class CustomDialog extends StatelessWidget {
@@ -14,14 +14,14 @@ class CustomDialog extends StatelessWidget {
   final GestureTapCallback? negativeBtnPressed;
 
   const CustomDialog({
-    Key? key,
+    super.key,
      this.title,
     required this.content,
     required this.positiveBtnText,
      this.negativeBtnText='',
     required this.positiveBtnPressed,
     this.iconData=Icons.message, this.negativeBtnPressed,
-  }): super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -66,8 +66,8 @@ class CustomDialog extends StatelessWidget {
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   TextButton(
-                    child: Text(positiveBtnText,style: TextStyle(color: UserHelper.getColor()),),
                     onPressed: positiveBtnPressed,
+                    child: Text(positiveBtnText,style: TextStyle(color: UserHelper.getColor()),),
                   ),
                 ],
               ),

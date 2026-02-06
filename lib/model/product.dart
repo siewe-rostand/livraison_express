@@ -1,6 +1,6 @@
 
 
-import 'package:livraison_express/model/image.dart';
+import 'package:livraison_express_client/model/image.dart';
 
 import 'attributes.dart';
 

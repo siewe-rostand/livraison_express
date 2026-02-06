@@ -1,16 +1,15 @@
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_auth_oauth/firebase_auth_oauth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:livraison_express/utils/main_utils.dart';
 import 'package:logger/logger.dart';
 import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/user_helper.dart';
+import '../utils/main_utils.dart';
 import 'auth_service.dart';
 
 class FireAuth {
@@ -47,7 +46,7 @@ class FireAuth {
                   context: context,
                   fromLogin: true,
                   progressDialog: getProgressDialog(context: context))
-              .getAccessToken(firebaseTokenId: idToken)
+              .getAccessToken(firebaseTokenId: idToken ?? '')
               .catchError((onError) {});
         } else {
           ApiAuthService(
@@ -99,7 +98,7 @@ class FireAuth {
                 context: context,
                 fromLogin: true,
                 progressDialog: getProgressDialog(context: context))
-            .getAccessToken(firebaseTokenId: idToken)
+            .getAccessToken(firebaseTokenId: idToken ?? '')
             .catchError((onError) {});
       } else {
         ApiAuthService(
@@ -235,7 +234,7 @@ class FireAuth {
 
       // Create a credential from the access token
       final OAuthCredential facebookAuthCredential =
-          FacebookAuthProvider.credential(loginResult.accessToken!.token);
+          FacebookAuthProvider.credential(loginResult.accessToken?.tokenString ?? '');
 
       // Once signed in, return the UserCredential
       UserCredential? userCredential = await FirebaseAuth.instance
@@ -304,7 +303,7 @@ class FireAuth {
   static Future<void> performLogin(String provider, List<String> scopes,
       Map<String, String> parameters) async {
     try {
-      await FirebaseAuthOAuth().openSignInFlow(provider, scopes, parameters);
+      // await FirebaseAuthOAuth().openSignInFlow(provider, scopes, parameters);
     } on PlatformException catch (error) {
       debugPrint("${error.code}: ${error.message}");
       print(error);

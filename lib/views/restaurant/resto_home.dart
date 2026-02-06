@@ -1,7 +1,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:livraison_express/utils/size_config.dart';
+
+import '../../utils/size_config.dart';
 
 typedef SelectCardCallback = void Function(int option);
 class RestauHome extends StatelessWidget {

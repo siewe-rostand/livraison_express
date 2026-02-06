@@ -3,12 +3,12 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:livraison_express/constant/all-constant.dart';
-import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/service/address_services.dart';
-import 'package:livraison_express/views/address_detail/map_text_field.dart';
 
+import '../../constant/color-constant.dart';
+import '../../data/user_helper.dart';
 import '../../model/address.dart';
+import '../../service/address_services.dart';
+import 'map_text_field.dart';
 
 class AddressDialog extends StatefulWidget {
   const AddressDialog({Key? key, required this.address, this.buttonText, this.color, this.readOnly=true, this.title}) : super(key: key);

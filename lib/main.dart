@@ -4,12 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
-import 'package:livraison_express/constant/all-constant.dart';
-import 'package:livraison_express/model/quartier.dart';
-import 'package:livraison_express/utils/main_utils.dart';
-import 'package:livraison_express/views/splash-screen.dart';
-import 'package:livraison_express/provider/cart-provider.dart';
+import 'package:livraison_express_client/provider/cart-provider.dart';
+import 'package:livraison_express_client/utils/main_utils.dart';
+import 'package:livraison_express_client/views/splash-screen.dart';
 import 'package:provider/provider.dart';
+
+import 'constant/app-constant.dart';
+import 'model/quartier.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();

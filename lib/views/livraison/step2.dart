@@ -1,14 +1,9 @@
 import 'dart:convert';
 import 'dart:developer';
 
-import 'package:contacts_service/contacts_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
-import 'package:livraison_express/utils/asset_manager.dart';
-import 'package:livraison_express/utils/main_utils.dart';
-import 'package:livraison_express/utils/string_manager.dart';
-import 'package:livraison_express/views/address_detail/map_text_field.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,10 +13,14 @@ import '../../model/address.dart';
 import '../../model/client.dart';
 import '../../model/quartier.dart';
 import '../../model/user.dart';
+import '../../utils/asset_manager.dart';
+import '../../utils/main_utils.dart';
+import '../../utils/string_manager.dart';
+import '../address_detail/map_text_field.dart';
 import '../address_detail/selected_fav_address.dart';
 
 class Step2 extends StatefulWidget {
-  const Step2({Key? key, required this.formKey, required this.receiverAddress, required this.receiver}) : super(key: key);
+  const Step2({super.key, required this.formKey, required this.receiverAddress, required this.receiver});
   final GlobalKey<FormState> formKey;
   final Address receiverAddress;
   final Client receiver;
@@ -68,45 +67,45 @@ class _Step2State extends State<Step2> {
     });
     print('city uuuu....$city');
   }
-  autoComplete(){
-    return
-      TypeAheadField(
-        getImmediateSuggestions: true,
-        textFieldConfiguration:  TextFieldConfiguration(
-          scrollPadding: EdgeInsets.zero,
-          decoration: const InputDecoration(labelText: StringManager.nameAndSurname),
-          controller: _typeAheadController,
-        ),
-        suggestionsCallback: (pattern) {
-          // call the function to get suggestions based on text entered
-          return getContacts(pattern);
-        },
-        itemBuilder: (context,Contact suggestion) {
-          // show suggection list
-          suggestion.phones?.forEach((element) {
-            telephone=element.value!;
-          });
-          return ListTile(
-            title: Text(suggestion.displayName!),
-            subtitle: Text(
-              telephone,
-            ),
-          );
-        },
-        onSuggestionSelected: (Contact suggestion) {
-          suggestion.phones?.forEach((element) {
-            telephone=element.value!;
-          });
-          _typeAheadController.text=suggestion.displayName!;
-          widget.receiver.fullName = suggestion.displayName;
-          fname=suggestion.givenName??'';
-          name=suggestion.familyName??'';
-          phoneDestinationTextController.text =telephone;
-        },
-        hideOnEmpty: true,
-        autoFlipDirection: true,
-      );
-  }
+  // autoComplete(){
+  //   return
+  //     TypeAheadField(
+  //       getImmediateSuggestions: true,
+  //       textFieldConfiguration:  TextFieldConfiguration(
+  //         scrollPadding: EdgeInsets.zero,
+  //         decoration: const InputDecoration(labelText: StringManager.nameAndSurname),
+  //         controller: _typeAheadController,
+  //       ),
+  //       suggestionsCallback: (pattern) {
+  //         // call the function to get suggestions based on text entered
+  //         return getContacts(pattern);
+  //       },
+  //       itemBuilder: (context,Contact suggestion) {
+  //         // show suggection list
+  //         suggestion.phones?.forEach((element) {
+  //           telephone=element.value!;
+  //         });
+  //         return ListTile(
+  //           title: Text(suggestion.displayName!),
+  //           subtitle: Text(
+  //             telephone,
+  //           ),
+  //         );
+  //       },
+  //       onSuggestionSelected: (Contact suggestion) {
+  //         suggestion.phones?.forEach((element) {
+  //           telephone=element.value!;
+  //         });
+  //         _typeAheadController.text=suggestion.displayName!;
+  //         widget.receiver.fullName = suggestion.displayName;
+  //         fname=suggestion.givenName??'';
+  //         name=suggestion.familyName??'';
+  //         phoneDestinationTextController.text =telephone;
+  //       },
+  //       hideOnEmpty: true,
+  //       autoFlipDirection: true, onSelected: (InvalidType value) {  },
+  //     );
+  // }
 
   getStoredUserInfo(int value)async{
     radioSelected = value;
@@ -144,23 +143,23 @@ class _Step2State extends State<Step2> {
   }
 
 
-  Future<List<Contact>> getContacts(String query) async {
-    //We already have permissions for contact when we get to this page, so we
-    // are now just retrieving it
-    final PermissionStatus permission = await Permission.contacts.status;
-    if(permission == PermissionStatus.granted) {
-      return await ContactsService.getContacts(query: query,
-          withThumbnails: false,photoHighResolution: false
-      );
-    }else{
-      await Permission.contacts.request().then((value) {
-        if(value==PermissionStatus.granted){
-          getContacts(query);
-        }
-      });
-      throw Exception('error');
-    }
-  }
+  // Future<List<Contact>> getContacts(String query) async {
+  //   //We already have permissions for contact when we get to this page, so we
+  //   // are now just retrieving it
+  //   final PermissionStatus permission = await Permission.contacts.status;
+  //   if(permission == PermissionStatus.granted) {
+  //     return await ContactsService.getContacts(query: query,
+  //         withThumbnails: false,photoHighResolution: false
+  //     );
+  //   }else{
+  //     await Permission.contacts.request().then((value) {
+  //       if(value==PermissionStatus.granted){
+  //         getContacts(query);
+  //       }
+  //     });
+  //     throw Exception('error');
+  //   }
+  // }
   @override
   void initState() {
     init();
@@ -175,9 +174,9 @@ class _Step2State extends State<Step2> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
+            alignment: Alignment.topLeft,
             child: const Text(StringManager.receiverContact,
               style: TextStyle(color: Colors.black38),),
-            alignment: Alignment.topLeft,
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -200,8 +199,7 @@ class _Step2State extends State<Step2> {
               const Text('Autre'),
             ],
           ),
-          radioSelected == 0
-              ? TextFormField(
+          TextFormField(
             autovalidateMode:
             AutovalidateMode.onUserInteraction,
             onSaved: (val){
@@ -223,8 +221,7 @@ class _Step2State extends State<Step2> {
               }
               return null;
             },
-          )
-              : autoComplete(),
+          ),
           TextFormField(
             onSaved: (val)=>widget.receiver.telephone=val,
             keyboardType: TextInputType.phone,
@@ -335,38 +332,38 @@ class _Step2State extends State<Step2> {
             controller: cityDestinationTextController,
             enabled: false,
           ),
-          TypeAheadFormField<String>(
-            textFieldConfiguration:  TextFieldConfiguration(
-              controller: quarterDestinationTextController,
-              decoration: const InputDecoration(
-                  labelText: StringManager.quarter),
-            ),
-            suggestionsCallback: (String pattern) async {
-              if(pattern.isEmpty){
-                return const Iterable<String>.empty();
-              }
-              return city=='Douala'|| city == "DOUALA"? quarter.quarterDouala
-                  .where((String quarter) => quarter
-                  .toLowerCase().split(' ').any((word) =>word.startsWith(pattern
-                  .toLowerCase()) )
-              )
-                  .toList():quarter.quarterYaounde
-                  .where((item) =>
-                  item.toLowerCase().startsWith(pattern.toLowerCase()))
-                  .toList();
-            },
-            itemBuilder: (context, String suggestion) {
-              return ListTile(
-                title: Text(suggestion),
-              );
-            },
-            onSuggestionSelected: (String suggestion) {
-              quarterDestinationTextController.text = suggestion;
-            },
-            onSaved: (value)=>widget.receiverAddress.quarter=value,
-            autoFlipDirection: true,
-            hideOnEmpty: true,
-          ),
+          // TypeAheadFormField<String>(
+          //   textFieldConfiguration:  TextFieldConfiguration(
+          //     controller: quarterDestinationTextController,
+          //     decoration: const InputDecoration(
+          //         labelText: StringManager.quarter),
+          //   ),
+          //   suggestionsCallback: (String pattern) async {
+          //     if(pattern.isEmpty){
+          //       return const Iterable<String>.empty();
+          //     }
+          //     return city=='Douala'|| city == "DOUALA"? quarter.quarterDouala
+          //         .where((String quarter) => quarter
+          //         .toLowerCase().split(' ').any((word) =>word.startsWith(pattern
+          //         .toLowerCase()) )
+          //     )
+          //         .toList():quarter.quarterYaounde
+          //         .where((item) =>
+          //         item.toLowerCase().startsWith(pattern.toLowerCase()))
+          //         .toList();
+          //   },
+          //   itemBuilder: (context, String suggestion) {
+          //     return ListTile(
+          //       title: Text(suggestion),
+          //     );
+          //   },
+          //   onSuggestionSelected: (String suggestion) {
+          //     quarterDestinationTextController.text = suggestion;
+          //   },
+          //   onSaved: (value)=>widget.receiverAddress.quarter=value,
+          //   autoFlipDirection: true,
+          //   hideOnEmpty: true,
+          // ),
           TextFormField(
             onSaved: (val)=>widget.receiverAddress.description=val,
             autovalidateMode:

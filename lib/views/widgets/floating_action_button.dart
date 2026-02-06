@@ -17,9 +17,10 @@ class CustomFloatingButton extends StatelessWidget {
         backgroundColor: Colors.white,
         radius: 32,
         child: badge.Badge(
-          padding: const EdgeInsets.all(10),
-          badgeColor: UserHelper.getColorDark(),
-          animationType: badge.BadgeAnimationType.scale,
+          badgeStyle: badge.BadgeStyle(
+            padding: const EdgeInsets.all(10),
+            badgeColor: UserHelper.getColorDark(),
+          ),
           badgeContent: Consumer<CartProvider>(
             builder: (context, cart, child) {
               return Text(

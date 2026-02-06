@@ -1,5 +1,6 @@
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:livraison_express/model/options.dart';
+
+import 'options.dart';
 
 class Attributes{
   int? id;

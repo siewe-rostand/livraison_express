@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/model/orders.dart';
 
+import '../../../data/user_helper.dart';
 import '../../../model/attributes.dart';
+import '../../../model/orders.dart';
 import '../../../model/product.dart';
 import '../../../utils/size_config.dart';
 import 'horizontal_line.dart';
@@ -10,7 +10,7 @@ import 'horizontal_line.dart';
 class OrderContent extends StatelessWidget {
   final Command _order;
 
-  const OrderContent(this._order, {Key? key}) : super(key: key);
+  const OrderContent(this._order, {super.key});
 
   @override
   Widget build(BuildContext context) {

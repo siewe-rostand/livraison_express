@@ -2,25 +2,25 @@ import 'dart:convert';
 
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
-import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/model/order_status.dart';
-import 'package:livraison_express/service/course_service.dart';
-import 'package:livraison_express/views/order_confirmation/order_status_dialog.dart';
-import 'package:livraison_express/views/order_confirmation/widget/order_detail.dart';
+import 'package:livraison_express_client/views/order_confirmation/widget/order_detail.dart';
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../constant/color-constant.dart';
+import '../../data/user_helper.dart';
+import '../../model/order_status.dart';
 import '../../model/orders.dart';
+import '../../service/course_service.dart';
 import '../../utils/size_config.dart';
 import '../../utils/value_helper.dart';
 import '../address_detail/selected_fav_address.dart';
 import '../widgets/custom_dialog.dart';
 import '../widgets/open_wrapper.dart';
+import 'order_status_dialog.dart';
 
 class CommandLists extends StatefulWidget {
-  const CommandLists({Key? key}) : super(key: key);
+  const CommandLists({super.key});
 
   @override
   State<CommandLists> createState() => _CommandListsState();

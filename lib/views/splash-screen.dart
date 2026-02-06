@@ -2,17 +2,17 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:livraison_express/constant/all-constant.dart';
-import 'package:livraison_express/utils/asset_manager.dart';
-import 'package:livraison_express/views/login/login.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../constant/color-constant.dart';
 import '../data/user_helper.dart';
 import '../service/auth_service.dart';
+import '../utils/asset_manager.dart';
 import '../utils/size_config.dart';
+import 'login/login.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({Key? key}) : super(key: key);
+  const SplashScreen({super.key});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -70,8 +70,8 @@ class _SplashScreenState extends State<SplashScreen>
           children: [
             Center(
               child: FadeTransition(
-                child: Image.asset(AssetManager.logo),
                 opacity: fadeInFadeOut,
+                child: Image.asset(AssetManager.logo),
               ),
             ),
             Container(

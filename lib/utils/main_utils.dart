@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:livraison_express/utils/size_config.dart';
+import 'package:livraison_express_client/utils/size_config.dart';
 
 import '../constant/color-constant.dart';
 import '../data/user_helper.dart';
@@ -33,8 +33,8 @@ AppBarTheme appBarTheme() {
 
 TextTheme textTheme() {
   return const TextTheme(
-    bodyText1: TextStyle(color: kTextColor),
-    bodyText2: TextStyle(color: kTextColor),
+    bodyLarge: TextStyle(color: kTextColor),
+    bodyMedium: TextStyle(color: kTextColor),
   );
 }
 

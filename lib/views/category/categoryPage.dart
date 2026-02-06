@@ -2,30 +2,30 @@ import 'package:badges/badges.dart' as badge;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/model/category.dart';
-import 'package:livraison_express/provider/nav_view_model.dart';
-import 'package:livraison_express/service/shopService.dart';
-import 'package:livraison_express/utils/size_config.dart';
-import 'package:livraison_express/views/category/category-shimmer-card.dart';
-import 'package:livraison_express/views/product/product_page.dart';
-import 'package:livraison_express/views/category/sub_category.dart';
-import 'package:livraison_express/views/widgets/custom_dialog.dart';
-import 'package:livraison_express/views/widgets/custom_sliver_app_bar.dart';
+import 'package:livraison_express_client/views/category/sub_category.dart';
 import 'package:provider/provider.dart';
 
 import '../../constant/color-constant.dart';
 import '../../data/local_db/db-helper.dart';
+import '../../data/user_helper.dart';
+import '../../model/category.dart';
 import '../../model/shop.dart';
 import '../../provider/cart-provider.dart';
+import '../../provider/nav_view_model.dart';
+import '../../service/shopService.dart';
 import '../../utils/main_utils.dart';
+import '../../utils/size_config.dart';
 import '../cart/cart.dart';
+import '../product/product_page.dart';
+import '../widgets/custom_dialog.dart';
+import '../widgets/custom_sliver_app_bar.dart';
 import '../widgets/open_wrapper.dart';
+import 'category-shimmer-card.dart';
 
 class CategoryPage extends StatefulWidget {
   const CategoryPage({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<CategoryPage> createState() => _CategoryPageState();
@@ -282,9 +282,10 @@ class _CategoryPageState extends State<CategoryPage> {
                   backgroundColor: Colors.white,
                   radius: 32,
                   child: badge.Badge(
-                    padding: const EdgeInsets.all(10),
-                    badgeColor: UserHelper.getColorDark(),
-                    animationType: badge.BadgeAnimationType.scale,
+                    badgeStyle: badge.BadgeStyle(
+                      badgeColor: UserHelper.getColorDark(),
+                      padding: const EdgeInsets.all(10),
+                    ),
                     badgeContent: Consumer<CartProvider>(
                       builder: (context, cart, child) {
                         return Text(

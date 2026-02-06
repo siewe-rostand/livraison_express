@@ -1,23 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
-import 'package:livraison_express/utils/asset_manager.dart';
-import 'package:livraison_express/utils/string_manager.dart';
-import 'package:livraison_express/views/address_detail/map_text_field.dart';
-import 'package:livraison_express/views/address_detail/selected_fav_address.dart';
 import 'package:provider/provider.dart';
 
 import '../../../data/user_helper.dart';
 import '../../../model/address.dart';
 import '../../../model/quartier.dart';
+import '../../../utils/asset_manager.dart';
 import '../../../utils/main_utils.dart';
+import '../../../utils/string_manager.dart';
+import '../../address_detail/map_text_field.dart';
+import '../../address_detail/selected_fav_address.dart';
 
 class Step2 extends StatefulWidget {
   final GlobalKey<FormState> step2FormKey;
   final Address addressReceiver;
   const Step2(
-      {Key? key, required this.step2FormKey, required this.addressReceiver})
-      : super(key: key);
+      {super.key, required this.step2FormKey, required this.addressReceiver});
 
   @override
   State<Step2> createState() => _Step2State();
@@ -110,54 +109,54 @@ class _Step2State extends State<Step2> {
             enabled: false,
             onSaved: (value) => widget.addressReceiver.nom = value,
           ),
-          TypeAheadFormField<String>(
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            textFieldConfiguration: TextFieldConfiguration(
-              controller: quarterTextController,
-              decoration:
-                  const InputDecoration(labelText: StringManager.quarter),
-            ),
-            suggestionsCallback: (String pattern) async {
-              if (pattern.isEmpty) {
-                return const Iterable<String>.empty();
-              }
-              return city == 'Douala' || city == "DOUALA"
-                  ? quarter.quarterDouala
-                      .where((String quarter) => quarter
-                          .toLowerCase()
-                          .split(' ')
-                          .any(
-                              (word) => word.startsWith(pattern.toLowerCase())))
-                      .toList()
-                  : quarter.quarterYaounde
-                      .where((item) =>
-                          item.toLowerCase().startsWith(pattern.toLowerCase()))
-                      .toList();
-            },
-            itemBuilder: (context, String suggestion) {
-              return ListTile(
-                title: Text(suggestion),
-              );
-            },
-            onSuggestionSelected: (String suggestion) {
-              quarterTextController.text = suggestion;
-            },
-            onSaved: (value) => widget.addressReceiver.quarter = value,
-            validator: (value) {
-              List<String> douala = city == 'Douala' || city == "DOUALA"
-                  ? quarter.quarterDouala
-                  : quarter.quarterYaounde;
-              if (value!.isEmpty) {
-                return StringManager.errorMessage;
-              }
-              if (!(douala.contains(value))) {
-                return "Veuillez Choisir un quartier de votre ville svp";
-              }
-              return null;
-            },
-            autoFlipDirection: true,
-            hideOnEmpty: true,
-          ),
+          // TypeAheadFormField<String>(
+          //   autovalidateMode: AutovalidateMode.onUserInteraction,
+          //   textFieldConfiguration: TextFieldConfiguration(
+          //     controller: quarterTextController,
+          //     decoration:
+          //         const InputDecoration(labelText: StringManager.quarter),
+          //   ),
+          //   suggestionsCallback: (String pattern) async {
+          //     if (pattern.isEmpty) {
+          //       return const Iterable<String>.empty();
+          //     }
+          //     return city == 'Douala' || city == "DOUALA"
+          //         ? quarter.quarterDouala
+          //             .where((String quarter) => quarter
+          //                 .toLowerCase()
+          //                 .split(' ')
+          //                 .any(
+          //                     (word) => word.startsWith(pattern.toLowerCase())))
+          //             .toList()
+          //         : quarter.quarterYaounde
+          //             .where((item) =>
+          //                 item.toLowerCase().startsWith(pattern.toLowerCase()))
+          //             .toList();
+          //   },
+          //   itemBuilder: (context, String suggestion) {
+          //     return ListTile(
+          //       title: Text(suggestion),
+          //     );
+          //   },
+          //   onSuggestionSelected: (String suggestion) {
+          //     quarterTextController.text = suggestion;
+          //   },
+          //   onSaved: (value) => widget.addressReceiver.quarter = value,
+          //   validator: (value) {
+          //     List<String> douala = city == 'Douala' || city == "DOUALA"
+          //         ? quarter.quarterDouala
+          //         : quarter.quarterYaounde;
+          //     if (value!.isEmpty) {
+          //       return StringManager.errorMessage;
+          //     }
+          //     if (!(douala.contains(value))) {
+          //       return "Veuillez Choisir un quartier de votre ville svp";
+          //     }
+          //     return null;
+          //   },
+          //   autoFlipDirection: true,
+          //   hideOnEmpty: true,
+          // ),
           TextFormField(
             autovalidateMode: AutovalidateMode.onUserInteraction,
             decoration:

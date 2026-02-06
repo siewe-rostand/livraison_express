@@ -9,42 +9,41 @@ import 'package:flutter_svg/svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
-import 'package:livraison_express/data/local_db/db-helper.dart';
-import 'package:livraison_express/data/user_helper.dart';
-import 'package:livraison_express/model/cart-model.dart';
-import 'package:livraison_express/model/client.dart';
-import 'package:livraison_express/model/day_item.dart';
-import 'package:livraison_express/model/infos.dart';
-import 'package:livraison_express/model/payment.dart';
-import 'package:livraison_express/model/product.dart';
-import 'package:livraison_express/model/user.dart';
-import 'package:livraison_express/service/paymentApi.dart';
-import 'package:livraison_express/utils/main_utils.dart';
-import 'package:livraison_express/utils/size_config.dart';
-import 'package:livraison_express/views/super-market/widget/step1.dart';
-import 'package:livraison_express/views/super-market/widget/step2.dart';
-import 'package:livraison_express/views/widgets/custom_alert_dialog.dart';
-import 'package:livraison_express/views/widgets/custom_dialog.dart';
-import 'package:livraison_express/views/widgets/select_time.dart';
+import 'package:livraison_express_client/views/super-market/widget/step1.dart';
+import 'package:livraison_express_client/views/super-market/widget/step2.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../constant/color-constant.dart';
+import '../../data/local_db/db-helper.dart';
+import '../../data/user_helper.dart';
 import '../../model/address.dart';
+import '../../model/cart-model.dart';
+import '../../model/client.dart';
+import '../../model/day_item.dart';
 import '../../model/distance_matrix.dart';
 import '../../model/horaire.dart';
+import '../../model/infos.dart';
 import '../../model/order.dart';
+import '../../model/payment.dart';
+import '../../model/product.dart';
 import '../../model/shop.dart';
-import '../../service/course_service.dart';
+import '../../model/user.dart';
 import '../../provider/cart-provider.dart';
+import '../../service/course_service.dart';
+import '../../utils/main_utils.dart';
+import '../../utils/size_config.dart';
 import '../../utils/string_manager.dart';
 import '../cart/cart.dart';
+import '../widgets/custom_alert_dialog.dart';
+import '../widgets/custom_dialog.dart';
+import '../widgets/select_time.dart';
 
 enum DeliveryType { express, heure_livraison }
 
 class ValiderPanier extends StatefulWidget {
-  const ValiderPanier({Key? key, required this.totalAmount}) : super(key: key);
+  const ValiderPanier({super.key, required this.totalAmount});
   final double totalAmount;
 
   @override
@@ -478,20 +477,20 @@ class _ValiderPanierState extends State<ValiderPanier> {
     }
   }
 
-  initPaymentSheet(Map<String, dynamic> paymentIntentData) async {
-    await stripe.Stripe.instance.initPaymentSheet(
-        paymentSheetParameters: stripe.SetupPaymentSheetParameters(
-      paymentIntentClientSecret: paymentIntentData['client_secret'],
-      applePay: true,
-      googlePay: true,
-      testEnv: true,
-      style: ThemeMode.dark,
-      merchantCountryCode: 'US',
-      merchantDisplayName: 'ROSTAND',
-      customerId: paymentIntentData['customer'],
-      customerEphemeralKeySecret: paymentIntentData['ephemeralKey'],
-    ));
-  }
+  // initPaymentSheet(Map<String, dynamic> paymentIntentData) async {
+  //   await stripe.Stripe.instance.initPaymentSheet(
+  //       paymentSheetParameters: stripe.SetupPaymentSheetParameters(
+  //     paymentIntentClientSecret: paymentIntentData['client_secret'],
+  //     applePay: true,
+  //     googlePay: true,
+  //     testEnv: true,
+  //     style: ThemeMode.dark,
+  //     merchantCountryCode: 'US',
+  //     merchantDisplayName: 'ROSTAND',
+  //     customerId: paymentIntentData['customer'],
+  //     customerEphemeralKeySecret: paymentIntentData['ephemeralKey'],
+  //   ));
+  // }
 
   @override
   Widget build(BuildContext context) {

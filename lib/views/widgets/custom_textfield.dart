@@ -1,7 +1,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:livraison_express/utils/main_utils.dart';
+
+import '../../utils/main_utils.dart';
 
 class CustomTextField extends StatelessWidget {
   final TextEditingController controller;
@@ -16,7 +17,7 @@ class CustomTextField extends StatelessWidget {
   final IconData? prefixIcon;
   final Widget? suffixIcon;
   const CustomTextField({
-    Key? key,
+    super.key,
     required this.controller,
     this.inputFormatters,
     required this.labelText,
@@ -27,7 +28,7 @@ class CustomTextField extends StatelessWidget {
     this.autovalidateMode,
     this.prefixIcon,
     this.suffixIcon, this.isEmail,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

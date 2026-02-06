@@ -2,11 +2,11 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:livraison_express/utils/main_utils.dart';
-
 import '../data/user_helper.dart';
 import '../views/widgets/custom_dialog.dart';
 import 'package:flutter/material.dart';
+
+import 'main_utils.dart';
 
 String handleException(Object e, BuildContext context){
   print(e);

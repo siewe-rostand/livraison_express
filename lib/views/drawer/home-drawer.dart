@@ -2,25 +2,25 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:livraison_express/service/course_service.dart';
-import 'package:livraison_express/service/fire-auth.dart';
-import 'package:livraison_express/utils/size_config.dart';
-import 'package:livraison_express/views/order_confirmation/command_history.dart';
-import 'package:livraison_express/views/main/about.dart';
-import 'package:livraison_express/views/login/login.dart';
-import 'package:livraison_express/views/main/profil.dart';
-import 'package:livraison_express/provider/cart-provider.dart';
-import 'package:livraison_express/views/widgets/custom_alert_dialog.dart';
-import 'package:livraison_express/views/address_detail/selected_fav_address.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/user_helper.dart';
 import '../../model/user.dart';
+import '../../provider/cart-provider.dart';
+import '../../service/course_service.dart';
+import '../../service/fire-auth.dart';
+import '../../utils/size_config.dart';
+import '../address_detail/selected_fav_address.dart';
+import '../login/login.dart';
+import '../main/about.dart';
+import '../main/profil.dart';
+import '../order_confirmation/command_history.dart';
+import '../widgets/custom_alert_dialog.dart';
 
 class MyHomeDrawer extends StatefulWidget {
-  const MyHomeDrawer({Key? key}) : super(key: key);
+  const MyHomeDrawer({super.key});
 
   @override
   State<MyHomeDrawer> createState() => _MyHomeDrawerState();
@@ -100,6 +100,9 @@ class _MyHomeDrawerState extends State<MyHomeDrawer> {
               child: ListView(
                 children: [
                   DrawerHeader(
+                    decoration: const BoxDecoration(color: Color(0xff2A5CA8)),
+                    curve: Curves.fastOutSlowIn,
+                    duration: const Duration(milliseconds: 2500),
                     child: Container(
                       height: getProportionateScreenHeight(186),
                       margin: const EdgeInsets.only(left: 10),
@@ -121,9 +124,6 @@ class _MyHomeDrawerState extends State<MyHomeDrawer> {
                         ],
                       ),
                     ),
-                    decoration: const BoxDecoration(color: Color(0xff2A5CA8)),
-                    curve: Curves.fastOutSlowIn,
-                    duration: const Duration(milliseconds: 2500),
                   ),
                   drawerItem(Icons.home_rounded, 'Accueil', () {
                     Navigator.pop(context);
@@ -209,7 +209,7 @@ class _MyHomeDrawerState extends State<MyHomeDrawer> {
 
   void _onShare(BuildContext context) async {
     await Share.share(
-        "Découvrez quelque chose de cool\n https://play.google.com/store/apps/details?id=com.mcs.livraison_express");
+        "Découvrez quelque chose de cool\n https://play.google.com/store/apps/details?id=com.mcs.livraison_express_client");
   }
   drawerItem(IconData icon, String title, VoidCallback press) {
     return TextButton(
